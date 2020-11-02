@@ -1,0 +1,10 @@
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: invalid-empty-provider
+spec:
+  description: Invalid metric - empty provider
+  params:
+    foo: bar
+  type: gauge
+  provider: ""

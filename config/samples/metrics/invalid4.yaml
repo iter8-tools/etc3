@@ -1,0 +1,10 @@
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: invalid-type
+spec:
+  params:
+    foo: bar
+  description: Invalid metric - invalid type
+  type: invalid
+  provider: provider

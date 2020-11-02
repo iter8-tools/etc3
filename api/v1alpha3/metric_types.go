@@ -29,6 +29,7 @@ type MetricSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Params are key/value pairs used to construct the REST query to the metrics backend
+	// +optional
 	Params map[string]string `json:"params,omitempty"`
 
 	// Text description of the metric
@@ -74,6 +75,7 @@ type MetricStatus struct {
 // +kubebuilder:object:root=true
 
 // Metric is the Schema for the metrics API
+// +k8s:openapi-gen=true
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.type"
 // +kubebuilder:printcolumn:name="description",type="string",JSONPath=".spec.description"
 type Metric struct {

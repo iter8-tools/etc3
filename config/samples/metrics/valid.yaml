@@ -1,0 +1,86 @@
+# Valid -- counter
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: example-counter
+spec:
+  params:
+    query: container_cpu_cfs_throttled_seconds_total{container='kfserving-container', id=~'/kubepods.*', pod=~'.*$name.*'} or on() vector(0)
+  description: Valid counter metric
+  units: seconds
+  type: counter
+  provider: prometheus
+---
+# Valid - gauge, more params, another provider, no description, no units
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: example-gauge-plus
+spec:
+  params:
+    foo: bar
+    bar: even using variables like $name and $interval
+  type: gauge
+  provider: provider
+---
+# Valid - sample size
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: example-samplesize-ns
+spec:
+  description: Valid metric with sample size including both namespace and name
+  params:
+    foo: bar
+  type: gauge
+  provider: provider
+  sample_size:
+    namespace: foo
+    name: bar
+---
+# Valid - sample size without a namespace
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: example-samplesize-no-ns
+spec:
+  description: Valid metric with sample size with just a name
+  params:
+    foo: bar
+  type: gauge
+  provider: provider
+  sample_size:
+    name: bar
+---
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: valid-multiline-param
+spec:
+  description: Valid metric - multiline parameter value
+  params:
+    foo: |
+      a multiline
+      parameter
+  type: gauge
+  provider: prometheus
+---
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: valid-long-param
+spec:
+  description: Valid metric - long param value
+  params:
+    foo: a very long parameter kaskl sdaf kadslkjsad ja dfsl j asdkla sj adfsljk asda dslkj dfsa ds adsasdf jk ads adskjl adsjlkadsf lka dsfjlk asdlk salkasdlksadjkl  adsflkas dl jka dsfljk a sljk  adsfjlksdlkjadsf jlkadsljksdljkds jlkds jkl sdljkds jlkd sljkd sfljksdjkldsjlkdsljkdsjkldsjlkdsljkdsfjlkdasfjlksdljksdfgljkadskljadslk dsjklasdljksdlkvdsjlk aefsljksdljkdslk
+  type: gauge
+  provider: prometheus
+---
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: valid-no-params
+spec:
+  description: Valid metric - no params
+  type: gauge
+  provider: provider
