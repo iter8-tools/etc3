@@ -197,10 +197,24 @@ func (in *MetricSpec) DeepCopyInto(out *MetricSpec) {
 	*out = *in
 	if in.Params != nil {
 		in, out := &in.Params, &out.Params
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
 		}
+	}
+	if in.Description != nil {
+		in, out := &in.Description, &out.Description
+		*out = new(string)
+		**out = **in
+	}
+	if in.Units != nil {
+		in, out := &in.Units, &out.Units
+		*out = new(string)
+		**out = **in
 	}
 	if in.SampleSize != nil {
 		in, out := &in.SampleSize, &out.SampleSize

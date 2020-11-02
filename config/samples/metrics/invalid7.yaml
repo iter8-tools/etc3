@@ -1,12 +1,11 @@
 apiVersion: core.iter8.tools/v1alpha3
 kind: Metric
 metadata:
-  name: invalid-empty-sample-size-name
+  name: invalid-extra-field
 spec:
-  description: Invalid metric - empty sample_size.name
+  description: Invalid metric - extra field
   params:
     foo: bar
   type: gauge
   provider: prometheus
-  sample_size:
-    name: ""
+  foo: bar

@@ -84,3 +84,11 @@ spec:
   description: Valid metric - no params
   type: gauge
   provider: provider
+---
+apiVersion: core.iter8.tools/v1alpha3
+kind: Metric
+metadata:
+  name: valid-default-type
+spec:
+  description: Valid metric - no type -- defaults to gauge
+  provider: prometheus

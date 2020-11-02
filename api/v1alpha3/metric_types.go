@@ -20,8 +20,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// MetricType identifies the type of the metric
+// +kubebuilder:validation:Enum=counter;gauge
+type MetricType string
+
+const (
+	// CounterMetricType corresponds to Prometheus counter metric type
+	CounterMetricType MetricType = "counter"
+
+	// GaugeMetricType is an enhancement of Prometheus gauge metric type
+	GaugeMetricType MetricType = "gauge"
+)
 
 // MetricSpec defines the desired state of Metric
 type MetricSpec struct {
@@ -30,19 +39,20 @@ type MetricSpec struct {
 
 	// Params are key/value pairs used to construct the REST query to the metrics backend
 	// +optional
-	Params map[string]string `json:"params,omitempty"`
+	Params *map[string]string `json:"params,omitempty"`
 
 	// Text description of the metric
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
 	// Units used for display only
 	// +optional
-	Units string `json:"units,omitempty"`
+	Units *string `json:"units,omitempty"`
 
 	// Type of the metric
-	//+kubebuilder:validation:Enum={counter,gauge}
-	Type string `json:"type"`
+	// +kubebuilder:default:="gauge"
+	// +optional
+	Type MetricType `json:"type"`
 
 	// SampleSize is a reference to a counter metric resource.
 	// It needs to indicte the number of data points over which this metric is computed.

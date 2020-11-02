@@ -1,10 +1,10 @@
 apiVersion: core.iter8.tools/v1alpha3
 kind: Metric
 metadata:
-  name: invalid-type
+  name: invalid-empty-params
 spec:
+  description: Invalid metric - empty params
   params:
-    foo: bar
-  description: Invalid metric - invalid type
-  type: invalid
+  type: gauge
   provider: provider
+

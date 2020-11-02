@@ -1,10 +1,9 @@
 apiVersion: core.iter8.tools/v1alpha3
 kind: Metric
 metadata:
-  name: invalid-no-type
+  name: invalid-no-provider
 spec:
-  description: Invalid metric - no type
+  description: Invalid metric - no provider
   params:
     foo: bar
-  provider: prometheus
-# We would prefer if type was optional and defaulted to "gauge"
+  type: gauge

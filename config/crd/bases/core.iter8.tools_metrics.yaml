@@ -75,6 +75,7 @@ spec:
                 - name
                 type: object
               type:
+                default: gauge
                 description: Type of the metric
                 enum:
                 - counter
@@ -85,7 +86,6 @@ spec:
                 type: string
             required:
             - provider
-            - type
             type: object
           status:
             description: MetricStatus defines the observed state of Metric
