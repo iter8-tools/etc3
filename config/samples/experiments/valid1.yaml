@@ -1,0 +1,123 @@
+apiVersion: core.iter8.tools/v1alpha3
+kind: Experiment
+metadata:
+  name: sklearn-iris-experiment-12
+spec:
+  target: mymodelnamespace/sklearn-iris # namespaced name of the inference service
+  strategy:
+    type: canary
+    handlers:
+      start: start
+      finish: promote # other option is git_push
+      candidateFailure: none # other option is rollback
+    weights:
+      maxCandidateWeight: 100 # default; units = percent; candidate weight never exceeds this value
+      maxCandidateWeightIncrement: 5 # default; units = percent; candidate weight increment never exceeds this value
+      algorithm: progressive # default
+  versionInfo:
+    baseline:
+      name: default
+      tags:
+        container: my-container
+    candidates:
+    - name: canary
+      weightObjRef:
+        apiVersion: serving.kubeflow.org/v1alpha2
+        kind: InferenceService
+        name: sklearn-iris
+        namespace: modelnamespaces
+        fieldPath: spec.canaryTrafficPercent
+  criteria:
+    indicators:
+    - 95th-percentile-tail-latency
+    - container-throttled-seconds-total
+    objectives:
+    - metric: mean-latency
+      upperLimit: 200
+    - metric: error-rate
+      upperLimit: "0.01"
+  duration:
+    interval: 20s
+    maxIterations: 8
+status: # subresource
+  currentIteration: 1
+  phase: progressing
+  initTimestamp: "2020-08-13T17:00:00Z"
+  startTimestamp: "2020-08-13T17:26:37Z"
+  lastUpdateTimestamp: "2020-08-13T18:05:49Z"
+  # endTimeTimestamp: "2020-08-13T18:05:49Z"; this will be available after experiment is ended
+  conditions:
+  - type: start
+    status: in_progress # finished; error
+    transitionTime: "2020-08-13T17:26:37Z"
+    reason: ""
+    message: ""
+  - type: start
+    status: in_progress # finished; error
+    transitionTime: "2020-08-13T17:26:37Z"
+    reason: ""
+    message: ""
+  currentWeights: 
+  - name: baseline
+    value: 25
+  - name: canary
+    value: 75
+  analysis: 
+  - provenance: https://iter8-analytics:9090
+    timestamp: "2020-08-13T17:26:37Z"
+    type: metrics_aggregation
+    data: # rawExtension; this needs to be standardized and published as a format.
+      metrics:
+      - name: mean-latency
+        max: 10.0
+        min: 2.0
+        versions:
+        - name: baseline 
+          max: 8.0
+          min: 5.0
+          value: 6.89
+          sample_size: 40
+        - name: canary
+          max: 8.0
+          min: 5.0
+          value: 6.89
+          sample_size: 40
+      - name: request-count
+        max: 100
+        min: 0
+        versions:
+        - name: baseline 
+          max: 20
+          min: 0
+          value: 20
+        - name: canary
+          max: 100
+          min: 0
+          value: 100
+  - provenance: https://iter8-analytics:9090
+    timestamp: "2020-08-13T17:26:37Z"
+    type: version_assessment
+    data:
+      versions:
+      - name: baseline
+        satisfiesObjectives: [true, true]
+        # each entry in this array corresponds to entry in the objective
+      - name: canary
+      satisfiesObjectives: [true, false]
+  - provenance: https://iter8-analytics:9090
+    timestamp: "2020-08-13T17:26:37Z"
+    type: winner-assessment
+    data:
+      winnerFound: true
+      winner: canary
+      explanation: "what happened?"
+  - provenance: https://iter8-analytics:9090
+    timestamp: "2020-08-13T17:26:37Z"
+    type: weights
+    data: # num entries = num versions in this list
+      weights:
+      - name: baseline
+        value: 25
+      - name: canary
+        value: 75
+  message: "some message here for kubectl printer"

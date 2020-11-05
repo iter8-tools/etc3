@@ -36,13 +36,399 @@ spec:
           spec:
             description: ExperimentSpec defines the desired state of Experiment
             properties:
-              foo:
-                description: Foo is an example field of Experiment. Edit Experiment_types.go
-                  to remove/update
-                type: string
+              criteria:
+                description: Criteria contains a list of Criterion for assessing the
+                  candidates Note that at most one reward metric is allowed If more
+                  than one reward criterion is included, the first will be used while
+                  others would be omitted
+                properties:
+                  indicators:
+                    description: Indicators is a list of metrics to be measured and
+                      reported on each iteration of the experiment.
+                    items:
+                      type: string
+                    type: array
+                  objectives:
+                    description: Objectives is a list of conditions on metrics that
+                      must be tested on each iteration of the experiment. Failure
+                      of an objective might reduces the likelihood that a version
+                      will be selected as the winning version. Failure of an objective
+                      might also trigger an experiment rollback.
+                    items:
+                      description: Objective is a service level objective
+                      properties:
+                        lowerLimit:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          description: UpperLimit is the minimum acceptable value
+                            of the metric. LowerLimit float32 `json:"upperLimit"`
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        metric:
+                          description: Metric is the name of the metric resource that
+                            defines the metric to be measured. If the value contains
+                            a "/", the prefix will be considered to be a namespace
+                            name. If the value does not contain a "/", the metric
+                            should be defined either in the same namespace or in the
+                            default domain namespace (defined as a property of iter8
+                            when installed). The experiment namespace takes precedence.
+                          type: string
+                        rollback_on_failure:
+                          description: RollbackOnFailure indicates that if the criterion
+                            is not met, the experiment should be ended
+                          type: boolean
+                        upperLimit:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          description: UpperLimit is the maximum acceptable value
+                            of the metric. UpperLimit float32 `json:"upperLimit"`
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                      required:
+                      - metric
+                      type: object
+                    type: array
+                  reward:
+                    description: Reward is the metric that should be used to evaluate
+                      the reward for a version in the experiment.
+                    properties:
+                      metric:
+                        description: Metric ..
+                        type: string
+                      preferredDirection:
+                        description: PreferredDirectionType defines the valid values
+                          for reward.PreferredDirection
+                        enum:
+                        - higher
+                        - lower
+                        type: string
+                    required:
+                    - metric
+                    - preferredDirection
+                    type: object
+                type: object
+              duration:
+                description: Duration describes how long the experiment will last.
+                properties:
+                  interval:
+                    description: Interval is the length of an interval in the experiment
+                      Default is 30s
+                    type: string
+                  maxIterations:
+                    description: MaxInterations is the maximum number of iterations
+                      Default is 10
+                    format: int32
+                    type: integer
+                type: object
+              strategy:
+                description: Strategy identifies the type of experiment and its properties
+                properties:
+                  handlers:
+                    description: Handlers define domain specific behavior and are
+                      called at well defined points in the lifecycle of an experiment.
+                      Specifically at the start (start handler), at the end (finish
+                      handler). A special handler can be specified to handle error
+                      cases.
+                    properties:
+                      candidateFailure:
+                        description: CandidateFailure handler should implement any
+                          domain specific actions that should take place when an objective
+                          is violated. For now, this includes any rollback logic thast
+                          is needed. In the future, this function might be migrated
+                          into the controller itself.
+                        type: string
+                      finish:
+                        description: Finish handler implements any domain specific
+                          actions that should take place at the end of an experiment.
+                          For now, this includes any promotion logic that is needed
+                          for a winning version. In the future, this function might
+                          be migrated into the controller itself.
+                        type: string
+                      start:
+                        description: Start handler implmenents any domain specific
+                          set up for an experiment. It should ensure that any needed
+                          resources are available and in an appropriate state. It
+                          must update the spec.versionInfo field of the experiment
+                          resource.
+                        type: string
+                    type: object
+                  type:
+                    description: ExperimentType is the type of the experiment, one
+                      of several predefined types
+                    enum:
+                    - canary
+                    - A/B
+                    - A/B/N
+                    - performance
+                    - bluegreen
+                    type: string
+                  weights:
+                    description: Weights modify the behavior of the traffic split
+                      algorithm. Defaults depend on the experiment type.
+                    properties:
+                      algorithm:
+                        description: Algorithm is the traffic split algorithm Default
+                          will be "progressive" for progressive_* experiment types
+                          Default will be "fixed_split" for fixed_split_* experiment
+                          types
+                        type: string
+                      maxCandidateWeight:
+                        description: MaxCandidateWeight is the maximum percent of
+                          traffic that should be sent to the candidate versions during
+                          an experiment
+                        format: int32
+                        type: integer
+                      maxCandidateWeightIncrement:
+                        description: MaxCandidateWeightIncrement the maximum permissible
+                          increase in traffic to a candidate in one iteration
+                        format: int32
+                        type: integer
+                      split:
+                        description: Split used only the fixed_split alogorithms.
+                          If not specified will be uniform. Will be ignored by all
+                          others (warning if possible!)
+                        items:
+                          format: int32
+                          type: integer
+                        type: array
+                    type: object
+                required:
+                - type
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              versionInfo:
+                description: VersionInfo is information about versions that is typically
+                  provided by the domain start handler
+                properties:
+                  baseline:
+                    description: Baseline is baseline version
+                    properties:
+                      name:
+                        description: Name is a name for the version
+                        type: string
+                      tags:
+                        additionalProperties:
+                          type: string
+                        description: Tags is map of tags that can be used for metrics
+                          queries
+                        type: object
+                      weightObjRef:
+                        description: WeightObjRef is a reference to another kubernetes
+                          object
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: 'If referring to a piece of an object instead
+                              of an entire object, this string should contain a valid
+                              JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container
+                              within a pod, this would take on a value like: "spec.containers{name}"
+                              (where "name" refers to the name of the container that
+                              triggered the event) or if no container name is specified
+                              "spec.containers[2]" (container with index 2 in this
+                              pod). This syntax is chosen only to have some well-defined
+                              way of referencing a part of an object. TODO: this design
+                              is not final and this field is subject to change in
+                              the future.'
+                            type: string
+                          kind:
+                            description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          namespace:
+                            description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                            type: string
+                          resourceVersion:
+                            description: 'Specific resourceVersion to which this reference
+                              is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                            type: string
+                          uid:
+                            description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                            type: string
+                        type: object
+                    required:
+                    - name
+                    type: object
+                  candidates:
+                    description: Candidates is list candidate versions
+                    items:
+                      description: DomainVersion ..
+                      properties:
+                        name:
+                          description: Name is a name for the version
+                          type: string
+                        tags:
+                          additionalProperties:
+                            type: string
+                          description: Tags is map of tags that can be used for metrics
+                            queries
+                          type: object
+                        weightObjRef:
+                          description: WeightObjRef is a reference to another kubernetes
+                            object
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            fieldPath:
+                              description: 'If referring to a piece of an object instead
+                                of an entire object, this string should contain a
+                                valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                For example, if the object reference is to a container
+                                within a pod, this would take on a value like: "spec.containers{name}"
+                                (where "name" refers to the name of the container
+                                that triggered the event) or if no container name
+                                is specified "spec.containers[2]" (container with
+                                index 2 in this pod). This syntax is chosen only to
+                                have some well-defined way of referencing a part of
+                                an object. TODO: this design is not final and this
+                                field is subject to change in the future.'
+                              type: string
+                            kind:
+                              description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                              type: string
+                            namespace:
+                              description: 'Namespace of the referent. More info:
+                                https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                              type: string
+                            resourceVersion:
+                              description: 'Specific resourceVersion to which this
+                                reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                              type: string
+                            uid:
+                              description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                              type: string
+                          type: object
+                      required:
+                      - name
+                      type: object
+                    type: array
+                required:
+                - baseline
+                type: object
+            required:
+            - strategy
             type: object
+            x-kubernetes-preserve-unknown-fields: true
           status:
             description: ExperimentStatus defines the observed state of Experiment
+            properties:
+              analysis:
+                description: Analysis returned by the last analyis
+                items:
+                  description: Analysis is data from an analytics provider
+                  properties:
+                    data:
+                      description: Data is the data provided by the analytics provider
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    provenance:
+                      description: Provenance is source of data
+                      type: string
+                    timestamp:
+                      description: Timestamp is the timestamp when the controller
+                        got its data from an analytics engine
+                      format: date-time
+                      type: string
+                    type:
+                      description: Type is type of analytics data A string type is
+                        used instead of defining a type because not all types are
+                        of interest to the controller.
+                      type: string
+                  required:
+                  - data
+                  - provenance
+                  - timestamp
+                  - type
+                  type: object
+                type: array
+              conditions:
+                description: List of conditions
+                items:
+                  description: ExperimentCondition describes a condition of an experiment
+                  properties:
+                    message:
+                      description: Detailed explanation on the update
+                      type: string
+                    reason:
+                      description: Reason for the last update
+                      type: string
+                    status:
+                      description: Status of the condition
+                      type: string
+                    transitionTime:
+                      description: TransitionTime is the time when this condition
+                        is last updated
+                      format: date-time
+                      type: string
+                    type:
+                      description: Type of the condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              currentIteration:
+                description: CurrentIteration is the current iteration number
+                format: int32
+                type: integer
+              currentWeights:
+                description: CurrentWeights is currently applied traffic weights
+                items:
+                  description: VersionWeight is the weight for a version
+                  properties:
+                    name:
+                      description: Name the name of a version
+                      type: string
+                    value:
+                      description: Value is the weight assigned to name
+                      format: int32
+                      type: integer
+                  required:
+                  - name
+                  - value
+                  type: object
+                type: array
+              endTimestamp:
+                description: EndTimestamp is the timestamp when experiment completes
+                format: date-time
+                type: string
+              initTimestamp:
+                description: InitTimestamp is the timestamp when the experiment is
+                  initialized matches example
+                format: date-time
+                type: string
+              lastUpdateTimestamp:
+                description: LastUpdateTime is the last time iteration has been updated
+                format: date-time
+                type: string
+              message:
+                description: Message specifies message to show in the kubectl printer
+                type: string
+              phase:
+                description: Phase marks the Phase the experiment is at
+                type: string
+              recommendedBaseline:
+                description: RecommendedBaseline is the version recommended as the
+                  baseline after the experiment completes. Will be set to the winner
+                  (status.analysis[].data.winner) or to the current baseline in the
+                  case of a rollback.
+                type: string
+              startTimestamp:
+                description: StartTimestamp is the timestamp when the experiment starts
+                  matches
+                format: date-time
+                type: string
             type: object
         type: object
     served: true

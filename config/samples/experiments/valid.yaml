@@ -1,0 +1,25 @@
+apiVersion: core.iter8.tools/v1alpha3
+kind: Experiment
+metadata:
+  name: experiment-sample
+spec:
+  target: mymodelnamespace/sklearn-iris
+  strategy:
+    type: A/B
+    weights:
+      maxCandidateTraffic: 50
+      maxCandidateTrafficIncrement: 5
+      algorithm: progressive
+    duration:
+      interval: 20s
+      maxIterations: 8
+  criteria:
+    indicators:
+    - 95th_percentile_tail_latency
+    - container_throttled_seconds_total
+    objectives:
+    - metric: mean_latency
+      upperLimit: 200
+    - metric: error_rate
+      upperLimit: 100m
+      # rollback_on_failure: true # default
