@@ -116,8 +116,6 @@ spec:
                     - metric
                     - preferredDirection
                     type: object
-                required:
-                - requestCount
                 type: object
               duration:
                 description: Duration describes how long the experiment will last.

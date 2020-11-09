@@ -177,7 +177,7 @@ type Criteria struct {
 	// RequestCount identifies metric to be used to count how many requests a version has seen
 	// Typically set by the controller (based on setup configuration) but can be overridden by the user
 	// + optional
-	RequestCount *string `json:"requestCount"`
+	RequestCount *string `json:"requestCount,omitempty"`
 
 	// Reward is the metric that should be used to evaluate the reward for a version in the experiment.
 	// +optional
