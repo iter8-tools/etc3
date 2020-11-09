@@ -18,7 +18,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // Experiment is the Schema for the experiments API
@@ -47,6 +46,7 @@ type ExperimentSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// VersionInfo is information about versions that is typically provided by the domain start handler
+	// +optional
 	VersionInfo *VersionInfo `json:"versionInfo,omitempty"`
 
 	// Strategy identifies the type of experiment and its properties
@@ -61,6 +61,8 @@ type ExperimentSpec struct {
 	// Duration describes how long the experiment will last.
 	// +optional
 	Duration *Duration `json:"duration,omitempty"`
+
+	Metrics *map[string]Metric `json:"metrics,omitempty"`
 }
 
 // VersionInfo is information about versions that is typically provided by the domain start handler.
@@ -85,7 +87,19 @@ type DomainVersion struct {
 
 	// WeightObjRef is a reference to another kubernetes object
 	// +optional
-	WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
+	//WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
+	WeightObjRef *WeightObjRef `json:"weightObjRef,omitempty"`
+	// FieldPath is the path to the field that should in WeightObjRef to be updated to indicate a change in weight
+	//FieldPath *string `json:"fieldPath,omitempty"`
+}
+
+// WeightObjRef is a reference to another kubernetes object
+type WeightObjRef struct {
+	// WeightObjRef is a reference to another kubernetes object
+	corev1.ObjectReference `json:",inline"`
+
+	// FieldPath is the path to the field that should in WeightObjRef to be updated to indicate a change in weight
+	FieldPath string `json:"fieldPath"`
 }
 
 // Strategy identifies the type of experiment and its properties
@@ -111,7 +125,6 @@ type Strategy struct {
 // Specifically at the start (start handler), at the end (finish handler).
 // A special handler can be specified to handle error cases.
 type Handlers struct {
-
 	// Start handler implmenents any domain specific set up for an experiment.
 	// It should ensure that any needed resources are available and in an appropriate state.
 	// It must update the spec.versionInfo field of the experiment resource.
@@ -135,19 +148,25 @@ type Handlers struct {
 type Weights struct {
 	// MaxCandidateWeight is the maximum percent of traffic that should be sent to the
 	// candidate versions during an experiment
+	// +kubebuilder:validation:Minimum:=1
+	// +kubebuilder:validation:Maximum:=100
+	// +optional
 	MaxCandidateWeight *int32 `json:"maxCandidateWeight,omitempty"`
 
 	// MaxCandidateWeightIncrement the maximum permissible increase in traffic to a candidate in one iteration
+	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Maximum:=100
+	// +optional
 	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty"`
 
 	// Algorithm is the traffic split algorithm
-	// Default will be "progressive" for progressive_* experiment types
-	// Default will be "fixed_split" for fixed_split_* experiment types
+	// Default will be "fixed_split" for experiment type "bluegreen", "progressive" otherwise.
 	// +optional
 	Algorithm *string `json:"algorithm,omitempty"`
 
-	// Split used only the fixed_split alogorithms. If not specified will be uniform.
-	// Will be ignored by all others (warning if possible!)
+	// Split used only by the fixed_split algorithm.
+	// If not specified, it will be uniform among baseline and all candidates.
+	// Will be ignored by all other algorithms (warning if possible!)
 	// + optional
 	Split []int32 `json:"split,omitempty"`
 }
@@ -155,8 +174,10 @@ type Weights struct {
 // Criteria is list of criteria to be evaluated throughout the experiment
 type Criteria struct {
 
-	// requestCountMetric ??
-	// <<<<<<<<<<< >>>>>>>>>>>> <<<<<<<<<<< >>>>>>>>>>>
+	// RequestCount identifies metric to be used to count how many requests a version has seen
+	// Typically set by the controller (based on setup configuration) but can be overridden by the user
+	// + optional
+	RequestCount *string `json:"requestCount"`
 
 	// Reward is the metric that should be used to evaluate the reward for a version in the experiment.
 	// +optional
@@ -178,6 +199,8 @@ type Reward struct {
 	// Metric ..
 	Metric string `json:"metric"`
 
+	// PreferredDirection identifies whether higher or lower values of the reward metric are preferred
+	// valid values are "higher" and "lower"
 	PreferredDirection PreferredDirectionType `json:"preferredDirection"`
 }
 
@@ -192,15 +215,14 @@ type Objective struct {
 
 	// UpperLimit is the maximum acceptable value of the metric.
 	// +optional
-	// UpperLimit float32 `json:"upperLimit"`
-	UpperLimit resource.Quantity `json:"upperLimit,omitempty"`
+	UpperLimit *resource.Quantity `json:"upperLimit,omitempty"`
 
 	// UpperLimit is the minimum acceptable value of the metric.
 	// +optional
-	// LowerLimit float32 `json:"upperLimit"`
-	LowerLimit resource.Quantity `json:"lowerLimit,omitempty"`
+	LowerLimit *resource.Quantity `json:"lowerLimit,omitempty"`
 
 	// RollbackOnFailure indicates that if the criterion is not met, the experiment should be ended
+	// default is false
 	// +optional
 	RollbackOnFailure *bool `json:"rollback_on_failure,omitempty"`
 }
@@ -212,7 +234,7 @@ type Duration struct {
 	// +optional
 	Interval *string `json:"interval,omitempty"`
 
-	// MaxInterations is the maximum number of iterations
+	// MaxIterations is the maximum number of iterations
 	// Default is 10
 	// +optional
 	MaxIterations *int32 `json:"maxIterations,omitempty"`
@@ -242,21 +264,21 @@ type ExperimentStatus struct {
 	// +optional
 	LastUpdateTimestamp *metav1.Time `json:"lastUpdateTimestamp,omitempty"`
 
-	// CurrentIteration is the current iteration number
+	// CurrentIteration is the current iteration number.
+	// It is undefined until the experiment starts.
 	// +optional
 	CurrentIteration *int32 `json:"currentIteration,omitempty"`
 
-	// Phase marks the Phase the experiment is at
-	// +optional
-	Phase PhaseType `json:"phase,omitempty"`
+	// Phase marks the phase the experiment is at
+	Phase PhaseType `json:"phase"`
 
 	// CurrentWeights is currently applied traffic weights
 	// +optional
-	CurrentWeights []VersionWeight `json:"currentWeights,omitempty"`
+	CurrentWeights []WeightsData `json:"currentWeights,omitempty"`
 
 	// Analysis returned by the last analyis
 	// +optional
-	Analysis []Analysis `json:"analysis,omitempty"`
+	Analysis *Analysis `json:"analysis,omitempty"`
 
 	// RecommendedBaseline is the version recommended as the baseline after the experiment completes.
 	// Will be set to the winner (status.analysis[].data.winner)
@@ -277,9 +299,9 @@ type ExperimentCondition struct {
 	// Status of the condition
 	Status corev1.ConditionStatus `json:"status"`
 
-	// TransitionTime is the time when this condition is last updated
+	// LastTransitionTime is the time when this condition is last updated
 	// +optional
-	TransitionTime *metav1.Time `json:"transitionTime,omitempty"`
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
 
 	// Reason for the last update
 	// +optional
@@ -292,29 +314,129 @@ type ExperimentCondition struct {
 
 // Analysis is data from an analytics provider
 type Analysis struct {
+	// AggregatedMetrics
+	AggregatedMetrics *AggregatedMetricsAnalysis `json:"aggregatedMetrics,omitempty"`
+
+	// WinnerAssessment
+	WinnerAssessment *WinnerAssessmentAnalysis `json:"winnerAssessment,omitempty"`
+
+	// VersionAssessments
+	VersionAssessments *VersionAssessmentsAnalysis `json:"versionAssessments,omitempty"`
+
+	// Weights
+	Weights *WeightsAnalysis `json:"weights,omitempty"`
+}
+
+// AnalysisMetaData ..
+type AnalysisMetaData struct {
 	// Provenance is source of data
 	Provenance string `json:"provenance"`
 
 	// Timestamp is the timestamp when the controller got its data from an analytics engine
 	Timestamp metav1.Time `json:"timestamp"`
 
-	// Type is type of analytics data
-	// A string type is used instead of defining a type because not all types are of interest
-	// to the controller.
-	Type string `json:"type"`
-
-	// Data is the data provided by the analytics provider
-	// +kubebuilder:validation:XPreserveUnknownFields
-	Data runtime.RawExtension `json:"data"`
+	// Message optional messsage for user
+	// +optional
+	Message *string `json:"message,omitempty"`
 }
 
-// VersionWeight is the weight for a version
-type VersionWeight struct {
+// WinnerAssessmentAnalysis ..
+type WinnerAssessmentAnalysis struct {
+	AnalysisMetaData `json:",inline"`
+
+	// Data
+	Data WinnerAssessmentData `json:"data"`
+}
+
+// VersionAssessmentsAnalysis ..
+type VersionAssessmentsAnalysis struct {
+	AnalysisMetaData `json:",inline"`
+
+	// Data
+	Data []VersionAssessmentsData `json:"data"`
+}
+
+// WeightsAnalysis ..
+type WeightsAnalysis struct {
+	AnalysisMetaData `json:",inline"`
+
+	// Data
+	Data []WeightsData `json:"data"`
+}
+
+// AggregatedMetricsAnalysis ..
+type AggregatedMetricsAnalysis struct {
+	AnalysisMetaData `json:",inline"`
+
+	// Data
+	Data []AggregatedMetricsData `json:"data"`
+}
+
+// WinnerAssessmentData ..
+type WinnerAssessmentData struct {
+	// WinnerFound whether or not a winning version has been identified
+	WinnerFound bool `json:"winnerFound"`
+
+	// Winner if found
+	// +optional
+	Winner *string `json:"winner,omitempty"`
+}
+
+// VersionAssessmentsData ..
+type VersionAssessmentsData struct {
+	// Name of version
+	Name string `json:"name"`
+
+	// SatisfiesObjectives whether the objectives (in spec.criteria.objectives) are satisfied
+	// order is the same as expressed in spec.critieria.objectives
+	SatisfiesObjectives []bool `json:"satisfiesObjectives"`
+}
+
+// AggregatedMetricsData ..
+type AggregatedMetricsData struct {
+	// Name of metric
+	Name string `json:"name"`
+
+	// Max value observed for this metric across all versions
+	// +optional
+	Max *resource.Quantity `json:"max,omitempty"`
+
+	// Min value observed for this metric across all versions
+	// +optional
+	Min *resource.Quantity `json:"min,omitempty"`
+
+	// AggregatedMetricsVersionData
+	Versions []AggregatedMetricsVersionData `json:"versions"`
+}
+
+// WeightsData is the weight for a version
+type WeightsData struct {
 	// Name the name of a version
 	Name string `json:"name"`
 
 	// Value is the weight assigned to name
 	Value int32 `json:"value"`
+}
+
+// AggregatedMetricsVersionData ..
+type AggregatedMetricsVersionData struct {
+	// Name of version
+	Name string `json:"name"`
+
+	// Max value observed for this metric for this version
+	// +optional
+	Max *resource.Quantity `json:"max,omitempty"`
+
+	// Min value observed for this metric for this version
+	// +optional
+	Min *resource.Quantity `json:"min,omitempty"`
+
+	// Value of the metric observed for this version
+	// +optional
+	Value *resource.Quantity `json:"value,omitempty"`
+
+	// SampleSize is the number of requests observed for this version
+	SampleSize *int32 `json:"sampleSize,omitempty"`
 }
 
 func init() {

@@ -19,20 +19,20 @@ package v1alpha3
 type ExperimentTypeType string
 
 const (
-	// Canary indicates an experiment is a canary experiment
-	Canary ExperimentTypeType = "canary"
+	// ExperimentTypeCanary indicates an experiment is a canary experiment
+	ExperimentTypeCanary ExperimentTypeType = "canary"
 
-	// AB indicates an experiment is a A/B experiment
-	AB ExperimentTypeType = "A/B"
+	// ExperimentTypeAB indicates an experiment is a A/B experiment
+	ExperimentTypeAB ExperimentTypeType = "A/B"
 
-	// ABN indicates an experiment is a A/B/n experiment
-	ABN ExperimentTypeType = "A/B/N"
+	// ExperimentTypeABN indicates an experiment is a A/B/n experiment
+	ExperimentTypeABN ExperimentTypeType = "A/B/N"
 
-	// Performance indicates an experiment is a performance experiment
-	Performance ExperimentTypeType = "performance"
+	// ExperimentTypePerformance indicates an experiment is a performance experiment
+	ExperimentTypePerformance ExperimentTypeType = "performance"
 
-	// BlueGreen indicates an experiment is a blue-green experiment
-	BlueGreen ExperimentTypeType = "bluegreen"
+	// ExperimentTypeBlueGreen indicates an experiment is a blue-green experiment
+	ExperimentTypeBlueGreen ExperimentTypeType = "bluegreen"
 )
 
 // PreferredDirectionType defines the valid values for reward.PreferredDirection
@@ -40,46 +40,53 @@ const (
 type PreferredDirectionType string
 
 const (
-	// Higher indicates that a higher value is "better"
-	Higher PreferredDirectionType = "higher"
+	// PreferredDirectionHigher indicates that a higher value is "better"
+	PreferredDirectionHigher PreferredDirectionType = "higher"
 
-	// Lower indicates that a lower value is "better"
-	Lower PreferredDirectionType = "lower"
+	// PreferredDirectionLower indicates that a lower value is "better"
+	PreferredDirectionLower PreferredDirectionType = "lower"
 )
 
 // ExperimentConditionType limits conditions can be set by controller
+// +kubebuilder:validation:Enum:=ExperimentInitialized;StartHandlerCompleted;FinishHandlerCompleted;MetricsRead;AnalysticsServiceNormal;ExperimentCompleted
 type ExperimentConditionType string
 
 const (
-	// ExperimentCreated
-	// MetricsRead
-	// StartHandlerInvoked (in-progress, finished, error)
-	// FinishHandlerInvoked (in-progress, finished, error)
-	// ExperimentCompleted
-	// AnalyticsActive
+	// ExperimentConditionExperimentInitialized ..
+	// Unknown at start, set to False immediately; True when done
+	ExperimentConditionExperimentInitialized ExperimentConditionType = "ExperimentInitialized"
 
-	// ExperimentConditionTargetsProvided has status True when the Experiment detects all elements specified in targetService
-	ExperimentConditionTargetsProvided ExperimentConditionType = "TargetsProvided"
+	// ExperimentConditionStartHandlerCompleted ..
+	// Unknown until called; False until completed; True when done
+	ExperimentConditionStartHandlerCompleted ExperimentConditionType = "StartHandlerCompleted"
 
-	// ExperimentConditionAnalyticsServiceNormal has status True when the analytics service is operating normally
-	ExperimentConditionAnalyticsServiceNormal ExperimentConditionType = "AnalyticsServiceNormal"
+	// ExperimentConditionFinishHandlerCompleted ..
+	// Unknown until called; False until completed; True when done
+	ExperimentConditionFinishHandlerCompleted ExperimentConditionType = "FinishHandlerCompleted"
 
-	// ExperimentConditionMetricsSynced has status True when metrics are successfully synced with config map
-	ExperimentConditionMetricsSynced ExperimentConditionType = "MetricsSynced"
+	// ExperimentConditionMetricsRead ..
+	// Unknown before reading metrics
+	// True when done; False if any error
+	// Future: go to paused state if can't find metric; resume when defined or experiment changed
+	ExperimentConditionMetricsRead ExperimentConditionType = "MetricsRead"
+
+	// ExperimentConditionAnalysticsServiceNormal ..
+	// Unknown before any attemtps to call analytics service
+	// True while calls successful
+	// False if a call fails
+	ExperimentConditionAnalysticsServiceNormal ExperimentConditionType = "AnalysticsServiceNormal"
 
 	// ExperimentConditionExperimentCompleted has status True when the experiment is completed
+	// Unknown initially, set to False during initialization
 	ExperimentConditionExperimentCompleted ExperimentConditionType = "ExperimentCompleted"
-
-	// ExperimentConditionRoutingRulesReady has status True when routing rules are ready
-	ExperimentConditionRoutingRulesReady ExperimentConditionType = "RoutingRulesReady"
 )
 
 // PhaseType has options for phases that an experiment can be at
 type PhaseType string
 
 const (
-	// PhasePause indicates experiment is paused
-	PhasePause PhaseType = "Pause"
+	// PhasePaused indicates experiment is paused
+	PhasePaused PhaseType = "Paused"
 
 	// PhaseProgressing indicates experiment is progressing
 	PhaseProgressing PhaseType = "Progressing"
@@ -89,19 +96,8 @@ const (
 )
 
 // A set of reason setting the experiment condition status
+// TBD
 const (
-	ReasonTargetsFound            = "TargetsFound"
-	ReasonTargetsError            = "TargetsError"
-	ReasonAnalyticsServiceError   = "AnalyticsServiceError"
-	ReasonAnalyticsServiceRunning = "AnalyticsServiceRunning"
-	ReasonIterationUpdate         = "IterationUpdate"
-	ReasonAssessmentUpdate        = "AssessmentUpdate"
-	ReasonTrafficUpdate           = "TrafficUpdate"
-	ReasonExperimentCompleted     = "ExperimentCompleted"
-	ReasonSyncMetricsError        = "SyncMetricsError"
-	ReasonSyncMetricsSucceeded    = "SyncMetricsSucceeded"
-	ReasonRoutingRulesError       = "RoutingRulesError"
-	ReasonRoutingRulesReady       = "RoutingRulesReady"
-	ReasonActionPause             = "ActionPause"
-	ReasonActionResume            = "ActionResume"
+	ReasonIterationUpdate     = "IterationUpdate"
+	ReasonExperimentCompleted = "ExperimentCompleted"
 )

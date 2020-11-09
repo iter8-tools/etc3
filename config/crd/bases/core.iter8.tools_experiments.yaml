@@ -62,7 +62,7 @@ spec:
                           - type: integer
                           - type: string
                           description: UpperLimit is the minimum acceptable value
-                            of the metric. LowerLimit float32 `json:"upperLimit"`
+                            of the metric.
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                         metric:
@@ -76,20 +76,27 @@ spec:
                           type: string
                         rollback_on_failure:
                           description: RollbackOnFailure indicates that if the criterion
-                            is not met, the experiment should be ended
+                            is not met, the experiment should be ended default is
+                            false
                           type: boolean
                         upperLimit:
                           anyOf:
                           - type: integer
                           - type: string
                           description: UpperLimit is the maximum acceptable value
-                            of the metric. UpperLimit float32 `json:"upperLimit"`
+                            of the metric.
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                       required:
                       - metric
                       type: object
                     type: array
+                  requestCount:
+                    description: RequestCount identifies metric to be used to count
+                      how many requests a version has seen Typically set by the controller
+                      (based on setup configuration) but can be overridden by the
+                      user
+                    type: string
                   reward:
                     description: Reward is the metric that should be used to evaluate
                       the reward for a version in the experiment.
@@ -98,8 +105,9 @@ spec:
                         description: Metric ..
                         type: string
                       preferredDirection:
-                        description: PreferredDirectionType defines the valid values
-                          for reward.PreferredDirection
+                        description: PreferredDirection identifies whether higher
+                          or lower values of the reward metric are preferred valid
+                          values are "higher" and "lower"
                         enum:
                         - higher
                         - lower
@@ -108,6 +116,8 @@ spec:
                     - metric
                     - preferredDirection
                     type: object
+                required:
+                - requestCount
                 type: object
               duration:
                 description: Duration describes how long the experiment will last.
@@ -117,10 +127,80 @@ spec:
                       Default is 30s
                     type: string
                   maxIterations:
-                    description: MaxInterations is the maximum number of iterations
+                    description: MaxIterations is the maximum number of iterations
                       Default is 10
                     format: int32
                     type: integer
+                type: object
+              metrics:
+                additionalProperties:
+                  description: Metric is the Schema for the metrics API
+                  properties:
+                    apiVersion:
+                      description: 'APIVersion defines the versioned schema of this
+                        representation of an object. Servers should convert recognized
+                        schemas to the latest internal value, and may reject unrecognized
+                        values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                      type: string
+                    kind:
+                      description: 'Kind is a string value representing the REST resource
+                        this object represents. Servers may infer this from the endpoint
+                        the client submits requests to. Cannot be updated. In CamelCase.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                      type: string
+                    metadata:
+                      type: object
+                    spec:
+                      description: MetricSpec defines the desired state of Metric
+                      properties:
+                        description:
+                          description: Text description of the metric
+                          type: string
+                        params:
+                          additionalProperties:
+                            type: string
+                          description: Params are key/value pairs used to construct
+                            the REST query to the metrics backend
+                          type: object
+                        provider:
+                          description: Provider identifies the metric backend including
+                            its authentication properties and its unmarshaller
+                          minLength: 1
+                          type: string
+                        sample_size:
+                          description: SampleSize is a reference to a counter metric
+                            resource. It needs to indicte the number of data points
+                            over which this metric is computed.
+                          properties:
+                            name:
+                              description: Name is the name of the metric
+                              minLength: 1
+                              type: string
+                            namespace:
+                              description: Namespace is the namespace where the metric
+                                is defined If not provided, it is assumed to be in
+                                the same namespace as the referrer.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type:
+                          default: gauge
+                          description: Type of the metric
+                          enum:
+                          - counter
+                          - gauge
+                          type: string
+                        units:
+                          description: Units used for display only
+                          type: string
+                      required:
+                      - provider
+                      type: object
+                    status:
+                      description: MetricStatus defines the observed state of Metric
+                      type: object
+                  type: object
                 type: object
               strategy:
                 description: Strategy identifies the type of experiment and its properties
@@ -170,25 +250,29 @@ spec:
                     properties:
                       algorithm:
                         description: Algorithm is the traffic split algorithm Default
-                          will be "progressive" for progressive_* experiment types
-                          Default will be "fixed_split" for fixed_split_* experiment
-                          types
+                          will be "fixed_split" for experiment type "bluegreen", "progressive"
+                          otherwise.
                         type: string
                       maxCandidateWeight:
                         description: MaxCandidateWeight is the maximum percent of
                           traffic that should be sent to the candidate versions during
                           an experiment
                         format: int32
+                        maximum: 100
+                        minimum: 1
                         type: integer
                       maxCandidateWeightIncrement:
                         description: MaxCandidateWeightIncrement the maximum permissible
                           increase in traffic to a candidate in one iteration
                         format: int32
+                        maximum: 100
+                        minimum: 0
                         type: integer
                       split:
-                        description: Split used only the fixed_split alogorithms.
-                          If not specified will be uniform. Will be ignored by all
-                          others (warning if possible!)
+                        description: Split used only by the fixed_split algorithm.
+                          If not specified, it will be uniform among baseline and
+                          all candidates. Will be ignored by all other algorithms
+                          (warning if possible!)
                         items:
                           format: int32
                           type: integer
@@ -216,7 +300,7 @@ spec:
                         type: object
                       weightObjRef:
                         description: WeightObjRef is a reference to another kubernetes
-                          object
+                          object WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
                         properties:
                           apiVersion:
                             description: API version of the referent.
@@ -251,6 +335,8 @@ spec:
                           uid:
                             description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                             type: string
+                        required:
+                        - fieldPath
                         type: object
                     required:
                     - name
@@ -271,7 +357,7 @@ spec:
                           type: object
                         weightObjRef:
                           description: WeightObjRef is a reference to another kubernetes
-                            object
+                            object WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
                           properties:
                             apiVersion:
                               description: API version of the referent.
@@ -307,6 +393,8 @@ spec:
                             uid:
                               description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                               type: string
+                          required:
+                          - fieldPath
                           type: object
                       required:
                       - name
@@ -324,38 +412,214 @@ spec:
             properties:
               analysis:
                 description: Analysis returned by the last analyis
-                items:
-                  description: Analysis is data from an analytics provider
-                  properties:
-                    data:
-                      description: Data is the data provided by the analytics provider
-                      type: object
-                      x-kubernetes-preserve-unknown-fields: true
-                    provenance:
-                      description: Provenance is source of data
-                      type: string
-                    timestamp:
-                      description: Timestamp is the timestamp when the controller
-                        got its data from an analytics engine
-                      format: date-time
-                      type: string
-                    type:
-                      description: Type is type of analytics data A string type is
-                        used instead of defining a type because not all types are
-                        of interest to the controller.
-                      type: string
-                  required:
-                  - data
-                  - provenance
-                  - timestamp
-                  - type
-                  type: object
-                type: array
+                properties:
+                  aggregatedMetrics:
+                    description: AggregatedMetrics
+                    properties:
+                      data:
+                        description: Data
+                        items:
+                          description: AggregatedMetricsData ..
+                          properties:
+                            max:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              description: Max value observed for this metric across
+                                all versions
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            min:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              description: Min value observed for this metric across
+                                all versions
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            name:
+                              description: Name of metric
+                              type: string
+                            versions:
+                              description: AggregatedMetricsVersionData
+                              items:
+                                description: AggregatedMetricsVersionData ..
+                                properties:
+                                  max:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    description: Max value observed for this metric
+                                      for this version
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                  min:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    description: Min value observed for this metric
+                                      for this version
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                  name:
+                                    description: Name of version
+                                    type: string
+                                  sampleSize:
+                                    description: SampleSize is the number of requests
+                                      observed for this version
+                                    format: int32
+                                    type: integer
+                                  value:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    description: Value of the metric observed for
+                                      this version
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                required:
+                                - name
+                                type: object
+                              type: array
+                          required:
+                          - name
+                          - versions
+                          type: object
+                        type: array
+                      message:
+                        description: Message optional messsage for user
+                        type: string
+                      provenance:
+                        description: Provenance is source of data
+                        type: string
+                      timestamp:
+                        description: Timestamp is the timestamp when the controller
+                          got its data from an analytics engine
+                        format: date-time
+                        type: string
+                    required:
+                    - data
+                    - provenance
+                    - timestamp
+                    type: object
+                  versionAssessments:
+                    description: VersionAssessments
+                    properties:
+                      data:
+                        description: Data
+                        items:
+                          description: VersionAssessmentsData ..
+                          properties:
+                            name:
+                              description: Name of version
+                              type: string
+                            satisfiesObjectives:
+                              description: SatisfiesObjectives whether the objectives
+                                (in spec.criteria.objectives) are satisfied order
+                                is the same as expressed in spec.critieria.objectives
+                              items:
+                                type: boolean
+                              type: array
+                          required:
+                          - name
+                          - satisfiesObjectives
+                          type: object
+                        type: array
+                      message:
+                        description: Message optional messsage for user
+                        type: string
+                      provenance:
+                        description: Provenance is source of data
+                        type: string
+                      timestamp:
+                        description: Timestamp is the timestamp when the controller
+                          got its data from an analytics engine
+                        format: date-time
+                        type: string
+                    required:
+                    - data
+                    - provenance
+                    - timestamp
+                    type: object
+                  weights:
+                    description: Weights
+                    properties:
+                      data:
+                        description: Data
+                        items:
+                          description: WeightsData is the weight for a version
+                          properties:
+                            name:
+                              description: Name the name of a version
+                              type: string
+                            value:
+                              description: Value is the weight assigned to name
+                              format: int32
+                              type: integer
+                          required:
+                          - name
+                          - value
+                          type: object
+                        type: array
+                      message:
+                        description: Message optional messsage for user
+                        type: string
+                      provenance:
+                        description: Provenance is source of data
+                        type: string
+                      timestamp:
+                        description: Timestamp is the timestamp when the controller
+                          got its data from an analytics engine
+                        format: date-time
+                        type: string
+                    required:
+                    - data
+                    - provenance
+                    - timestamp
+                    type: object
+                  winnerAssessment:
+                    description: WinnerAssessment
+                    properties:
+                      data:
+                        description: Data
+                        properties:
+                          winner:
+                            description: Winner if found
+                            type: string
+                          winnerFound:
+                            description: WinnerFound whether or not a winning version
+                              has been identified
+                            type: boolean
+                        required:
+                        - winnerFound
+                        type: object
+                      message:
+                        description: Message optional messsage for user
+                        type: string
+                      provenance:
+                        description: Provenance is source of data
+                        type: string
+                      timestamp:
+                        description: Timestamp is the timestamp when the controller
+                          got its data from an analytics engine
+                        format: date-time
+                        type: string
+                    required:
+                    - data
+                    - provenance
+                    - timestamp
+                    type: object
+                type: object
               conditions:
                 description: List of conditions
                 items:
                   description: ExperimentCondition describes a condition of an experiment
                   properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the time when this condition
+                        is last updated
+                      format: date-time
+                      type: string
                     message:
                       description: Detailed explanation on the update
                       type: string
@@ -365,13 +629,15 @@ spec:
                     status:
                       description: Status of the condition
                       type: string
-                    transitionTime:
-                      description: TransitionTime is the time when this condition
-                        is last updated
-                      format: date-time
-                      type: string
                     type:
                       description: Type of the condition
+                      enum:
+                      - ExperimentInitialized
+                      - StartHandlerCompleted
+                      - FinishHandlerCompleted
+                      - MetricsRead
+                      - AnalysticsServiceNormal
+                      - ExperimentCompleted
                       type: string
                   required:
                   - status
@@ -379,13 +645,14 @@ spec:
                   type: object
                 type: array
               currentIteration:
-                description: CurrentIteration is the current iteration number
+                description: CurrentIteration is the current iteration number. It
+                  is undefined until the experiment starts.
                 format: int32
                 type: integer
               currentWeights:
                 description: CurrentWeights is currently applied traffic weights
                 items:
-                  description: VersionWeight is the weight for a version
+                  description: WeightsData is the weight for a version
                   properties:
                     name:
                       description: Name the name of a version
@@ -416,7 +683,7 @@ spec:
                 description: Message specifies message to show in the kubectl printer
                 type: string
               phase:
-                description: Phase marks the Phase the experiment is at
+                description: Phase marks the phase the experiment is at
                 type: string
               recommendedBaseline:
                 description: RecommendedBaseline is the version recommended as the
@@ -429,6 +696,8 @@ spec:
                   matches
                 format: date-time
                 type: string
+            required:
+            - phase
             type: object
         type: object
     served: true
