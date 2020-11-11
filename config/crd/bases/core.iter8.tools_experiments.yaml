@@ -122,11 +122,11 @@ spec:
                 properties:
                   interval:
                     description: Interval is the length of an interval in the experiment
-                      Default is 30s
+                      Default is 20s
                     type: string
                   maxIterations:
                     description: MaxIterations is the maximum number of iterations
-                      Default is 10
+                      Default is 15
                     format: int32
                     type: integer
                 type: object
@@ -199,6 +199,8 @@ spec:
                       description: MetricStatus defines the observed state of Metric
                       type: object
                   type: object
+                description: Metrics is a map of all the metrics used in the experiment
+                  It is inserted by the controller from the references in spec.criteria
                 type: object
               strategy:
                 description: Strategy identifies the type of experiment and its properties
@@ -210,19 +212,19 @@ spec:
                       handler). A special handler can be specified to handle error
                       cases.
                     properties:
-                      candidateFailure:
-                        description: CandidateFailure handler should implement any
-                          domain specific actions that should take place when an objective
-                          is violated. For now, this includes any rollback logic thast
-                          is needed. In the future, this function might be migrated
-                          into the controller itself.
-                        type: string
                       finish:
                         description: Finish handler implements any domain specific
                           actions that should take place at the end of an experiment.
                           For now, this includes any promotion logic that is needed
                           for a winning version. In the future, this function might
                           be migrated into the controller itself.
+                        type: string
+                      rollback:
+                        description: Rollback handler should implement any domain
+                          specific actions that should take place when an objective
+                          is violated. For now, this includes any rollback logic thast
+                          is needed. In the future, this function might be migrated
+                          into the controller itself.
                         type: string
                       start:
                         description: Start handler implmenents any domain specific
@@ -248,8 +250,11 @@ spec:
                     properties:
                       algorithm:
                         description: Algorithm is the traffic split algorithm Default
-                          will be "fixed_split" for experiment type "bluegreen", "progressive"
-                          otherwise.
+                          will be None for performance experiments, "fixed_split"
+                          for bluegreen experiments, and "progressive" otherwise
+                        enum:
+                        - fixed_split
+                        - progressive
                         type: string
                       maxCandidateWeight:
                         description: MaxCandidateWeight is the maximum percent of
@@ -268,9 +273,9 @@ spec:
                         type: integer
                       split:
                         description: Split used only by the fixed_split algorithm.
-                          If not specified, it will be uniform among baseline and
-                          all candidates. Will be ignored by all other algorithms
-                          (warning if possible!)
+                          For bluegreen experiments, it will default to [0, 100] Otherwise,
+                          it will default to a uniform split among baseline and candidates.
+                          Will be ignored by all other algorithms (warning if possible!)
                         items:
                           format: int32
                           type: integer
@@ -279,7 +284,11 @@ spec:
                 required:
                 - type
                 type: object
-                x-kubernetes-preserve-unknown-fields: true
+              target:
+                description: Target is used to enable concurrent experimentation Two
+                  experiments cannot be running concurrently for the same target.
+                minLength: 1
+                type: string
               versionInfo:
                 description: VersionInfo is information about versions that is typically
                   provided by the domain start handler
@@ -298,7 +307,7 @@ spec:
                         type: object
                       weightObjRef:
                         description: WeightObjRef is a reference to another kubernetes
-                          object WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
+                          object
                         properties:
                           apiVersion:
                             description: API version of the referent.
@@ -333,8 +342,6 @@ spec:
                           uid:
                             description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                             type: string
-                        required:
-                        - fieldPath
                         type: object
                     required:
                     - name
@@ -355,7 +362,7 @@ spec:
                           type: object
                         weightObjRef:
                           description: WeightObjRef is a reference to another kubernetes
-                            object WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
+                            object
                           properties:
                             apiVersion:
                               description: API version of the referent.
@@ -391,8 +398,6 @@ spec:
                             uid:
                               description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                               type: string
-                          required:
-                          - fieldPath
                           type: object
                       required:
                       - name
@@ -403,8 +408,8 @@ spec:
                 type: object
             required:
             - strategy
+            - target
             type: object
-            x-kubernetes-preserve-unknown-fields: true
           status:
             description: ExperimentStatus defines the observed state of Experiment
             properties:
@@ -439,7 +444,9 @@ spec:
                               description: Name of metric
                               type: string
                             versions:
-                              description: AggregatedMetricsVersionData
+                              description: Versions is aggregated metrics data for
+                                each version; there should be an entry for each version
+                                (baseline and all candidates)
                               items:
                                 description: AggregatedMetricsVersionData ..
                                 properties:
@@ -466,6 +473,7 @@ spec:
                                     description: SampleSize is the number of requests
                                       observed for this version
                                     format: int32
+                                    minimum: 0
                                     type: integer
                                   value:
                                     anyOf:
@@ -506,15 +514,17 @@ spec:
                       data:
                         description: Data
                         items:
-                          description: VersionAssessmentsData ..
+                          description: VersionAssessmentData indicates if the objectives
+                            are satisfied for a given version
                           properties:
                             name:
                               description: Name of version
                               type: string
                             satisfiesObjectives:
                               description: SatisfiesObjectives whether the objectives
-                                (in spec.criteria.objectives) are satisfied order
-                                is the same as expressed in spec.critieria.objectives
+                                (in spec.criteria.objectives) are satisfied There
+                                should have one entry for each objective in spec.criteria.objectives
+                                The order is the same as expressed in spec.critieria.objectives
                               items:
                                 type: boolean
                               type: array
@@ -545,7 +555,7 @@ spec:
                       data:
                         description: Data
                         items:
-                          description: WeightsData is the weight for a version
+                          description: WeightData is the weight for a version
                           properties:
                             name:
                               description: Name the name of a version
@@ -634,7 +644,7 @@ spec:
                       - StartHandlerCompleted
                       - FinishHandlerCompleted
                       - MetricsRead
-                      - AnalysticsServiceNormal
+                      - AnalyticsServiceNormal
                       - ExperimentCompleted
                       type: string
                   required:
@@ -650,7 +660,7 @@ spec:
               currentWeights:
                 description: CurrentWeights is currently applied traffic weights
                 items:
-                  description: WeightsData is the weight for a version
+                  description: WeightData is the weight for a version
                   properties:
                     name:
                       description: Name the name of a version
@@ -700,6 +710,8 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

@@ -7,12 +7,12 @@ spec:
   strategy:
     type: A/B
     weights:
-      maxCandidateTraffic: 50
-      maxCandidateTrafficIncrement: 5
+      maxCandidateWeight: 50
+      maxCandidateWeightIncrement: 5
       algorithm: progressive
-    duration:
-      interval: 20s
-      maxIterations: 8
+  duration:
+    interval: 20s
+    maxIterations: 8
   criteria:
     indicators:
     - 95th_percentile_tail_latency

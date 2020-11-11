@@ -9,7 +9,7 @@ spec:
     handlers:
       start: start
       finish: promote # other option is git_push
-      candidateFailure: none # other option is rollback
+      rollback: none # other option is rollback
     weights:
       maxCandidateWeight: 100 # default; units = percent; candidate weight never exceeds this value
       maxCandidateWeightIncrement: 5 # default; units = percent; candidate weight increment never exceeds this value

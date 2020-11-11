@@ -35,6 +35,18 @@ const (
 	ExperimentTypeBlueGreen ExperimentTypeType = "bluegreen"
 )
 
+// AlgorithmType identifies the algorithms that can be used
+// +kubebuilder:validation:Enum=fixed_split;progressive
+type AlgorithmType string
+
+const (
+	// AlgorithmTypeFixedSplit indicates the weight distribution algorithm is a fixed split
+	AlgorithmTypeFixedSplit AlgorithmType = "fixed_split"
+
+	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
+	AlgorithmTypeProgressive AlgorithmType = "progressive"
+)
+
 // PreferredDirectionType defines the valid values for reward.PreferredDirection
 // +kubebuilder:validation:Enum=higher;lower
 type PreferredDirectionType string
@@ -48,7 +60,7 @@ const (
 )
 
 // ExperimentConditionType limits conditions can be set by controller
-// +kubebuilder:validation:Enum:=ExperimentInitialized;StartHandlerCompleted;FinishHandlerCompleted;MetricsRead;AnalysticsServiceNormal;ExperimentCompleted
+// +kubebuilder:validation:Enum:=ExperimentInitialized;StartHandlerLaunched;StartHandlerCompleted;FinishHandlerLaunched;FinishHandlerCompleted;MetricsSynced;AnalyticsServiceNormal;ExperimentCompleted
 type ExperimentConditionType string
 
 const (
@@ -56,25 +68,33 @@ const (
 	// Unknown at start, set to False immediately; True when done
 	ExperimentConditionExperimentInitialized ExperimentConditionType = "ExperimentInitialized"
 
+	// ExperimentConditionStartHandlerLaunched ..
+	// False until launched, True thereafter
+	ExperimentConditionStartHandlerLaunched ExperimentConditionType = "StartHandlerLaunched"
+
 	// ExperimentConditionStartHandlerCompleted ..
-	// Unknown until called; False until completed; True when done
+	// False until completed; True when done
 	ExperimentConditionStartHandlerCompleted ExperimentConditionType = "StartHandlerCompleted"
+
+	// ExperimentConditionFinishHandlerLaunched ..
+	// False until launched; True thereafter
+	ExperimentConditionFinishHandlerLaunched ExperimentConditionType = "FinishHandlerLaunched"
 
 	// ExperimentConditionFinishHandlerCompleted ..
 	// Unknown until called; False until completed; True when done
 	ExperimentConditionFinishHandlerCompleted ExperimentConditionType = "FinishHandlerCompleted"
 
-	// ExperimentConditionMetricsRead ..
+	// ExperimentConditionMetricsSynced ..
 	// Unknown before reading metrics
 	// True when done; False if any error
 	// Future: go to paused state if can't find metric; resume when defined or experiment changed
-	ExperimentConditionMetricsRead ExperimentConditionType = "MetricsRead"
+	ExperimentConditionMetricsSynced ExperimentConditionType = "MetricsSynced"
 
-	// ExperimentConditionAnalysticsServiceNormal ..
+	// ExperimentConditionAnalyticsServiceNormal ..
 	// Unknown before any attemtps to call analytics service
 	// True while calls successful
 	// False if a call fails
-	ExperimentConditionAnalysticsServiceNormal ExperimentConditionType = "AnalysticsServiceNormal"
+	ExperimentConditionAnalyticsServiceNormal ExperimentConditionType = "AnalyticsServiceNormal"
 
 	// ExperimentConditionExperimentCompleted has status True when the experiment is completed
 	// Unknown initially, set to False during initialization
@@ -85,7 +105,9 @@ const (
 type PhaseType string
 
 const (
-	// PhasePaused indicates experiment is paused
+	// PhasePaused indicates experiment is paused; this occurs because a needed resource
+	// is not available. For example, another experiment may already be in progress using
+	// the same target.
 	PhasePaused PhaseType = "Paused"
 
 	// PhaseProgressing indicates experiment is progressing

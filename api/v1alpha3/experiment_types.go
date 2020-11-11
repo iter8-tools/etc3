@@ -21,8 +21,9 @@ import (
 )
 
 // Experiment is the Schema for the experiments API
-// +kubebuilder:object:root=true
 // +k8s:openapi-gen=true
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 type Experiment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -40,10 +41,14 @@ type ExperimentList struct {
 }
 
 // ExperimentSpec defines the desired state of Experiment
-// +kubebuilder:validation:XPreserveUnknownFields
 type ExperimentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Target is used to enable concurrent experimentation
+	// Two experiments cannot be running concurrently for the same target.
+	// +kubebuilder:validation:MinLength:=1
+	Target *string `json:"target"`
 
 	// VersionInfo is information about versions that is typically provided by the domain start handler
 	// +optional
@@ -62,6 +67,9 @@ type ExperimentSpec struct {
 	// +optional
 	Duration *Duration `json:"duration,omitempty"`
 
+	// Metrics is a map of all the metrics used in the experiment
+	// It is inserted by the controller from the references in spec.criteria
+	// +optional
 	Metrics *map[string]Metric `json:"metrics,omitempty"`
 }
 
@@ -87,24 +95,11 @@ type DomainVersion struct {
 
 	// WeightObjRef is a reference to another kubernetes object
 	// +optional
-	//WeightObjRef corev1.ObjectReference `json:"weightObjRef,omitempty"`
-	WeightObjRef *WeightObjRef `json:"weightObjRef,omitempty"`
-	// FieldPath is the path to the field that should in WeightObjRef to be updated to indicate a change in weight
-	//FieldPath *string `json:"fieldPath,omitempty"`
-}
-
-// WeightObjRef is a reference to another kubernetes object
-type WeightObjRef struct {
-	// WeightObjRef is a reference to another kubernetes object
-	corev1.ObjectReference `json:",inline"`
-
-	// FieldPath is the path to the field that should in WeightObjRef to be updated to indicate a change in weight
-	FieldPath string `json:"fieldPath"`
+	WeightObjRef *corev1.ObjectReference `json:"weightObjRef,omitempty"`
 }
 
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
-// +kubebuilder:validation:XPreserveUnknownFields
 type Strategy struct {
 	// ExperimentType is the type of the experiment, one of several predefined types
 	Type ExperimentTypeType `json:"type"`
@@ -137,11 +132,11 @@ type Handlers struct {
 	// +optional
 	Finish *string `json:"finish,omitempty"`
 
-	// CandidateFailure handler should implement any domain specific actions that should take place when an objective is violated.
+	// Rollback handler should implement any domain specific actions that should take place when an objective is violated.
 	// For now, this includes any rollback logic thast is needed.
 	// In the future, this function might be migrated into the controller itself.
 	// +optional
-	CandidateFailure *string `json:"candidateFailure"`
+	Rollback *string `json:"rollback"`
 }
 
 // Weights modify the behavior of the traffic split algorithm.
@@ -160,12 +155,15 @@ type Weights struct {
 	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty"`
 
 	// Algorithm is the traffic split algorithm
-	// Default will be "fixed_split" for experiment type "bluegreen", "progressive" otherwise.
+	// Default will be None for performance experiments,
+	// "fixed_split" for bluegreen experiments, and
+	// "progressive" otherwise
 	// +optional
-	Algorithm *string `json:"algorithm,omitempty"`
+	Algorithm *AlgorithmType `json:"algorithm,omitempty"`
 
 	// Split used only by the fixed_split algorithm.
-	// If not specified, it will be uniform among baseline and all candidates.
+	// For bluegreen experiments, it will default to [0, 100]
+	// Otherwise, it will default to a uniform split among baseline and candidates.
 	// Will be ignored by all other algorithms (warning if possible!)
 	// + optional
 	Split []int32 `json:"split,omitempty"`
@@ -230,12 +228,12 @@ type Objective struct {
 // Duration of an experiment
 type Duration struct {
 	// Interval is the length of an interval in the experiment
-	// Default is 30s
+	// Default is 20s
 	// +optional
 	Interval *string `json:"interval,omitempty"`
 
 	// MaxIterations is the maximum number of iterations
-	// Default is 10
+	// Default is 15
 	// +optional
 	MaxIterations *int32 `json:"maxIterations,omitempty"`
 }
@@ -274,7 +272,7 @@ type ExperimentStatus struct {
 
 	// CurrentWeights is currently applied traffic weights
 	// +optional
-	CurrentWeights []WeightsData `json:"currentWeights,omitempty"`
+	CurrentWeights []WeightData `json:"currentWeights,omitempty"`
 
 	// Analysis returned by the last analyis
 	// +optional
@@ -321,7 +319,7 @@ type Analysis struct {
 	WinnerAssessment *WinnerAssessmentAnalysis `json:"winnerAssessment,omitempty"`
 
 	// VersionAssessments
-	VersionAssessments *VersionAssessmentsAnalysis `json:"versionAssessments,omitempty"`
+	VersionAssessments *VersionAssessmentAnalysis `json:"versionAssessments,omitempty"`
 
 	// Weights
 	Weights *WeightsAnalysis `json:"weights,omitempty"`
@@ -348,12 +346,12 @@ type WinnerAssessmentAnalysis struct {
 	Data WinnerAssessmentData `json:"data"`
 }
 
-// VersionAssessmentsAnalysis ..
-type VersionAssessmentsAnalysis struct {
+// VersionAssessmentAnalysis ..
+type VersionAssessmentAnalysis struct {
 	AnalysisMetaData `json:",inline"`
 
 	// Data
-	Data []VersionAssessmentsData `json:"data"`
+	Data []VersionAssessmentData `json:"data"`
 }
 
 // WeightsAnalysis ..
@@ -361,7 +359,7 @@ type WeightsAnalysis struct {
 	AnalysisMetaData `json:",inline"`
 
 	// Data
-	Data []WeightsData `json:"data"`
+	Data []WeightData `json:"data"`
 }
 
 // AggregatedMetricsAnalysis ..
@@ -382,13 +380,14 @@ type WinnerAssessmentData struct {
 	Winner *string `json:"winner,omitempty"`
 }
 
-// VersionAssessmentsData ..
-type VersionAssessmentsData struct {
+// VersionAssessmentData indicates if the objectives are satisfied for a given version
+type VersionAssessmentData struct {
 	// Name of version
 	Name string `json:"name"`
 
 	// SatisfiesObjectives whether the objectives (in spec.criteria.objectives) are satisfied
-	// order is the same as expressed in spec.critieria.objectives
+	// There should have one entry for each objective in spec.criteria.objectives
+	// The order is the same as expressed in spec.critieria.objectives
 	SatisfiesObjectives []bool `json:"satisfiesObjectives"`
 }
 
@@ -405,12 +404,13 @@ type AggregatedMetricsData struct {
 	// +optional
 	Min *resource.Quantity `json:"min,omitempty"`
 
-	// AggregatedMetricsVersionData
+	// Versions is aggregated metrics data for each version; there should be an entry for each
+	// version (baseline and all candidates)
 	Versions []AggregatedMetricsVersionData `json:"versions"`
 }
 
-// WeightsData is the weight for a version
-type WeightsData struct {
+// WeightData is the weight for a version
+type WeightData struct {
 	// Name the name of a version
 	Name string `json:"name"`
 
@@ -436,6 +436,7 @@ type AggregatedMetricsVersionData struct {
 	Value *resource.Quantity `json:"value,omitempty"`
 
 	// SampleSize is the number of requests observed for this version
+	// +kubebuilder:validation:Minimum:=0
 	SampleSize *int32 `json:"sampleSize,omitempty"`
 }
 
