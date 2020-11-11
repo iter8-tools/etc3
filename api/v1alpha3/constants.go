@@ -14,25 +14,25 @@ limitations under the License.
 
 package v1alpha3
 
-// ExperimentTypeType identifies the type of experiment type
+// StrategyType identifies the type of experiment type
 // +kubebuilder:validation:Enum=canary;A/B;A/B/N;performance;bluegreen
-type ExperimentTypeType string
+type StrategyType string
 
 const (
-	// ExperimentTypeCanary indicates an experiment is a canary experiment
-	ExperimentTypeCanary ExperimentTypeType = "canary"
+	// StrategyTypeCanary indicates an experiment is a canary experiment
+	StrategyTypeCanary StrategyType = "canary"
 
-	// ExperimentTypeAB indicates an experiment is a A/B experiment
-	ExperimentTypeAB ExperimentTypeType = "A/B"
+	// StrategyTypeAB indicates an experiment is a A/B experiment
+	StrategyTypeAB StrategyType = "A/B"
 
-	// ExperimentTypeABN indicates an experiment is a A/B/n experiment
-	ExperimentTypeABN ExperimentTypeType = "A/B/N"
+	// StrategyTypeABN indicates an experiment is a A/B/n experiment
+	StrategyTypeABN StrategyType = "A/B/N"
 
-	// ExperimentTypePerformance indicates an experiment is a performance experiment
-	ExperimentTypePerformance ExperimentTypeType = "performance"
+	// StrategyTypePerformance indicates an experiment is a performance experiment
+	StrategyTypePerformance StrategyType = "performance"
 
-	// ExperimentTypeBlueGreen indicates an experiment is a blue-green experiment
-	ExperimentTypeBlueGreen ExperimentTypeType = "bluegreen"
+	// StrategyTypeBlueGreen indicates an experiment is a blue-green experiment
+	StrategyTypeBlueGreen StrategyType = "bluegreen"
 )
 
 // AlgorithmType identifies the algorithms that can be used

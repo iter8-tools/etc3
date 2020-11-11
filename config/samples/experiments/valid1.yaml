@@ -33,7 +33,7 @@ spec:
     - 95th-percentile-tail-latency
     - container-throttled-seconds-total
     objectives:
-    - metric: mean-latency
+    - metric: iter8/mean-latency
       upperLimit: 200
     - metric: error-rate
       upperLimit: "0.01"
@@ -43,10 +43,10 @@ spec:
 status: # subresource
   currentIteration: 1
   phase: progressing
-  initTimestamp: "2020-08-13T17:00:00Z"
-  startTimestamp: "2020-08-13T17:26:37Z"
-  lastUpdateTimestamp: "2020-08-13T18:05:49Z"
-  # endTimeTimestamp: "2020-08-13T18:05:49Z"; this will be available after experiment is ended
+  initTime: "2020-08-13T17:00:00Z"
+  startTime: "2020-08-13T17:26:37Z"
+  lastUpdateTime: "2020-08-13T18:05:49Z"
+  # endTimeTime: "2020-08-13T18:05:49Z"; this will be available after experiment is ended
   conditions:
   - type: StartHandlerCompleted
     status: "True"
@@ -58,7 +58,7 @@ status: # subresource
     lastTransitionTime: "2020-08-13T17:26:37Z"
     reason: ""
     message: ""
-  currentWeights:
+  currentWeightDistribution:
   - name: baseline
     value: 25
   - name: canary
@@ -68,42 +68,39 @@ status: # subresource
       provenance: https://iter8-analytics:9090
       timestamp: "2020-08-13T17:26:37Z"
       data:
-      - name: mean-latency
-        max: "10.0"
-        min: "2.0"
-        versions:
-        - name: baseline 
-          max: "8.0"
-          min: "5.0"
-          value: "6.89"
-          sampleSize: 40
-        - name: canary
-          max: "8.0"
-          min: "5.0"
-          value: "6.89"
-          sampleSize: 40
-      - name: request-count
-        max: "100"
-        min: "0"
-        versions:
-        - name: baseline 
-          max: "20"
-          min: "0"
-          value: "20"
-        - name: canary
+        iter8/mean-latency:
+          max: "10.0"
+          min: "2.0"
+          data:
+            baseline:
+              max: "8.0"
+              min: "5.0"
+              value: "6.89"
+              sampleSize: 40
+            canary:
+              max: "8.0"
+              min: "5.0"
+              value: "6.89"
+              sampleSize: 40
+        request-count:
           max: "100"
           min: "0"
-          value: "100"
+          data:
+            baseline: 
+              max: "20"
+              min: "0"
+              value: "20"
+            canary:
+              max: "100"
+              min: "0"
+              value: "100"
       message: "no requests for version x."
     versionAssessments:
       provenance: https://iter8-analytics:9090
       timestamp: "2020-08-13T17:26:37Z"
       data:
-      - name: baseline
-        satisfiesObjectives: [true, true]
-        # each entry in this array corresponds to entry in the objective
-      - name: canary
-        satisfiesObjectives: [true, false]
+        baseline: [true, true] # each entry in this array corresponds to entry in the objective
+        canary: [true, false]
       message: "some message here for kubectl printer"
     winnerAssessment:
       provenance: https://iter8-analytics:9090

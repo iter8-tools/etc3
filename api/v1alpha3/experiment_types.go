@@ -69,6 +69,7 @@ type ExperimentSpec struct {
 
 	// Metrics is a map of all the metrics used in the experiment
 	// It is inserted by the controller from the references in spec.criteria
+	// Key is the name as referenced in spec.criteria
 	// +optional
 	Metrics *map[string]Metric `json:"metrics,omitempty"`
 }
@@ -76,15 +77,15 @@ type ExperimentSpec struct {
 // VersionInfo is information about versions that is typically provided by the domain start handler.
 type VersionInfo struct {
 	// Baseline is baseline version
-	Baseline DomainVersion `json:"baseline"`
+	Baseline VersionDetail `json:"baseline"`
 
 	// Candidates is list candidate versions
 	// +optional
-	Candidates []DomainVersion `json:"candidates,omitempty"`
+	Candidates []VersionDetail `json:"candidates,omitempty"`
 }
 
-// DomainVersion ..
-type DomainVersion struct {
+// VersionDetail is detail about a single version
+type VersionDetail struct {
 
 	// Name is a name for the version
 	Name string `json:"name"`
@@ -101,8 +102,8 @@ type DomainVersion struct {
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
 type Strategy struct {
-	// ExperimentType is the type of the experiment, one of several predefined types
-	Type ExperimentTypeType `json:"type"`
+	// Type is the experiment strategy
+	Type StrategyType `json:"type"`
 
 	// Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
 	// Specifically at the start (start handler), at the end (finish handler).
@@ -136,14 +137,14 @@ type Handlers struct {
 	// For now, this includes any rollback logic thast is needed.
 	// In the future, this function might be migrated into the controller itself.
 	// +optional
-	Rollback *string `json:"rollback"`
+	Rollback *string `json:"rollback,omitempty"`
 }
 
 // Weights modify the behavior of the traffic split algorithm.
 type Weights struct {
 	// MaxCandidateWeight is the maximum percent of traffic that should be sent to the
 	// candidate versions during an experiment
-	// +kubebuilder:validation:Minimum:=1
+	// +kubebuilder:validation:Minimum:=0
 	// +kubebuilder:validation:Maximum:=100
 	// +optional
 	MaxCandidateWeight *int32 `json:"maxCandidateWeight,omitempty"`
@@ -161,12 +162,12 @@ type Weights struct {
 	// +optional
 	Algorithm *AlgorithmType `json:"algorithm,omitempty"`
 
-	// Split used only by the fixed_split algorithm.
+	// WeightDistribution used only by the fixed_split algorithm.
 	// For bluegreen experiments, it will default to [0, 100]
 	// Otherwise, it will default to a uniform split among baseline and candidates.
 	// Will be ignored by all other algorithms (warning if possible!)
 	// + optional
-	Split []int32 `json:"split,omitempty"`
+	WeightDistribution []int32 `json:"weightDistribution,omitempty"`
 }
 
 // Criteria is list of criteria to be evaluated throughout the experiment
@@ -228,7 +229,7 @@ type Objective struct {
 // Duration of an experiment
 type Duration struct {
 	// Interval is the length of an interval in the experiment
-	// Default is 20s
+	// Default is "20s"
 	// +optional
 	Interval *string `json:"interval,omitempty"`
 
@@ -244,23 +245,23 @@ type ExperimentStatus struct {
 	// +optional
 	Conditions []*ExperimentCondition `json:"conditions,omitempty"`
 
-	// InitTimestamp is the timestamp when the experiment is initialized
+	// InitTime is the times when the experiment is initialized (experiment CR is new)
 	// +optional
 	// matches example
-	InitTimestamp *metav1.Time `json:"initTimestamp,omitempty"`
+	InitTime *metav1.Time `json:"initTime,omitempty"`
 
-	// StartTimestamp is the timestamp when the experiment starts
+	// StartTime is the time when the experiment starts (after the start handler finished)
 	// +optional
 	// matches
-	StartTimestamp *metav1.Time `json:"startTimestamp,omitempty"`
+	StartTime *metav1.Time `json:"startTime,omitempty"`
 
-	// EndTimestamp is the timestamp when experiment completes
+	// EndTime is the time when experiment completes (after the finish handler completed)
 	// +optional
-	EndTimestamp *metav1.Time `json:"endTimestamp,omitempty"`
+	EndTime *metav1.Time `json:"endTime,omitempty"`
 
 	// LastUpdateTime is the last time iteration has been updated
 	// +optional
-	LastUpdateTimestamp *metav1.Time `json:"lastUpdateTimestamp,omitempty"`
+	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty"`
 
 	// CurrentIteration is the current iteration number.
 	// It is undefined until the experiment starts.
@@ -270,9 +271,9 @@ type ExperimentStatus struct {
 	// Phase marks the phase the experiment is at
 	Phase PhaseType `json:"phase"`
 
-	// CurrentWeights is currently applied traffic weights
+	// CurrentWeightDistribution is currently applied traffic weights
 	// +optional
-	CurrentWeights []WeightData `json:"currentWeights,omitempty"`
+	CurrentWeightDistribution []WeightData `json:"currentWeightDistribution,omitempty"`
 
 	// Analysis returned by the last analyis
 	// +optional
@@ -350,9 +351,14 @@ type WinnerAssessmentAnalysis struct {
 type VersionAssessmentAnalysis struct {
 	AnalysisMetaData `json:",inline"`
 
-	// Data
-	Data []VersionAssessmentData `json:"data"`
+	// Data is a map from version name to an array of indicators as to whether or not the objectives are satisfied
+	// The order of the array entries is the same as the order of objectives in spec.criteria.objectives
+	// There must be an entry for each objective
+	Data map[string]BooleanList `json:"data"`
 }
+
+// BooleanList ..
+type BooleanList []bool
 
 // WeightsAnalysis ..
 type WeightsAnalysis struct {
@@ -366,8 +372,8 @@ type WeightsAnalysis struct {
 type AggregatedMetricsAnalysis struct {
 	AnalysisMetaData `json:",inline"`
 
-	// Data
-	Data []AggregatedMetricsData `json:"data"`
+	// Data is a map from metric name to most recent metric data
+	Data map[string]AggregatedMetricsData `json:"data"`
 }
 
 // WinnerAssessmentData ..
@@ -380,22 +386,8 @@ type WinnerAssessmentData struct {
 	Winner *string `json:"winner,omitempty"`
 }
 
-// VersionAssessmentData indicates if the objectives are satisfied for a given version
-type VersionAssessmentData struct {
-	// Name of version
-	Name string `json:"name"`
-
-	// SatisfiesObjectives whether the objectives (in spec.criteria.objectives) are satisfied
-	// There should have one entry for each objective in spec.criteria.objectives
-	// The order is the same as expressed in spec.critieria.objectives
-	SatisfiesObjectives []bool `json:"satisfiesObjectives"`
-}
-
 // AggregatedMetricsData ..
 type AggregatedMetricsData struct {
-	// Name of metric
-	Name string `json:"name"`
-
 	// Max value observed for this metric across all versions
 	// +optional
 	Max *resource.Quantity `json:"max,omitempty"`
@@ -404,9 +396,8 @@ type AggregatedMetricsData struct {
 	// +optional
 	Min *resource.Quantity `json:"min,omitempty"`
 
-	// Versions is aggregated metrics data for each version; there should be an entry for each
-	// version (baseline and all candidates)
-	Versions []AggregatedMetricsVersionData `json:"versions"`
+	// Data is a map from version name to the most recent aggregated metrics data for that version
+	Data map[string]AggregatedMetricsVersionData `json:"data"`
 }
 
 // WeightData is the weight for a version
@@ -420,9 +411,6 @@ type WeightData struct {
 
 // AggregatedMetricsVersionData ..
 type AggregatedMetricsVersionData struct {
-	// Name of version
-	Name string `json:"name"`
-
 	// Max value observed for this metric for this version
 	// +optional
 	Max *resource.Quantity `json:"max,omitempty"`

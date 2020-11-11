@@ -122,7 +122,7 @@ spec:
                 properties:
                   interval:
                     description: Interval is the length of an interval in the experiment
-                      Default is 20s
+                      Default is "20s"
                     type: string
                   maxIterations:
                     description: MaxIterations is the maximum number of iterations
@@ -201,6 +201,7 @@ spec:
                   type: object
                 description: Metrics is a map of all the metrics used in the experiment
                   It is inserted by the controller from the references in spec.criteria
+                  Key is the name as referenced in spec.criteria
                 type: object
               strategy:
                 description: Strategy identifies the type of experiment and its properties
@@ -235,8 +236,7 @@ spec:
                         type: string
                     type: object
                   type:
-                    description: ExperimentType is the type of the experiment, one
-                      of several predefined types
+                    description: Type is the experiment strategy
                     enum:
                     - canary
                     - A/B
@@ -262,7 +262,7 @@ spec:
                           an experiment
                         format: int32
                         maximum: 100
-                        minimum: 1
+                        minimum: 0
                         type: integer
                       maxCandidateWeightIncrement:
                         description: MaxCandidateWeightIncrement the maximum permissible
@@ -271,11 +271,12 @@ spec:
                         maximum: 100
                         minimum: 0
                         type: integer
-                      split:
-                        description: Split used only by the fixed_split algorithm.
-                          For bluegreen experiments, it will default to [0, 100] Otherwise,
-                          it will default to a uniform split among baseline and candidates.
-                          Will be ignored by all other algorithms (warning if possible!)
+                      weightDistribution:
+                        description: WeightDistribution used only by the fixed_split
+                          algorithm. For bluegreen experiments, it will default to
+                          [0, 100] Otherwise, it will default to a uniform split among
+                          baseline and candidates. Will be ignored by all other algorithms
+                          (warning if possible!)
                         items:
                           format: int32
                           type: integer
@@ -349,7 +350,7 @@ spec:
                   candidates:
                     description: Candidates is list candidate versions
                     items:
-                      description: DomainVersion ..
+                      description: VersionDetail is detail about a single version
                       properties:
                         name:
                           description: Name is a name for the version
@@ -420,34 +421,11 @@ spec:
                     description: AggregatedMetrics
                     properties:
                       data:
-                        description: Data
-                        items:
+                        additionalProperties:
                           description: AggregatedMetricsData ..
                           properties:
-                            max:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              description: Max value observed for this metric across
-                                all versions
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            min:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              description: Min value observed for this metric across
-                                all versions
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            name:
-                              description: Name of metric
-                              type: string
-                            versions:
-                              description: Versions is aggregated metrics data for
-                                each version; there should be an entry for each version
-                                (baseline and all candidates)
-                              items:
+                            data:
+                              additionalProperties:
                                 description: AggregatedMetricsVersionData ..
                                 properties:
                                   max:
@@ -466,9 +444,6 @@ spec:
                                       for this version
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     x-kubernetes-int-or-string: true
-                                  name:
-                                    description: Name of version
-                                    type: string
                                   sampleSize:
                                     description: SampleSize is the number of requests
                                       observed for this version
@@ -483,15 +458,32 @@ spec:
                                       this version
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     x-kubernetes-int-or-string: true
-                                required:
-                                - name
                                 type: object
-                              type: array
+                              description: Data is a map from version name to the
+                                most recent aggregated metrics data for that version
+                              type: object
+                            max:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              description: Max value observed for this metric across
+                                all versions
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            min:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              description: Min value observed for this metric across
+                                all versions
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
                           required:
-                          - name
-                          - versions
+                          - data
                           type: object
-                        type: array
+                        description: Data is a map from metric name to most recent
+                          metric data
+                        type: object
                       message:
                         description: Message optional messsage for user
                         type: string
@@ -512,27 +504,17 @@ spec:
                     description: VersionAssessments
                     properties:
                       data:
-                        description: Data
-                        items:
-                          description: VersionAssessmentData indicates if the objectives
-                            are satisfied for a given version
-                          properties:
-                            name:
-                              description: Name of version
-                              type: string
-                            satisfiesObjectives:
-                              description: SatisfiesObjectives whether the objectives
-                                (in spec.criteria.objectives) are satisfied There
-                                should have one entry for each objective in spec.criteria.objectives
-                                The order is the same as expressed in spec.critieria.objectives
-                              items:
-                                type: boolean
-                              type: array
-                          required:
-                          - name
-                          - satisfiesObjectives
-                          type: object
-                        type: array
+                        additionalProperties:
+                          description: BooleanList ..
+                          items:
+                            type: boolean
+                          type: array
+                        description: Data is a map from version name to an array of
+                          indicators as to whether or not the objectives are satisfied
+                          The order of the array entries is the same as the order
+                          of objectives in spec.criteria.objectives There must be
+                          an entry for each objective
+                        type: object
                       message:
                         description: Message optional messsage for user
                         type: string
@@ -641,9 +623,11 @@ spec:
                       description: Type of the condition
                       enum:
                       - ExperimentInitialized
+                      - StartHandlerLaunched
                       - StartHandlerCompleted
+                      - FinishHandlerLaunched
                       - FinishHandlerCompleted
-                      - MetricsRead
+                      - MetricsSynced
                       - AnalyticsServiceNormal
                       - ExperimentCompleted
                       type: string
@@ -657,8 +641,9 @@ spec:
                   is undefined until the experiment starts.
                 format: int32
                 type: integer
-              currentWeights:
-                description: CurrentWeights is currently applied traffic weights
+              currentWeightDistribution:
+                description: CurrentWeightDistribution is currently applied traffic
+                  weights
                 items:
                   description: WeightData is the weight for a version
                   properties:
@@ -674,16 +659,17 @@ spec:
                   - value
                   type: object
                 type: array
-              endTimestamp:
-                description: EndTimestamp is the timestamp when experiment completes
+              endTime:
+                description: EndTime is the time when experiment completes (after
+                  the finish handler completed)
                 format: date-time
                 type: string
-              initTimestamp:
-                description: InitTimestamp is the timestamp when the experiment is
-                  initialized matches example
+              initTime:
+                description: InitTime is the times when the experiment is initialized
+                  (experiment CR is new) matches example
                 format: date-time
                 type: string
-              lastUpdateTimestamp:
+              lastUpdateTime:
                 description: LastUpdateTime is the last time iteration has been updated
                 format: date-time
                 type: string
@@ -699,9 +685,9 @@ spec:
                   (status.analysis[].data.winner) or to the current baseline in the
                   case of a rollback.
                 type: string
-              startTimestamp:
-                description: StartTimestamp is the timestamp when the experiment starts
-                  matches
+              startTime:
+                description: StartTime is the time when the experiment starts (after
+                  the start handler finished) matches
                 format: date-time
                 type: string
             required:
