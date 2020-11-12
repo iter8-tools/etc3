@@ -24,7 +24,7 @@ import (
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +groupName=iter8.tools
-// +   kubebuilder   :   subresource   :   status
+// +kubebuilder:subresource:status
 type Experiment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
