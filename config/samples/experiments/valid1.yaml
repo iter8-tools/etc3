@@ -5,7 +5,7 @@ metadata:
 spec:
   target: mymodelnamespace/sklearn-iris # namespaced name of the inference service
   strategy:
-    type: canary
+    type: Canary
     handlers:
       start: start
       finish: promote # other option is git_push
@@ -13,7 +13,7 @@ spec:
     weights:
       maxCandidateWeight: 100 # default; units = percent; candidate weight never exceeds this value
       maxCandidateWeightIncrement: 5 # default; units = percent; candidate weight increment never exceeds this value
-      algorithm: progressive # default
+      algorithm: Progressive # default
   versionInfo:
     baseline:
       name: default
@@ -28,7 +28,7 @@ spec:
         namespace: modelnamespaces
         fieldPath: spec.canaryTrafficPercent
   criteria:
-    requestCount: request-count-metric
+    requestCount: request-count
     indicators:
     - 95th-percentile-tail-latency
     - container-throttled-seconds-total
@@ -38,8 +38,21 @@ spec:
     - metric: error-rate
       upperLimit: "0.01"
   duration:
-    interval: 20s
+    intervalSeconds: 20
     maxIterations: 8
+  metrics:
+    - name: request-count
+      metricObj: 
+        apiVersion: core.iter8.tools/v1alpha3
+        kind: Metric
+        metadata:
+          name: request-count
+        spec:
+          params:
+            query: sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)
+          description: Number of requests
+          type: counter
+          provider: prometheus
 status: # subresource
   currentIteration: 1
   phase: progressing

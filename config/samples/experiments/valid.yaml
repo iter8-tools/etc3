@@ -9,17 +9,17 @@ spec:
     weights:
       maxCandidateWeight: 50
       maxCandidateWeightIncrement: 5
-      algorithm: progressive
+      algorithm: Progressive
   duration:
-    interval: 20s
+    intervalSeconds: 20
     maxIterations: 8
   criteria:
     indicators:
-    - 95th_percentile_tail_latency
-    - container_throttled_seconds_total
+    - 95th-percentile-tail-latency
+    - container-throttled-seconds-total
     objectives:
-    - metric: mean_latency
+    - metric: mean-latency
       upperLimit: 200
-    - metric: error_rate
+    - metric: error-rate
       upperLimit: 100m
       # rollback_on_failure: true # default

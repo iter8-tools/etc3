@@ -15,12 +15,12 @@ limitations under the License.
 package v2alpha1
 
 // StrategyType identifies the type of experiment type
-// +kubebuilder:validation:Enum=canary;A/B;A/B/N;performance;bluegreen
+// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Performance;BlueGreen
 type StrategyType string
 
 const (
 	// StrategyTypeCanary indicates an experiment is a canary experiment
-	StrategyTypeCanary StrategyType = "canary"
+	StrategyTypeCanary StrategyType = "Canary"
 
 	// StrategyTypeAB indicates an experiment is a A/B experiment
 	StrategyTypeAB StrategyType = "A/B"
@@ -29,34 +29,34 @@ const (
 	StrategyTypeABN StrategyType = "A/B/N"
 
 	// StrategyTypePerformance indicates an experiment is a performance experiment
-	StrategyTypePerformance StrategyType = "performance"
+	StrategyTypePerformance StrategyType = "Performance"
 
 	// StrategyTypeBlueGreen indicates an experiment is a blue-green experiment
-	StrategyTypeBlueGreen StrategyType = "bluegreen"
+	StrategyTypeBlueGreen StrategyType = "BlueGreen"
 )
 
 // AlgorithmType identifies the algorithms that can be used
-// +kubebuilder:validation:Enum=fixed_split;progressive
+// +kubebuilder:validation:Enum=FixedSplit;Progressive
 type AlgorithmType string
 
 const (
 	// AlgorithmTypeFixedSplit indicates the weight distribution algorithm is a fixed split
-	AlgorithmTypeFixedSplit AlgorithmType = "fixed_split"
+	AlgorithmTypeFixedSplit AlgorithmType = "FixedSplit"
 
 	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
-	AlgorithmTypeProgressive AlgorithmType = "progressive"
+	AlgorithmTypeProgressive AlgorithmType = "Progressive"
 )
 
 // PreferredDirectionType defines the valid values for reward.PreferredDirection
-// +kubebuilder:validation:Enum=higher;lower
+// +kubebuilder:validation:Enum=High;Low
 type PreferredDirectionType string
 
 const (
 	// PreferredDirectionHigher indicates that a higher value is "better"
-	PreferredDirectionHigher PreferredDirectionType = "higher"
+	PreferredDirectionHigher PreferredDirectionType = "High"
 
 	// PreferredDirectionLower indicates that a lower value is "better"
-	PreferredDirectionLower PreferredDirectionType = "lower"
+	PreferredDirectionLower PreferredDirectionType = "Low"
 )
 
 // ExperimentConditionType limits conditions can be set by controller

@@ -109,8 +109,8 @@ spec:
                           or lower values of the reward metric are preferred valid
                           values are "higher" and "lower"
                         enum:
-                        - higher
-                        - lower
+                        - High
+                        - Low
                         type: string
                     required:
                     - metric
@@ -120,10 +120,11 @@ spec:
               duration:
                 description: Duration describes how long the experiment will last.
                 properties:
-                  interval:
-                    description: Interval is the length of an interval in the experiment
-                      Default is "20s"
-                    type: string
+                  intervalSeconds:
+                    description: IntervalSeconds is the length of an interval of the
+                      experiment in seconds Default is 20 (seconds)
+                    format: int32
+                    type: integer
                   maxIterations:
                     description: MaxIterations is the maximum number of iterations
                       Default is 15
@@ -131,75 +132,86 @@ spec:
                     type: integer
                 type: object
               metrics:
-                additionalProperties:
-                  description: Metric is the Schema for the metrics API
-                  properties:
-                    apiVersion:
-                      description: 'APIVersion defines the versioned schema of this
-                        representation of an object. Servers should convert recognized
-                        schemas to the latest internal value, and may reject unrecognized
-                        values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-                      type: string
-                    kind:
-                      description: 'Kind is a string value representing the REST resource
-                        this object represents. Servers may infer this from the endpoint
-                        the client submits requests to. Cannot be updated. In CamelCase.
-                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                      type: string
-                    metadata:
-                      type: object
-                    spec:
-                      description: MetricSpec defines the desired state of Metric
-                      properties:
-                        description:
-                          description: Text description of the metric
-                          type: string
-                        params:
-                          additionalProperties:
-                            type: string
-                          description: Params are key/value pairs used to construct
-                            the REST query to the metrics backend
-                          type: object
-                        provider:
-                          description: Provider identifies the metric backend including
-                            its authentication properties and its unmarshaller
-                          minLength: 1
-                          type: string
-                        sample_size:
-                          description: SampleSize is a reference to a counter metric
-                            resource. It needs to indicte the number of data points
-                            over which this metric is computed.
-                          properties:
-                            name:
-                              description: Name is the name of the metric
-                              minLength: 1
-                              type: string
-                            namespace:
-                              description: Namespace is the namespace where the metric
-                                is defined If not provided, it is assumed to be in
-                                the same namespace as the referrer.
-                              type: string
-                          required:
-                          - name
-                          type: object
-                        type:
-                          default: gauge
-                          description: Type of the metric
-                          enum:
-                          - counter
-                          - gauge
-                          type: string
-                        units:
-                          description: Units used for display only
-                          type: string
-                      required:
-                      - provider
-                      type: object
-                  type: object
-                description: Metrics is a map of all the metrics used in the experiment
+                description: Metrics is a list of all the metrics used in the experiment
                   It is inserted by the controller from the references in spec.criteria
                   Key is the name as referenced in spec.criteria
-                type: object
+                items:
+                  description: MetricInfo is name/value pair; entry for list of metrics
+                  properties:
+                    metricObj:
+                      description: MetricObj is the referenced metric
+                      properties:
+                        apiVersion:
+                          description: 'APIVersion defines the versioned schema of
+                            this representation of an object. Servers should convert
+                            recognized schemas to the latest internal value, and may
+                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                          type: string
+                        kind:
+                          description: 'Kind is a string value representing the REST
+                            resource this object represents. Servers may infer this
+                            from the endpoint the client submits requests to. Cannot
+                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          type: string
+                        metadata:
+                          type: object
+                        spec:
+                          description: MetricSpec defines the desired state of Metric
+                          properties:
+                            description:
+                              description: Text description of the metric
+                              type: string
+                            params:
+                              additionalProperties:
+                                type: string
+                              description: Params are key/value pairs used to construct
+                                the REST query to the metrics backend
+                              type: object
+                            provider:
+                              description: Provider identifies the metric backend
+                                including its authentication properties and its unmarshaller
+                              minLength: 1
+                              type: string
+                            sample_size:
+                              description: SampleSize is a reference to a counter
+                                metric resource. It needs to indicte the number of
+                                data points over which this metric is computed.
+                              properties:
+                                name:
+                                  description: Name is the name of the metric
+                                  minLength: 1
+                                  type: string
+                                namespace:
+                                  description: Namespace is the namespace where the
+                                    metric is defined If not provided, it is assumed
+                                    to be in the same namespace as the referrer.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type:
+                              default: gauge
+                              description: Type of the metric
+                              enum:
+                              - counter
+                              - gauge
+                              type: string
+                            units:
+                              description: Units used for display only
+                              type: string
+                          required:
+                          - provider
+                          type: object
+                      type: object
+                    name:
+                      description: Name is identifier for metric.  Can be of the form
+                        "name" or "namespace/name"
+                      type: string
+                  required:
+                  - metricObj
+                  - name
+                  type: object
+                type: array
               strategy:
                 description: Strategy identifies the type of experiment and its properties
                 properties:
@@ -235,11 +247,11 @@ spec:
                   type:
                     description: Type is the experiment strategy
                     enum:
-                    - canary
+                    - Canary
                     - A/B
                     - A/B/N
-                    - performance
-                    - bluegreen
+                    - Performance
+                    - BlueGreen
                     type: string
                   weights:
                     description: Weights modify the behavior of the traffic split
@@ -250,8 +262,8 @@ spec:
                           will be None for performance experiments, "fixed_split"
                           for bluegreen experiments, and "progressive" otherwise
                         enum:
-                        - fixed_split
-                        - progressive
+                        - FixedSplit
+                        - Progressive
                         type: string
                       maxCandidateWeight:
                         description: MaxCandidateWeight is the maximum percent of

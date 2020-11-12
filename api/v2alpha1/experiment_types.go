@@ -68,11 +68,20 @@ type ExperimentSpec struct {
 	// +optional
 	Duration *Duration `json:"duration,omitempty"`
 
-	// Metrics is a map of all the metrics used in the experiment
+	// Metrics is a list of all the metrics used in the experiment
 	// It is inserted by the controller from the references in spec.criteria
 	// Key is the name as referenced in spec.criteria
 	// +optional
-	Metrics *map[string]Metric `json:"metrics,omitempty"`
+	Metrics []MetricInfo `json:"metrics,omitempty"`
+}
+
+// MetricInfo is name/value pair; entry for list of metrics
+type MetricInfo struct {
+	// Name is identifier for metric.  Can be of the form "name" or "namespace/name"
+	Name string `json:"name"`
+
+	// MetricObj is the referenced metric
+	MetricObj Metric `json:"metricObj"`
 }
 
 // VersionInfo is information about versions that is typically provided by the domain start handler.
@@ -229,10 +238,10 @@ type Objective struct {
 
 // Duration of an experiment
 type Duration struct {
-	// Interval is the length of an interval in the experiment
-	// Default is "20s"
+	// IntervalSeconds is the length of an interval of the experiment in seconds
+	// Default is 20 (seconds)
 	// +optional
-	Interval *string `json:"interval,omitempty"`
+	IntervalSeconds *int32 `json:"intervalSeconds,omitempty"`
 
 	// MaxIterations is the maximum number of iterations
 	// Default is 15
