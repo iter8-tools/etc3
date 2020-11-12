@@ -1,10 +1,10 @@
 domain: iter8.tools
 repo: github.com/iter8-tools/etc3
 resources:
-- group: core
+- group: 
   kind: Experiment
   version: v2alpha1
-- group: core
+- group: 
   kind: Metric
   version: v2alpha1
 version: "2"

@@ -3,7 +3,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: experiments.core.iter8.tools
+  name: experiments.iter8.tools
 spec:
   conversion:
     strategy: Webhook

@@ -1,5 +1,5 @@
 # Valid -- counter
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: example-counter
@@ -12,7 +12,7 @@ spec:
   provider: prometheus
 ---
 # Valid - gauge, more params, another provider, no description, no units
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: example-gauge-plus
@@ -24,7 +24,7 @@ spec:
   provider: provider
 ---
 # Valid - sample size
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: example-samplesize-ns
@@ -39,7 +39,7 @@ spec:
     name: bar
 ---
 # Valid - sample size without a namespace
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: example-samplesize-no-ns
@@ -52,7 +52,7 @@ spec:
   sample_size:
     name: bar
 ---
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: valid-multiline-param
@@ -65,7 +65,7 @@ spec:
   type: gauge
   provider: prometheus
 ---
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: valid-long-param
@@ -76,7 +76,7 @@ spec:
   type: gauge
   provider: prometheus
 ---
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: valid-no-params
@@ -85,7 +85,7 @@ spec:
   type: gauge
   provider: provider
 ---
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: valid-default-type

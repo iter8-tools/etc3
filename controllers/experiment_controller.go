@@ -34,8 +34,8 @@ type ExperimentReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=core.iter8.tools,resources=experiments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core.iter8.tools,resources=experiments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=iter8.tools,resources=experiments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=iter8.tools,resources=experiments/status,verbs=get;update;patch
 
 func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

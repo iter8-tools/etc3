@@ -23,6 +23,7 @@ import (
 // Experiment is the Schema for the experiments API
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
+// +groupName=iter8.tools
 // +   kubebuilder   :   subresource   :   status
 type Experiment struct {
 	metav1.TypeMeta   `json:",inline"`

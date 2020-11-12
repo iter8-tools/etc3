@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: experiments.core.iter8.tools
+  name: experiments.iter8.tools
 spec:
-  group: core.iter8.tools
+  group: iter8.tools
   names:
     kind: Experiment
     listKind: ExperimentList

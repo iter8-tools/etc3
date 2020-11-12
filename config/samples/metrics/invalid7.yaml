@@ -1,4 +1,4 @@
-apiVersion: core.iter8.tools/v2alpha1
+apiVersion: iter8.tools/v2alpha1
 kind: Metric
 metadata:
   name: invalid-extra-field
