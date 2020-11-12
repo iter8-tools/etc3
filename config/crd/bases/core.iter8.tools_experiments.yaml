@@ -195,9 +195,6 @@ spec:
                       required:
                       - provider
                       type: object
-                    status:
-                      description: MetricStatus defines the observed state of Metric
-                      type: object
                   type: object
                 description: Metrics is a map of all the metrics used in the experiment
                   It is inserted by the controller from the references in spec.criteria
@@ -696,8 +693,6 @@ spec:
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}
 status:
   acceptedNames:
     kind: ""

@@ -87,9 +87,6 @@ spec:
             required:
             - provider
             type: object
-          status:
-            description: MetricStatus defines the observed state of Metric
-            type: object
         type: object
     served: true
     storage: true

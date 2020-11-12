@@ -92,8 +92,11 @@ type Metric struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MetricSpec   `json:"spec,omitempty"`
-	Status MetricStatus `json:"status,omitempty"`
+	Spec MetricSpec `json:"spec,omitempty"`
+	// metrics are fixed; there is no need for a status
+	// cf. https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
+	// See section: Objects > Spec and Status
+	// Status MetricStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
