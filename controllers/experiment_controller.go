@@ -24,7 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	corev2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 )
 
 // ExperimentReconciler reconciles a Experiment object
@@ -48,6 +48,6 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&corev2alpha1.Experiment{}).
+		For(&v2alpha1.Experiment{}).
 		Complete(r)
 }
