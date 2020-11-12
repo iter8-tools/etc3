@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha3
+package v2alpha1
 
 // StrategyType identifies the type of experiment type
 // +kubebuilder:validation:Enum=canary;A/B;A/B/N;performance;bluegreen
