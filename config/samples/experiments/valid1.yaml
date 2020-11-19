@@ -9,10 +9,11 @@ spec:
     handlers:
       start: start
       finish: promote # other option is git_push
-      rollback: none # other option is rollback
+      # rollback:     # not applicable; but could 
+      failure: promote # could do something else
     weights:
       maxCandidateWeight: 100 # default; units = percent; candidate weight never exceeds this value
-      maxCandidateWeightIncrement: 5 # default; units = percent; candidate weight increment never exceeds this value
+      maxCandidateWeightIncrement: 10 # default; units = percent; candidate weight increment never exceeds this value
       algorithm: Progressive # default
   versionInfo:
     baseline:
@@ -33,14 +34,28 @@ spec:
     - 95th-percentile-tail-latency
     - container-throttled-seconds-total
     objectives:
-    - metric: iter8/mean-latency
-      upperLimit: 200
+    - metric: default/mean-latency
+      upperLimit: 1000
     - metric: error-rate
       upperLimit: "0.01"
   duration:
     intervalSeconds: 20
     maxIterations: 8
   metrics:
+    - name: error-rate
+      metricObj:
+        apiVersion: core.iter8.tools/v1alpha3
+        kind: Metric
+        metadata:
+          name: error-rate
+        spec:
+          description: Fraction of requests with error responses
+          params:
+            query: (sum(increase(revision_app_request_latencies_count{response_code_class!='2xx',service_name=~'.*$name'}[$interval])) or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))
+          type: gauge
+          sample_size: 
+            name: request-count
+          provider: prometheus
     - name: request-count
       metricObj: 
         apiVersion: core.iter8.tools/v1alpha3
@@ -53,8 +68,52 @@ spec:
           description: Number of requests
           type: counter
           provider: prometheus
+    - name: container-throttled-seconds-total
+      metricObj:
+          apiVersion: core.iter8.tools/v1alpha3
+          kind: Metric
+          metadata:
+            name: container-throttled-seconds-total
+          spec:
+            params:
+              query: container_cpu_cfs_throttled_seconds_total{container='kfserving-container', id=~'/kubepods.*', pod=~'.*$name.*'} or on() vector(0)
+            description: Total time duration the container has been throttled
+            units: seconds
+            type: counter
+            provider: prometheus
+    - name: default/mean-latency
+      metricObj:
+        apiVersion: core.iter8.tools/v1alpha3
+        kind: Metric
+        metadata:
+          name: mean-latency
+        spec:
+          description: Mean latency
+          units: milliseconds
+          params:
+            query: (sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))
+          type: gauge
+          sample_size: 
+            name: request-count
+          provider: prometheus
+    - name: 95th-percentile-tail-latency
+      metricObj:
+        apiVersion: core.iter8.tools/v1alpha3
+        kind: Metric
+        metadata:
+          name: 95th-percentile-tail-latency
+        spec:
+          description: 95th percentile tail latency
+          units: milliseconds
+          params:
+            query: query=histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval]))
+              by (le))
+          type: gauge
+          sample_size: 
+            name: request-count
+          provider: prometheus
 status: # subresource
-  currentIteration: 1
+  completedIterations: 0
   phase: progressing
   initTime: "2020-08-13T17:00:00Z"
   startTime: "2020-08-13T17:26:37Z"
