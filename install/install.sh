@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install iter8 in one line; both the controller and the  analytics engine.
+# Install iter8 2.0 in one line; both the controller and the analytics engine.
 #set -x
 
 install() {
