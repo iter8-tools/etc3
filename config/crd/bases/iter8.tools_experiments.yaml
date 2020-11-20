@@ -203,6 +203,7 @@ spec:
                           - provider
                           type: object
                       type: object
+                      x-kubernetes-embedded-resource: true
                     name:
                       description: Name is identifier for metric.  Can be of the form
                         "name" or "namespace/name"
@@ -222,6 +223,10 @@ spec:
                       handler). A special handler can be specified to handle error
                       cases.
                     properties:
+                      failure:
+                        description: Failure handler should implement any domain specific
+                          actions that should take place when an experiment fails.
+                        type: string
                       finish:
                         description: Finish handler implements any domain specific
                           actions that should take place at the end of an experiment.
@@ -232,9 +237,8 @@ spec:
                       rollback:
                         description: Rollback handler should implement any domain
                           specific actions that should take place when an objective
-                          is violated. For now, this includes any rollback logic thast
-                          is needed. In the future, this function might be migrated
-                          into the controller itself.
+                          is violated. This behavior is specific to the version with
+                          the failing objective
                         type: string
                       start:
                         description: Start handler implmenents any domain specific
@@ -609,6 +613,11 @@ spec:
                     - timestamp
                     type: object
                 type: object
+              completedIterations:
+                description: CurrentIteration is the current iteration number. It
+                  is undefined until the experiment starts.
+                format: int32
+                type: integer
               conditions:
                 description: List of conditions
                 items:
@@ -636,6 +645,10 @@ spec:
                       - StartHandlerCompleted
                       - FinishHandlerLaunched
                       - FinishHandlerCompleted
+                      - RollbackHandlerLaunched
+                      - RollbackHandlerCompleted
+                      - FailureHandlerLaunched
+                      - FailureHandlerCompleted
                       - MetricsSynced
                       - AnalyticsServiceNormal
                       - ExperimentCompleted
@@ -645,11 +658,6 @@ spec:
                   - type
                   type: object
                 type: array
-              currentIteration:
-                description: CurrentIteration is the current iteration number. It
-                  is undefined until the experiment starts.
-                format: int32
-                type: integer
               currentWeightDistribution:
                 description: CurrentWeightDistribution is currently applied traffic
                   weights

@@ -81,6 +81,7 @@ type MetricInfo struct {
 	Name string `json:"name"`
 
 	// MetricObj is the referenced metric
+	// +kubebuilder:validation:EmbeddedResource
 	MetricObj Metric `json:"metricObj"`
 }
 
@@ -144,10 +145,13 @@ type Handlers struct {
 	Finish *string `json:"finish,omitempty"`
 
 	// Rollback handler should implement any domain specific actions that should take place when an objective is violated.
-	// For now, this includes any rollback logic thast is needed.
-	// In the future, this function might be migrated into the controller itself.
+	// This behavior is specific to the version with the failing objective
 	// +optional
 	Rollback *string `json:"rollback,omitempty"`
+
+	// Failure handler should implement any domain specific actions that should take place when an experiment fails.
+	// +optional
+	Failure *string `json:"failure,omitempty"`
 }
 
 // Weights modify the behavior of the traffic split algorithm.
@@ -276,7 +280,7 @@ type ExperimentStatus struct {
 	// CurrentIteration is the current iteration number.
 	// It is undefined until the experiment starts.
 	// +optional
-	CurrentIteration *int32 `json:"currentIteration,omitempty"`
+	CompletedIterations *int32 `json:"completedIterations,omitempty"`
 
 	// Phase marks the phase the experiment is at
 	Phase PhaseType `json:"phase"`

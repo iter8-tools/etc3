@@ -413,8 +413,8 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 		in, out := &in.LastUpdateTime, &out.LastUpdateTime
 		*out = (*in).DeepCopy()
 	}
-	if in.CurrentIteration != nil {
-		in, out := &in.CurrentIteration, &out.CurrentIteration
+	if in.CompletedIterations != nil {
+		in, out := &in.CompletedIterations, &out.CompletedIterations
 		*out = new(int32)
 		**out = **in
 	}
@@ -465,6 +465,11 @@ func (in *Handlers) DeepCopyInto(out *Handlers) {
 	}
 	if in.Rollback != nil {
 		in, out := &in.Rollback, &out.Rollback
+		*out = new(string)
+		**out = **in
+	}
+	if in.Failure != nil {
+		in, out := &in.Failure, &out.Failure
 		*out = new(string)
 		**out = **in
 	}

@@ -60,7 +60,7 @@ const (
 )
 
 // ExperimentConditionType limits conditions can be set by controller
-// +kubebuilder:validation:Enum:=ExperimentInitialized;StartHandlerLaunched;StartHandlerCompleted;FinishHandlerLaunched;FinishHandlerCompleted;MetricsSynced;AnalyticsServiceNormal;ExperimentCompleted
+// +kubebuilder:validation:Enum:=ExperimentInitialized;StartHandlerLaunched;StartHandlerCompleted;FinishHandlerLaunched;FinishHandlerCompleted;RollbackHandlerLaunched;RollbackHandlerCompleted;FailureHandlerLaunched;FailureHandlerCompleted;MetricsSynced;AnalyticsServiceNormal;ExperimentCompleted
 type ExperimentConditionType string
 
 const (
@@ -83,6 +83,22 @@ const (
 	// ExperimentConditionFinishHandlerCompleted ..
 	// Unknown until called; False until completed; True when done
 	ExperimentConditionFinishHandlerCompleted ExperimentConditionType = "FinishHandlerCompleted"
+
+	// ExperimentConditionRollbackHandlerLaunched ..
+	// False until launched; True thereafter
+	ExperimentConditionRollbackHandlerLaunched ExperimentConditionType = "RollbackHandlerLaunched"
+
+	// ExperimentConditionRollbackHandlerCompleted ..
+	// Unknown until called; False until completed; True when done
+	ExperimentConditionRollbackHandlerCompleted ExperimentConditionType = "RollbackHandlerCompleted"
+
+	// ExperimentConditionFailureHandlerLaunched ..
+	// False until launched; True thereafter
+	ExperimentConditionFailureHandlerLaunched ExperimentConditionType = "FailureHandlerLaunched"
+
+	// ExperimentConditionFailureHandlerCompleted ..
+	// Unknown until called; False until completed; True when done
+	ExperimentConditionFailureHandlerCompleted ExperimentConditionType = "FailureHandlerCompleted"
 
 	// ExperimentConditionMetricsSynced ..
 	// Unknown before reading metrics
@@ -120,6 +136,8 @@ const (
 // A set of reason setting the experiment condition status
 // TBD
 const (
-	ReasonIterationUpdate     = "IterationUpdate"
-	ReasonExperimentCompleted = "ExperimentCompleted"
+	ReasonAnalyticsServiceError   = "AnalyticsServiceError"
+	ReasonAnalyticsServiceRunning = "AnalyticServiceRunning"
+	ReasonIterationUpdate         = "IterationUpdate"
+	ReasonExperimentCompleted     = "ExperimentCompleted"
 )
