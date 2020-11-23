@@ -12,6 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// experiment_types.go - go model for experiment CRD
+
 package v2alpha1
 
 import (

@@ -12,6 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// constants.go - values of constants used in experiment model
+
 package v2alpha1
 
 // StrategyType identifies the type of experiment type
@@ -101,7 +103,7 @@ const (
 	ExperimentConditionFailureHandlerCompleted ExperimentConditionType = "FailureHandlerCompleted"
 
 	// ExperimentConditionMetricsSynced ..
-	// Unknown before reading metrics
+	// Unknown or False before reading metrics
 	// True when done; False if any error
 	// Future: go to paused state if can't find metric; resume when defined or experiment changed
 	ExperimentConditionMetricsSynced ExperimentConditionType = "MetricsSynced"
@@ -138,6 +140,8 @@ const (
 const (
 	ReasonAnalyticsServiceError   = "AnalyticsServiceError"
 	ReasonAnalyticsServiceRunning = "AnalyticServiceRunning"
+	ReasonMetricUnavailable       = "MetricUnavailable"
+	ReasonMetricsSynced           = "MetricsSynced"
 	ReasonIterationUpdate         = "IterationUpdate"
 	ReasonExperimentCompleted     = "ExperimentCompleted"
 )

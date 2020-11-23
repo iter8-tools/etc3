@@ -12,10 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// defaults.go - methods to get values for optional spec fields that return a default value when none set
+//             - methods to initialize spec fields with default or derived values
+
 package v2alpha1
 
 import (
-	"context"
 	"time"
 
 	"github.com/iter8-tools/etc3/util"
@@ -88,7 +90,8 @@ func (s *ExperimentSpec) GetStartHandler() *string {
 // InitializeStartHandler initializes the start handler (if not already set) to the default handler
 // Returns true if a change was made, false if not
 func (s *ExperimentSpec) InitializeStartHandler() bool {
-	// This may be overkill since we don't have a default handler, but we do for rollback; we use parallel code
+	// This may be overkill since we don't have a default start handler
+	// We may for rollback; so we write parallel code
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -118,7 +121,8 @@ func (s *ExperimentSpec) GetFinishHandler() *string {
 // InitializeFinishHandler initializes the finish handler (if not already set) to the default handler
 // Returns true if a change was made, false if not
 func (s *ExperimentSpec) InitializeFinishHandler() bool {
-	// This may be overkill since we don't have a default handler, but we do for rollback; we use parallel code
+	// This may be overkill since we don't have a default finish handler
+	// We may for rollback; so we write parallel code
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -153,7 +157,7 @@ func (s *ExperimentSpec) GetRollbackHandler() *string {
 // InitializeRollbackHandler initializes the finish handler (if not already set) to the default handler
 // Returns true if a change was made, false if not
 func (s *ExperimentSpec) InitializeRollbackHandler() bool {
-	// This may be overkill since we don't have a default handler, but we do for rollback; we use parallel code
+	// We gave a default handler if bluegreen; see GetRollbackHandler
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -183,7 +187,8 @@ func (s *ExperimentSpec) GetFailureHandler() *string {
 // InitializeFailureHandler initializes the finish handler (if not already set) to the default handler
 // Returns true if a change was made, false if not
 func (s *ExperimentSpec) InitializeFailureHandler() bool {
-	// This may be overkill since we don't have a default handler, but we do for rollback; we use parallel code
+	// This may be overkill since we don't have a default start handler
+	// We may for rollback; so we write parallel code
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -430,7 +435,7 @@ func (s *ExperimentSpec) InitializeRequestCount() bool {
 		return false
 	}
 	if s.Criteria.RequestCount == nil {
-		s.GetRequestCount()
+		s.Criteria.RequestCount = s.GetRequestCount()
 		return true
 	}
 	return false
@@ -486,7 +491,7 @@ func (s *ExperimentSpec) InitializeCriteria() bool {
 
 // InitializeSpec initializes any fields in spec not already set
 // Returns true if a change was made, false if not
-func (e *Experiment) InitializeSpec(ctx context.Context) bool {
+func (e *Experiment) InitializeSpec() bool {
 	change := e.Spec.InitializeHandlers()
 	change = e.Spec.InitializeWeights() || change
 	change = e.Spec.InitializeDuration() || change

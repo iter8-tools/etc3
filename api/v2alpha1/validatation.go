@@ -12,6 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// validation.go - methods to validate an experiment resource
+
 package v2alpha1
 
 // // IsValidSpec determines if the spec is consistent and valid for an experiment

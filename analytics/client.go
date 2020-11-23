@@ -26,13 +26,38 @@ import (
 )
 
 func mock() (*v2alpha1.Analysis, error) {
+
+	now := metav1.Now()
 	return &v2alpha1.Analysis{
-		AggregatedMetrics:  &v2alpha1.AggregatedMetricsAnalysis{},
-		WinnerAssessment:   &v2alpha1.WinnerAssessmentAnalysis{},
-		VersionAssessments: &v2alpha1.VersionAssessmentAnalysis{},
+		AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
+			AnalysisMetaData: v2alpha1.AnalysisMetaData{
+				Provenance: "mock",
+				Timestamp:  now,
+				Message:    nil,
+			},
+			Data: make(map[string]v2alpha1.AggregatedMetricsData),
+		},
+		WinnerAssessment: &v2alpha1.WinnerAssessmentAnalysis{
+			AnalysisMetaData: v2alpha1.AnalysisMetaData{
+				Provenance: "mock",
+				Timestamp:  now,
+				Message:    nil,
+			},
+			Data: v2alpha1.WinnerAssessmentData{
+				WinnerFound: false,
+			},
+		},
+		VersionAssessments: &v2alpha1.VersionAssessmentAnalysis{
+			AnalysisMetaData: v2alpha1.AnalysisMetaData{
+				Provenance: "mock",
+				Timestamp:  now,
+				Message:    nil,
+			},
+			Data: make(map[string]v2alpha1.BooleanList),
+		},
 		Weights: &v2alpha1.WeightsAnalysis{
 			AnalysisMetaData: v2alpha1.AnalysisMetaData{
-				Provenance: "provenance",
+				Provenance: "mock",
 				Timestamp:  metav1.Now(),
 				Message:    nil,
 			},
@@ -55,7 +80,7 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}) (*v2alpha1.An
 	}
 
 	var prettyJSON bytes.Buffer
-	json.Indent(&prettyJSON, data, "", "\t")
+	json.Indent(&prettyJSON, data, "", "  ")
 	log.Info("post request", "URL", endpoint)
 	log.Info(string(prettyJSON.Bytes()))
 	raw, err := http.Post(endpoint, "application/json", bytes.NewBuffer(data))
@@ -67,11 +92,13 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}) (*v2alpha1.An
 	defer raw.Body.Close()
 	body, err := ioutil.ReadAll(raw.Body)
 
-	json.Indent(&prettyJSON, body, "", "\t")
+	//var prettyBody bytes.Buffer
+	//json.Indent(&prettyBody, body, "", "  ")
 	log.Info("post response", "URL", endpoint)
-	log.Info(string(prettyJSON.Bytes()))
+	//log.Info(string(prettyBody.Bytes()))
 
 	if raw.StatusCode >= 400 {
+		log.Info("post error response", "response", string(body))
 		return mock()
 		// return nil, fmt.Errorf("%v", string(body))
 	}

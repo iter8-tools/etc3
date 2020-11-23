@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// metric_types.go - go model for metric CRD
+
 package v2alpha1
 
 import (

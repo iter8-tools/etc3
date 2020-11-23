@@ -30,6 +30,8 @@ const (
 	NamespaceKey = "namespace"
 )
 
+// util.go - utility methods; currently supporting storing and retreiving values from context.Context
+
 // Logger gets the logger from the context.
 func Logger(ctx context.Context) logr.Logger {
 	return ctx.Value(LoggerKey).(logr.Logger)

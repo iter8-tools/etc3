@@ -12,25 +12,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// weights.go - implements interactions with dynamic client to read and update weights of objects in spec.versionInfo
+
 package controllers
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
-	"github.com/yalp/jsonpath"
+	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
 	memory "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 )
+
+// weights.go - logic to redistribute weights in domain objects using dynamic client
+// derived from example at https://ymmt2005.hatenablog.com/entry/2020/04/14/An_example_of_using_dynamic_client_of_k8s.io/client-go
 
 func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
 	// 1. Prepare a RESTMapper to find GVR
@@ -71,114 +76,33 @@ func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReferenc
 	return dr, nil
 }
 
-// derived from example at https://ymmt2005.hatenablog.com/entry/2020/04/14/An_example_of_using_dynamic_client_of_k8s.io/client-go
-func getObj(ctx context.Context, cfg *rest.Config, objRef *corev1.ObjectReference) (*unstructured.Unstructured, error) {
-	dr, err := getDynamicResourceInterface(cfg, objRef)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("calling Get(%s)\n\n", objRef.Name)
-	// result, err := dyn.Resource(res).Namespace(namespace).Get(ctx, objRef.Name, metav1.GetOptions{})
-	result, err := dr.Get(ctx, objRef.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("result: %+v\n\n", result)
-
-	// Patch
-	// data, err := json.Marshal([]patchStringValue{{
-	// 	Op:    "replace",
-	// 	Path:  "/spec/type",
-	// 	Value: "gauge",
-	// }})
-	// if err != nil {
-	// 	return result, err
-	// }
-	// fmt.Printf("data = %s\n\n", data)
-	// fmt.Printf("name = %s\n\n", objRef.Name)
-
-	// x, err := dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{FieldManager: "etc3"})
-	// if err != nil {
-	// 	return result, err
-	// }
-	// fmt.Printf("x = %v\n\n", x)
-
-	// // 7. Create or Update the object with SSA
-	// //     types.ApplyPatchType indicates SSA.
-	// //     FieldManager specifies the field owner ID.
-	// _, err = dr.Patch(ctx, objRef.Name, types.ApplyPatchType, data, metav1.PatchOptions{
-	// 	FieldManager: "sample-controller",
-	// })
-
-	// pretty print the result
-	// enc := json.NewEncoder(os.Stdout)
-	// enc.SetIndent("", "    ")
-	// enc.Encode(result)
-
-	return result, nil
-}
-
-type patchStringValue struct {
+type patchIntValue struct {
 	Op    string `json:"op"`
 	Path  string `json:"path"`
-	Value string `json:"value"`
+	Value int32  `json:"value"`
 }
 
-func patchObjectDynamic(ctx context.Context, cfg *rest.Config, objRef *corev1.ObjectReference) (*unstructured.Unstructured, error) {
-	// dr, err := getDynamicResourceInterface(cfg, objRef)
-	// if err != nil {
-	// 	return nil, err
-	// }
+func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.ObjectReference, weight int32) (*unstructured.Unstructured, error) {
+	log := util.Logger(ctx)
+	log.Info("patchWeight() called")
+	defer log.Info("patchWeight() ended")
 
-	// data, err := json.Marshal([]patchStringValue{{
-	// 	Op:    "replace",
-	// 	Path:  "/spec/type",
-	// 	Value: "gauge",
-	// }})
-
-	// result, err := dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{FieldManager: "etc3"})
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// fmt.Printf("patch result = %v\n\n", result)
-
-	// return result, nil
-	return nil, nil
-}
-
-func getObjectDynamic(config *rest.Config, objRef *corev1.ObjectReference) (*unstructured.Unstructured, error) {
-	obj, err := getObj(context.Background(), config, objRef)
+	data, err := json.Marshal([]patchIntValue{{
+		Op:    "add",
+		Path:  objRef.FieldPath,
+		Value: weight,
+	}})
 	if err != nil {
-		panic(err.Error())
+		log.Error(err, "Unable to create JSON patch command")
+		return nil, err
 	}
-	fmt.Printf("obj: %+v\n\n", obj)
-	return obj, err
-}
+	log.Info("marshalled patch", "patch", string(data))
 
-func getValueDynamic(config *rest.Config, objRef *corev1.ObjectReference) interface{} {
-	obj, _ := getObjectDynamic(config, objRef)
-	if obj == nil {
-		return nil
-	}
-	resultJson, err := obj.MarshalJSON()
+	dr, err := getDynamicResourceInterface(r.Config, objRef)
 	if err != nil {
-		return nil
+		log.Error(err, "Unable to get dynamic resource interface")
+		return nil, err
 	}
-	fmt.Printf("resultJson = %s\n\n", resultJson)
 
-	resultObj := make(map[string]interface{})
-	err = json.Unmarshal(resultJson, &resultObj)
-	if err != nil {
-		return nil
-	}
-	// fmt.Printf("resultObj = %v\n\n", resultObj)
-
-	path := fmt.Sprintf("$.%s", objRef.FieldPath)
-	fmt.Printf("path = %s\n\n", path)
-	value, err := jsonpath.Read(resultObj, path)
-	if err != nil {
-		return nil
-	}
-	return value
+	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{FieldManager: "etc3"})
 }

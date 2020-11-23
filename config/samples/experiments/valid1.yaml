@@ -27,7 +27,7 @@ spec:
         kind: InferenceService
         name: sklearn-iris
         namespace: kfserving-test
-        fieldPath: spec.canaryTrafficPercent
+        fieldPath: /spec/canaryTrafficPercent
   criteria:
     requestCount: request-count
     indicators:
@@ -106,7 +106,7 @@ spec:
           description: 95th percentile tail latency
           units: milliseconds
           params:
-            query: query=histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval]))
+            query: histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval]))
               by (le))
           type: gauge
           sample_size: 

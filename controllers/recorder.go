@@ -12,6 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// recorder.go - methods to modify status.conditions. Each method allows for a single place to:
+//     - change status.condition
+//     - logs change
+//     - issue kubernetes event (not currently implemented)
+//     - send notification (not currently implemented)
+
 package controllers
 
 import (
@@ -31,30 +37,54 @@ import (
 //   - call a webhook
 // This can also be used to take a specfic action. This should probably be avoided.
 
-func (r *ExperimentReconciler) markAnalyticsServiceError(context context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) markAnalyticsServiceError(ctx context.Context, instance *v2alpha1.Experiment,
 	messageFormat string, messageA ...interface{}) {
 	if updated, reason := instance.Status.MarkAnalyticsServiceError(messageFormat, messageA...); updated {
-		util.Logger(context).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
+		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		// record event
 		// send notifications
 		r.markStatusUpdated()
 	}
 }
 
-func (r *ExperimentReconciler) markAnalyticsServiceRunning(context context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) markAnalyticsServiceRunning(ctx context.Context, instance *v2alpha1.Experiment,
 	messageFormat string, messageA ...interface{}) {
 	if updated, reason := instance.Status.MarkAnalyticsServiceRunning(messageFormat, messageA...); updated {
-		util.Logger(context).Info(reason)
+		util.Logger(ctx).Info(reason)
 		// record event
 		// send notifications
 		r.markStatusUpdated()
 	}
 }
 
-func (r *ExperimentReconciler) markIterationUpdate(context context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) markMetricUnavailable(ctx context.Context, instance *v2alpha1.Experiment,
+	messageFormat string, messageA ...interface{}) {
+	if updated, reason := instance.Status.MarkMetricUnavailable(messageFormat, messageA...); updated {
+		util.Logger(ctx).Info(reason)
+		// record event
+		// send notifications
+		r.markStatusUpdated()
+	}
+}
+
+func (r *ExperimentReconciler) markMetricsSynced(ctx context.Context, instance *v2alpha1.Experiment,
+	messageFormat string, messageA ...interface{}) {
+	log := util.Logger(ctx)
+	log.Info("markMetricsSynced() called")
+	defer log.Info("markMetricsSynced() completed")
+
+	if updated, reason := instance.Status.MarkMetricsSynced(log, messageFormat, messageA...); updated {
+		util.Logger(ctx).Info(reason)
+		// record event
+		// send notifications
+		r.markStatusUpdated()
+	}
+}
+
+func (r *ExperimentReconciler) markIterationUpdate(ctx context.Context, instance *v2alpha1.Experiment,
 	messageFormat string, messageA ...interface{}) {
 	if updated, reason := instance.Status.MarkIterationUpdate(messageFormat, messageA...); updated {
-		util.Logger(context).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
+		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		// record event
 		// send notifications
 		r.markStatusUpdated()
@@ -62,10 +92,10 @@ func (r *ExperimentReconciler) markIterationUpdate(context context.Context, inst
 	}
 }
 
-func (r *ExperimentReconciler) markExperimentCompleted(context context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) markExperimentCompleted(ctx context.Context, instance *v2alpha1.Experiment,
 	messageFormat string, messageA ...interface{}) {
 	if updated, reason := instance.Status.MarkExperimentCompleted(messageFormat, messageA...); updated {
-		util.Logger(context).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
+		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		// record event
 		// send notifications
 

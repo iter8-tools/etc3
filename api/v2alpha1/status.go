@@ -12,11 +12,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// status.go - methods to get and update status fields
+
 package v2alpha1
 
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -199,6 +202,20 @@ func (s *ExperimentStatus) MarkAnalyticsServiceRunning(messageFormat string, mes
 		markCondition(corev1.ConditionTrue, reason, messageFormat, messageA...), reason
 }
 
+// MarkMetricUnavailable sets a condition indicating that a required metric could not be found
+func (s *ExperimentStatus) MarkMetricUnavailable(messageFormat string, messageA ...interface{}) (bool, string) {
+	reason := ReasonMetricUnavailable
+	return s.GetCondition(ExperimentConditionMetricsSynced).
+		markCondition(corev1.ConditionFalse, reason, messageFormat, messageA...), reason
+}
+
+// MarkMetricsSynced sets a condition indicating that the all the required metrics have been found
+func (s *ExperimentStatus) MarkMetricsSynced(log logr.Logger, messageFormat string, messageA ...interface{}) (bool, string) {
+	reason := ReasonMetricsSynced
+	return s.GetCondition(ExperimentConditionMetricsSynced).
+		markConditionLogged(log, corev1.ConditionTrue, reason, messageFormat, messageA...), reason
+}
+
 // MarkIterationUpdate sets the condition that the iteration updated
 func (s *ExperimentStatus) MarkIterationUpdate(messageFormat string, messageA ...interface{}) (bool, string) {
 	reason := ReasonIterationUpdate
@@ -222,6 +239,20 @@ func (c *ExperimentCondition) markCondition(status corev1.ConditionStatus, reaso
 	return updated
 }
 
+// this method is introduced for debugging
+// TODO remove this
+func (c *ExperimentCondition) markConditionLogged(log logr.Logger, status corev1.ConditionStatus, reason, messageFormat string, messageA ...interface{}) bool {
+	log.Info("markConditionLogged() called", "status", status, "reason", reason)
+	message := fmt.Sprintf(messageFormat, messageA...)
+	updated := status != c.Status || reason != *c.Reason || message != *c.Message
+	c.Status = status
+	c.Reason = &reason
+	c.Message = &message
+	now := metav1.Now()
+	c.LastTransitionTime = &now
+	log.Info("markConditionLogged() completed", "updated", updated, "condition", *c)
+	return updated
+}
 func composeMessage(reason, messageFormat string, messageA ...interface{}) string {
 	out := reason
 	msg := fmt.Sprintf(messageFormat, messageA...)
