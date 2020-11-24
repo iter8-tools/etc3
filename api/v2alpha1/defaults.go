@@ -491,7 +491,7 @@ func (s *ExperimentSpec) InitializeCriteria() bool {
 
 // InitializeSpec initializes any fields in spec not already set
 // Returns true if a change was made, false if not
-func (e *Experiment) InitializeSpec() bool {
+func (e *Experiment) SpecLateInitialization() bool {
 	change := e.Spec.InitializeHandlers()
 	change = e.Spec.InitializeWeights() || change
 	change = e.Spec.InitializeDuration() || change

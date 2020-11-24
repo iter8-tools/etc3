@@ -61,29 +61,21 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 	return nil
 }
 
-// ReadMetrics finds and reads all the metrics into the spec
+// AlreadyReadMetrics determines if we have read the metrics already or not
+func (r *ExperimentReconciler) AlreadyReadMetrics(instance *v2alpha1.Experiment) bool {
+	// TODO remove depenency on condition; look at metrics instead
+	return instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced).IsTrue()
+}
+
+// ReadMetrics reads needed metrics from cluster and caches them in the experiment
 func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) bool {
 	log := util.Logger(ctx)
 	log.Info("ReadMetrics() called")
 	defer log.Info("ReadMetrics() completed")
 
-	// have we already read them?
-	if instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced).IsTrue() {
-		log.Info("Metrics previously read; skipping")
-		return false
-	}
-	return r.readMetricsInternal(ctx, instance)
-}
-
-func (r *ExperimentReconciler) readMetricsInternal(ctx context.Context, instance *v2alpha1.Experiment) bool {
-	log := util.Logger(ctx)
-	log.Info("readMetricsInternal() called")
-	defer log.Info("readMetricsInternal() completed")
-
 	criteria := instance.Spec.Criteria
 	if criteria == nil {
 		r.markMetricsSynced(ctx, instance, "No criteria specified")
-		r.markSpecUpdated()
 		return true
 	}
 
@@ -137,10 +129,7 @@ func (r *ExperimentReconciler) readMetricsInternal(ctx context.Context, instance
 		instance.Spec.Metrics = append(instance.Spec.Metrics,
 			v2alpha1.MetricInfo{Name: name, MetricObj: *obj})
 	}
-	log.Info("marking metrics synced", "spec updated", r.SpecUpdated, "condition", instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced))
 	r.markMetricsSynced(ctx, instance, "Read all metrics")
-	r.markSpecUpdated()
-	log.Info("marked metrics synced", "spec updated", r.SpecUpdated, "condition", instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced))
-
+	r.SpecModified = true
 	return true
 }

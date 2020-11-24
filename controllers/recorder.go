@@ -43,7 +43,7 @@ func (r *ExperimentReconciler) markAnalyticsServiceError(ctx context.Context, in
 		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		// record event
 		// send notifications
-		r.markStatusUpdated()
+		r.StatusModified = true
 	}
 }
 
@@ -53,7 +53,7 @@ func (r *ExperimentReconciler) markAnalyticsServiceRunning(ctx context.Context, 
 		util.Logger(ctx).Info(reason)
 		// record event
 		// send notifications
-		r.markStatusUpdated()
+		r.StatusModified = true
 	}
 }
 
@@ -63,7 +63,7 @@ func (r *ExperimentReconciler) markMetricUnavailable(ctx context.Context, instan
 		util.Logger(ctx).Info(reason)
 		// record event
 		// send notifications
-		r.markStatusUpdated()
+		r.StatusModified = true
 	}
 }
 
@@ -77,7 +77,7 @@ func (r *ExperimentReconciler) markMetricsSynced(ctx context.Context, instance *
 		util.Logger(ctx).Info(reason)
 		// record event
 		// send notifications
-		r.markStatusUpdated()
+		r.StatusModified = true
 	}
 }
 
@@ -87,8 +87,7 @@ func (r *ExperimentReconciler) markIterationUpdate(ctx context.Context, instance
 		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		// record event
 		// send notifications
-		r.markStatusUpdated()
-		r.markSpecUpdated()
+		r.StatusModified = true
 	}
 }
 
@@ -101,6 +100,6 @@ func (r *ExperimentReconciler) markExperimentCompleted(ctx context.Context, inst
 
 		now := metav1.Now()
 		instance.Status.EndTime = &now
-		r.markStatusUpdated()
+		r.StatusModified = true
 	}
 }

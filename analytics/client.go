@@ -17,6 +17,7 @@ package analytics
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -24,53 +25,6 @@ import (
 	"github.com/iter8-tools/etc3/api/v2alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func mock() (*v2alpha1.Analysis, error) {
-
-	now := metav1.Now()
-	return &v2alpha1.Analysis{
-		AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
-			AnalysisMetaData: v2alpha1.AnalysisMetaData{
-				Provenance: "mock",
-				Timestamp:  now,
-				Message:    nil,
-			},
-			Data: make(map[string]v2alpha1.AggregatedMetricsData),
-		},
-		WinnerAssessment: &v2alpha1.WinnerAssessmentAnalysis{
-			AnalysisMetaData: v2alpha1.AnalysisMetaData{
-				Provenance: "mock",
-				Timestamp:  now,
-				Message:    nil,
-			},
-			Data: v2alpha1.WinnerAssessmentData{
-				WinnerFound: false,
-			},
-		},
-		VersionAssessments: &v2alpha1.VersionAssessmentAnalysis{
-			AnalysisMetaData: v2alpha1.AnalysisMetaData{
-				Provenance: "mock",
-				Timestamp:  now,
-				Message:    nil,
-			},
-			Data: make(map[string]v2alpha1.BooleanList),
-		},
-		Weights: &v2alpha1.WeightsAnalysis{
-			AnalysisMetaData: v2alpha1.AnalysisMetaData{
-				Provenance: "mock",
-				Timestamp:  metav1.Now(),
-				Message:    nil,
-			},
-			Data: []v2alpha1.WeightData{{
-				Name:  "baseline",
-				Value: 25,
-			}, {
-				Name:  "canary",
-				Value: 75,
-			}},
-		},
-	}, nil
-}
 
 // Invoke sends payload to endpoint and gets response back
 func Invoke(log logr.Logger, endpoint string, payload interface{}) (*v2alpha1.Analysis, error) {
@@ -85,8 +39,7 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}) (*v2alpha1.An
 	log.Info(string(prettyJSON.Bytes()))
 	raw, err := http.Post(endpoint, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return mock()
-		// return nil, err
+		return nil, err
 	}
 
 	defer raw.Body.Close()
@@ -98,9 +51,7 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}) (*v2alpha1.An
 	//log.Info(string(prettyBody.Bytes()))
 
 	if raw.StatusCode >= 400 {
-		log.Info("post error response", "response", string(body))
-		return mock()
-		// return nil, fmt.Errorf("%v", string(body))
+		return nil, fmt.Errorf("%v", string(body))
 	}
 
 	var response v2alpha1.Analysis

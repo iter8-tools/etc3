@@ -74,7 +74,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// update analytics in instance.status
 	instance.Status.Analysis = analysis
-	r.markStatusUpdated()
+	r.StatusModified = true
 	log.Info("Updated status with analysis", "status.Analysis", instance.Status.Analysis)
 	log.Info("Updated status with analysis", "status", instance.Status)
 
@@ -101,7 +101,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// update completedIterations counter
 	*instance.Status.CompletedIterations++
-	r.markStatusUpdated()
+	r.StatusModified = true
 
 	// if there are no more iterations to execute, run finish handler(s) if present
 	if !r.moreIterationsNeeded(instance) {
@@ -120,7 +120,7 @@ func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instanc
 			util.Logger(ctx).Error(err, "Failed to update when initializing status")
 			return err
 		}
-		r.StatusUpdated = false
+		r.StatusModified = false
 	}
 	return nil
 }
@@ -204,7 +204,7 @@ func (r *ExperimentReconciler) endIteration(ctx context.Context, instance *v2alp
 	// update lastUpdateTime (any anything else that might have changed)
 	now := metav1.Now()
 	instance.Status.LastUpdateTime = &now
-	r.markStatusUpdated()
+	r.StatusModified = true
 	r.updateIfNeeded(ctx, instance)
 
 	interval := instance.Spec.GetIntervalAsDuration()

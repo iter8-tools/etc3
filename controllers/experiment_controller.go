@@ -35,11 +35,11 @@ import (
 // ExperimentReconciler reconciles a Experiment object
 type ExperimentReconciler struct {
 	client.Client
-	Log           logr.Logger
-	Scheme        *runtime.Scheme
-	Config        *rest.Config
-	SpecUpdated   bool
-	StatusUpdated bool
+	Log            logr.Logger
+	Scheme         *runtime.Scheme
+	Config         *rest.Config
+	SpecModified   bool
+	StatusModified bool
 }
 
 // +kubebuilder:rbac:groups=iter8.tools,resources=experiments,verbs=get;list;watch;create;update;patch;delete
@@ -70,7 +70,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return ctrl.Result{}, err
 	}
 
-	log.Info("found instance", "instance", instance, "updatedStatus", r.StatusUpdated) //, "spec", instance.Spec, "status", instance.Status)
+	log.Info("found instance", "instance", instance, "updatedStatus", r.StatusModified) //, "spec", instance.Spec, "status", instance.Status)
 
 	// ADD FINALIZER
 	// If instance does not have a finalizer, add one here (if desired)
@@ -85,7 +85,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 			log.Error(err, "Failed to update when initializing status.")
 			return ctrl.Result{}, err
 		}
-		r.StatusUpdated = false
+		r.StatusModified = false
 		log.Info("Updated status")
 	}
 
@@ -126,29 +126,15 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	}
 
 	// LATE INITIALIZATION of spec
-	change := instance.InitializeSpec()
-	log.Info("initialized spec", "change", change, "updatedStatus", r.StatusUpdated)
-	log.Info("reading metrics", "conditions", instance.Status.Conditions)
-	log.Info("reading metrics", "condition", instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced))
-	change = r.ReadMetrics(ctx, instance) || change
-	log.Info("read metrics", "change", change, "updatedStatus", r.StatusUpdated)
-	log.Info("read metrics", "conditions", instance.Status.Conditions)
-	log.Info("read metrics", "condition", instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced))
-	if r.StatusUpdated {
-		log.Info("updating instance status after late initialization", "status", instance.Status)
-		if err := r.Status().Update(ctx, instance); err != nil {
-			log.Error(err, "Failed to update status when initializing experiment")
-			return ctrl.Result{}, err
-		}
-		r.StatusUpdated = false
+	specChanged := instance.SpecLateInitialization()
+	if !r.AlreadyReadMetrics(instance) {
+		specChanged = r.ReadMetrics(ctx, instance) || specChanged
 	}
-	if change {
-		log.Info("updating instance spec after late initialization", "spec", instance.Spec)
-		if err := r.Update(ctx, instance); err != nil {
-			log.Error(err, "Failed to update spec when initializing experiment")
-			return ctrl.Result{}, err
-		}
-		r.SpecUpdated = false
+	if specChanged {
+		r.SpecModified = true
+	}
+	if err := r.updateIfNeeded(ctx, instance); err != nil {
+		return ctrl.Result{}, err
 	}
 	log.Info("Late initialization complete.")
 
@@ -214,6 +200,7 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
+// endRequest writes any changes (if needed) in preparation for ending processing of this reconcile request
 func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("endRequest() called")
@@ -223,6 +210,8 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha
 	return ctrl.Result{}, nil
 }
 
+// endExperiment is called to mark an experiment as completed and
+// triggers next experiment object
 func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("endExperiment() called")
@@ -236,15 +225,27 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	return ctrl.Result{}, nil
 }
 
+// finishExperiment calls the finish handler or (if none) ends the experiment
 func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("finishExperiment() called")
-	// set ExperimentConditionExperimentCompleted True
-	// set reommendedBaseline to spec.VersionInfo.baseline
-	// set ExperimentConditionExperimentSucceeded ???
-	// queue next experiment
-	r.updateIfNeeded(ctx, instance)
-	return ctrl.Result{}, nil
+	defer log.Info("finishExperiment() completed")
+
+	// run finish handlers
+	if instance.HasFinishHandler() {
+		r.startFinishHandler(ctx, instance)
+		r.startRollbackHandler(ctx, instance)
+		return r.endRequest(ctx, instance)
+	} else {
+		return r.endExperiment(ctx, instance)
+	}
+}
+
+func (r *ExperimentReconciler) startFinishHandler(ctx context.Context, instance *v2alpha1.Experiment) error {
+	log := util.Logger(ctx)
+	log.Info("startFinishHandler() called")
+	defer log.Info("startFinishHandler() ended")
+	return nil
 }
 
 func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
@@ -267,39 +268,24 @@ func validUpdateErr(err error) bool {
 	return strings.Contains(err.Error(), benignMsg)
 }
 
-func (r *ExperimentReconciler) needSpecUpdate() bool {
-	return r.SpecUpdated
-}
-func (r *ExperimentReconciler) needStatusUpdate() bool {
-	return r.StatusUpdated
-}
-
-func (r *ExperimentReconciler) markSpecUpdated() {
-	r.SpecUpdated = true
-}
-
-func (r *ExperimentReconciler) markStatusUpdated() {
-	r.StatusUpdated = true
-}
-
 func (r *ExperimentReconciler) updateIfNeeded(ctx context.Context, instance *v2alpha1.Experiment) error {
 	log := util.Logger(ctx)
-	if r.needStatusUpdate() {
+	if r.StatusModified {
 		log.Info("updating status", "status", instance.Status)
 		if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
 			log.Error(err, "Failed to update status")
 			return err
 		}
-		r.SpecUpdated = false
+		r.StatusModified = false
 	}
 
-	if r.needSpecUpdate() {
+	if r.SpecModified {
 		log.Info("updating spec", "spec", instance.Spec)
 		if err := r.Update(ctx, instance); err != nil && !validUpdateErr(err) {
 			log.Error(err, "Failed to update spec")
 			return err
 		}
-		r.StatusUpdated = false
+		r.SpecModified = false
 	}
 
 	return nil
