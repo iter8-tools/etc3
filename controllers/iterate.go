@@ -20,7 +20,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/iter8-tools/etc3/analytics"
@@ -30,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func (r *ExperimentReconciler) moreIterationsNeeded(instance *v2alpha1.Experiment) bool {
+func moreIterationsNeeded(instance *v2alpha1.Experiment) bool {
 	// Are there more iterations to execute
 	return *instance.Status.CompletedIterations < instance.Spec.GetMaxIterations()
 }
@@ -50,65 +49,54 @@ func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx co
 
 func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
 	log := util.Logger(ctx)
-	log.Info("doIterate() called")
-	defer log.Info("doIterate() completed")
+	log.Info("doIteration called")
+	defer log.Info("doIteration completed")
 
 	// record start time of experiment if not already set
 	if err := r.setStartTimeIfNotSet(ctx, instance); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	analyticsEndpoint := util.GetAnalyticsService()
+	analyticsEndpoint := r.Iter8Config.Endpoint //r.GetAnalyticsService()
 	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
 		r.markAnalyticsServiceError(ctx, instance, "Unable to contact analytics engine %s", analyticsEndpoint)
-		return r.failExperiment(ctx, instance)
+		return r.failExperiment(ctx, instance, err)
 	}
 
 	// VALIDATE analysis object:
-	//   - has 4 entries: aggregatedMetrics, winnerAssessment, versionAssessments, weights
-	//   - versionAssessments have entry for each version, objective
-	//   - weights has entry for each version
-	// If not valid: failExperiment(context, instance)
+	// 1. has 4 entries: aggregatedMetrics, winnerAssessment, versionAssessments, weights
+	// 2. versionAssessments have entry for each version, objective
+	// 3. weights has entry for each version
+	// If not valid: r.failExperiment(context, instance)
 
 	// update analytics in instance.status
 	instance.Status.Analysis = analysis
 	r.StatusModified = true
-	log.Info("Updated status with analysis", "status.Analysis", instance.Status.Analysis)
-	log.Info("Updated status with analysis", "status", instance.Status)
 
-	// TODO -- encapsulate in rollbackExperiment()
 	// Handle failure of objective (possibly rollback)
 	if r.mustRollback(ctx, instance) {
-		// do we consider this a completed iteration?
-		if instance.HasRollbackHandler() {
-			r.startRollbackHandler(ctx, instance)
-
-			return r.endIteration(ctx, instance)
-		}
-		// We don't need to check if any handlers are running
-		// Recall that we do this at the start of the reconciler
-		return r.finishExperiment(ctx, instance)
+		return r.rollbackExperiment(ctx, instance)
 	}
 
 	// update weight distribution
-	// if we failed some versions, how do we distribute weight?
-	err = r.redistributeWeight(ctx, instance)
-	if err != nil {
-		return r.failExperiment(ctx, instance)
+	// TODO if we failed some versions, how do we distribute weight?
+	if err := r.redistributeWeight(ctx, instance); err != nil {
+		r.markWeightRedistributionFailed(ctx, instance, "Failure redistributing weights: %s", err.Error())
+		return r.failExperiment(ctx, instance, err)
 	}
 
-	// update completedIterations counter
-	*instance.Status.CompletedIterations++
-	r.StatusModified = true
+	// update completedIterations counter and record completion
+	r.completeIteration(ctx, instance)
 
-	// if there are no more iterations to execute, run finish handler(s) if present
-	if !r.moreIterationsNeeded(instance) {
+	// if there are no more iterations to execute, finishExperiment
+	// otherwise, just endRequest (and requeue for later)
+	if !moreIterationsNeeded(instance) {
 		return r.finishExperiment(ctx, instance)
 	}
-
-	return r.endIteration(ctx, instance)
+	r.markIterationCompleted(ctx, instance, "Completed Iteration %d", *instance.Status.CompletedIterations)
+	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
 }
 
 func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instance *v2alpha1.Experiment) error {
@@ -129,87 +117,13 @@ func hasCriteria(instance *v2alpha1.Experiment) bool {
 	return instance.Spec.Criteria != nil
 }
 
-func (r *ExperimentReconciler) redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment) error {
-	log := util.Logger(ctx)
-	log.Info("redistributeWeight() called")
-	defer log.Info("redistributeWeight() ended")
-
-	if versionInfo := instance.Spec.VersionInfo; versionInfo == nil {
-		// should never get here; should have been validated before this
-		log.Info("Cannot redistribute weight; no version information present.")
-		return nil
-	}
-
-	// TODO collect multiple changes for each object
-	if err := r.updateWeightForVersion(ctx, instance, instance.Spec.VersionInfo.Baseline); err != nil {
-		return err
-	}
-	for _, version := range instance.Spec.VersionInfo.Candidates {
-		if err := r.updateWeightForVersion(ctx, instance, version); err != nil {
-			return err
-		}
-	}
-
-	// set status.currentWeightDistribution to match set weights
-	// for now copy from status.analysis.weights
-	instance.Status.CurrentWeightDistribution = make([]v2alpha1.WeightData, len(instance.Status.Analysis.Weights.Data))
-	for i, w := range instance.Status.Analysis.Weights.Data {
-		instance.Status.CurrentWeightDistribution[i] = w
-	}
-	return nil
-}
-
-func (r *ExperimentReconciler) updateWeightForVersion(ctx context.Context, instance *v2alpha1.Experiment, version v2alpha1.VersionDetail) error {
-	log := util.Logger(ctx)
-
-	// n-1 versions should have a weightObjRef.fieldPath; should be caught by validation
-	if version.WeightObjRef == nil {
-		log.Info("Unable to update weight; no weightObjectReference", "version", version)
-		return nil
-	}
-	if version.WeightObjRef.FieldPath == "" {
-		log.Info("Unable to update weight; no field specified", "version", version)
-		return nil
-	}
-
-	weight := getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
-	if weight == nil {
-		log.Info("Unable to find weight recommendation.", "version", version, "weights", instance.Status.Analysis.Weights)
-		// fatal error; expected a weight recommendation for all versions
-		return errors.New("Unable to find weight recommendation")
-	}
-	_, err := r.patchWeight(ctx, version.WeightObjRef, *weight)
-	if err != nil {
-		log.Error(err, "Failed to update weight", "version", version)
-		return err
-	}
-
-	return nil
-}
-
-func getWeightRecommendation(version string, weights []v2alpha1.WeightData) *int32 {
-	for _, w := range weights {
-		if w.Name == version {
-			weight := w.Value
-			return &weight
-		}
-	}
-	return nil
-}
-
-func (r *ExperimentReconciler) endIteration(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
-	log := util.Logger(ctx)
-	log.Info("endIteration() called", "instance", instance)
-
-	// update lastUpdateTime (any anything else that might have changed)
+func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *v2alpha1.Experiment) {
+	// update completedIterations counter
+	*instance.Status.CompletedIterations++
 	now := metav1.Now()
 	instance.Status.LastUpdateTime = &now
+	// TODO condition update
 	r.StatusModified = true
-	r.updateIfNeeded(ctx, instance)
-
-	interval := instance.Spec.GetIntervalAsDuration()
-	log.Info("Requeue for next iteration", "interval", interval, "iterations", instance.Status.GetCompletedIterations())
-	return ctrl.Result{RequeueAfter: interval}, nil
 }
 
 // mustRollback determines if the experiment should be rolled back.
@@ -240,17 +154,4 @@ func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instanc
 		}
 	}
 	return failedVersions
-}
-
-func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2alpha1.Experiment, failedVersions []string) {
-	log := util.Logger(ctx)
-	log.Info("rollbackExperiment() called")
-	defer log.Info("rollbackExperiment() ended")
-}
-
-func (r *ExperimentReconciler) startRollbackHandler(ctx context.Context, instance *v2alpha1.Experiment) error {
-	log := util.Logger(ctx)
-	log.Info("startRollbackHandler() called")
-	defer log.Info("startRollbackHandler() ended")
-	return nil
 }

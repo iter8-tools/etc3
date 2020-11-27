@@ -62,86 +62,33 @@ const (
 )
 
 // ExperimentConditionType limits conditions can be set by controller
-// +kubebuilder:validation:Enum:=ExperimentInitialized;StartHandlerLaunched;StartHandlerCompleted;FinishHandlerLaunched;FinishHandlerCompleted;RollbackHandlerLaunched;RollbackHandlerCompleted;FailureHandlerLaunched;FailureHandlerCompleted;MetricsSynced;AnalyticsServiceNormal;ExperimentCompleted
+// +kubebuilder:validation:Enum:=ExperimentCompleted;ExperimentFailed
 type ExperimentConditionType string
 
 const (
-	// ExperimentConditionExperimentInitialized ..
-	// Unknown at start, set to False immediately; True when done
-	ExperimentConditionExperimentInitialized ExperimentConditionType = "ExperimentInitialized"
-
-	// ExperimentConditionStartHandlerLaunched ..
-	// False until launched, True thereafter
-	ExperimentConditionStartHandlerLaunched ExperimentConditionType = "StartHandlerLaunched"
-
-	// ExperimentConditionStartHandlerCompleted ..
-	// False until completed; True when done
-	ExperimentConditionStartHandlerCompleted ExperimentConditionType = "StartHandlerCompleted"
-
-	// ExperimentConditionFinishHandlerLaunched ..
-	// False until launched; True thereafter
-	ExperimentConditionFinishHandlerLaunched ExperimentConditionType = "FinishHandlerLaunched"
-
-	// ExperimentConditionFinishHandlerCompleted ..
-	// Unknown until called; False until completed; True when done
-	ExperimentConditionFinishHandlerCompleted ExperimentConditionType = "FinishHandlerCompleted"
-
-	// ExperimentConditionRollbackHandlerLaunched ..
-	// False until launched; True thereafter
-	ExperimentConditionRollbackHandlerLaunched ExperimentConditionType = "RollbackHandlerLaunched"
-
-	// ExperimentConditionRollbackHandlerCompleted ..
-	// Unknown until called; False until completed; True when done
-	ExperimentConditionRollbackHandlerCompleted ExperimentConditionType = "RollbackHandlerCompleted"
-
-	// ExperimentConditionFailureHandlerLaunched ..
-	// False until launched; True thereafter
-	ExperimentConditionFailureHandlerLaunched ExperimentConditionType = "FailureHandlerLaunched"
-
-	// ExperimentConditionFailureHandlerCompleted ..
-	// Unknown until called; False until completed; True when done
-	ExperimentConditionFailureHandlerCompleted ExperimentConditionType = "FailureHandlerCompleted"
-
-	// ExperimentConditionMetricsSynced ..
-	// Unknown or False before reading metrics
-	// True when done; False if any error
-	// Future: go to paused state if can't find metric; resume when defined or experiment changed
-	ExperimentConditionMetricsSynced ExperimentConditionType = "MetricsSynced"
-
-	// ExperimentConditionAnalyticsServiceNormal ..
-	// Unknown before any attemtps to call analytics service
-	// True while calls successful
-	// False if a call fails
-	ExperimentConditionAnalyticsServiceNormal ExperimentConditionType = "AnalyticsServiceNormal"
-
 	// ExperimentConditionExperimentCompleted has status True when the experiment is completed
 	// Unknown initially, set to False during initialization
 	ExperimentConditionExperimentCompleted ExperimentConditionType = "ExperimentCompleted"
-)
 
-// PhaseType has options for phases that an experiment can be at
-type PhaseType string
-
-const (
-	// PhasePaused indicates experiment is paused; this occurs because a needed resource
-	// is not available. For example, another experiment may already be in progress using
-	// the same target.
-	PhasePaused PhaseType = "Paused"
-
-	// PhaseProgressing indicates experiment is progressing
-	PhaseProgressing PhaseType = "Progressing"
-
-	// PhaseCompleted indicates experiment has competed (successfully or not)
-	PhaseCompleted PhaseType = "Completed"
+	// ExperimentConditionExperimentFailed has status True when the experiment has failed
+	// False until failure occurs
+	ExperimentConditionExperimentFailed ExperimentConditionType = "ExperimentFailed"
 )
 
 // A set of reason setting the experiment condition status
-// TBD
 const (
-	ReasonAnalyticsServiceError   = "AnalyticsServiceError"
-	ReasonAnalyticsServiceRunning = "AnalyticServiceRunning"
-	ReasonMetricUnavailable       = "MetricUnavailable"
-	ReasonMetricsSynced           = "MetricsSynced"
-	ReasonIterationUpdate         = "IterationUpdate"
-	ReasonExperimentCompleted     = "ExperimentCompleted"
+	ReasonExperimentInitialized      = "ExperimentInitialized"
+	ReasonStartHandlerLaunched       = "StartHandlerLaunched"
+	ReasonStartHandlerCompleted      = "StartHandlerCompleted"
+	ReasonTargetAcquired             = "TargetAcquired"
+	ReasonIterationCompleted         = "IterationUpdate"
+	ReasonTerminalHandlerLaunched    = "TerminalHandlerLaunched"
+	ReasonExperimentCompleted        = "ExperimentCompleted"
+	ReasonAnalyticsServiceError      = "AnalyticsServiceError"
+	ReasonMetricUnavailable          = "MetricUnavailable"
+	ReasonMetricsUnreadable          = "MetricsUnreadable"
+	ReasonHandlerFailed              = "HandlerFailed"
+	ReasonLaunchHandlerFailed        = "LaunchHandlerFailed"
+	ReasonWeightRedistributionFailed = "WeightRedistributionFailed"
+	ReasonInvalidExperiment          = "InvalidExperiment"
 )

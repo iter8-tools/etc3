@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -36,6 +37,10 @@ import (
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+)
+
+const (
+	Iter8Controller = "iter8"
 )
 
 func init() {
@@ -46,8 +51,11 @@ func init() {
 }
 
 func main() {
+	var analyticsEndpoint string
 	var metricsAddr string
 	var enableLeaderElection bool
+	flag.StringVar(&analyticsEndpoint, "analytics-endpoint", "http://foo//v2/analytics_results",
+		"The analytics service endpont")
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
@@ -67,15 +75,28 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
+
 	restCfg, err := config.GetConfig()
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "unable to configure manager")
 	}
+
+	cfg := configuration.Iter8Config{}
+	err = configuration.ReadConfig(&cfg)
+	if err != nil {
+		// set default values? or fail
+		setupLog.Error(err, "unable to configure manager")
+		os.Exit(1)
+	}
+	setupLog.Info("read config", "cfg", cfg)
+
 	if err = (&controllers.ExperimentReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Experiment"),
-		Scheme: mgr.GetScheme(),
-		Config: restCfg,
+		Client:        mgr.GetClient(),
+		Log:           ctrl.Log.WithName("controllers").WithName("Experiment"),
+		Scheme:        mgr.GetScheme(),
+		RestConfig:    restCfg,
+		EventRecorder: mgr.GetEventRecorderFor(Iter8Controller),
+		Iter8Config:   cfg,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Experiment")
 		os.Exit(1)

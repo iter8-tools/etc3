@@ -19,7 +19,6 @@ package v2alpha1
 import (
 	"fmt"
 
-	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,23 +29,14 @@ const (
 )
 
 var experimentCondSet = []ExperimentConditionType{
-	ExperimentConditionExperimentInitialized,
-	ExperimentConditionStartHandlerLaunched,
-	ExperimentConditionStartHandlerCompleted,
-	ExperimentConditionFinishHandlerLaunched,
-	ExperimentConditionFinishHandlerCompleted,
-	ExperimentConditionRollbackHandlerLaunched,
-	ExperimentConditionRollbackHandlerCompleted,
-	ExperimentConditionFailureHandlerLaunched,
-	ExperimentConditionFailureHandlerCompleted,
-	ExperimentConditionMetricsSynced,
-	ExperimentConditionAnalyticsServiceNormal,
+	ExperimentConditionExperimentFailed,
+	ExperimentConditionExperimentCompleted,
 }
 
-func (s *ExperimentStatus) addCondition(conditionType ExperimentConditionType) *ExperimentCondition {
+func (s *ExperimentStatus) addCondition(conditionType ExperimentConditionType, status corev1.ConditionStatus) *ExperimentCondition {
 	condition := &ExperimentCondition{
 		Type:   conditionType,
-		Status: corev1.ConditionUnknown,
+		Status: status,
 	}
 	now := metav1.Now()
 	condition.LastTransitionTime = &now
@@ -62,7 +52,7 @@ func (s *ExperimentStatus) GetCondition(condition ExperimentConditionType) *Expe
 		}
 	}
 
-	return s.addCondition(condition)
+	return s.addCondition(condition, corev1.ConditionUnknown)
 }
 
 // IsTrue tells whether the experiment condition is true or not
@@ -80,79 +70,19 @@ func (c *ExperimentCondition) IsUnknown() bool {
 	return c.Status == corev1.ConditionUnknown
 }
 
-// InitStatus initialize status value of an experiment
-func (e *Experiment) InitStatus() {
+// InitializeStatus initialize status value of an experiment
+func (e *Experiment) InitializeStatus() {
 	// sets relevant unset conditions to Unknown state.
-	for _, c := range experimentCondSet {
-		e.Status.addCondition(c)
-	}
-
-	// TODO be explicit about the condition value
+	e.Status.addCondition(ExperimentConditionExperimentCompleted, corev1.ConditionFalse)
+	e.Status.addCondition(ExperimentConditionExperimentFailed, corev1.ConditionFalse)
 
 	now := metav1.Now()
 	e.Status.InitTime = &now // metav1.Now()
 
 	e.Status.LastUpdateTime = &now // metav1.Now()
 
-	// e.Status.Phase = PhaseProgressing
-
 	completedIterations := int32(0)
 	e.Status.CompletedIterations = &completedIterations
-}
-
-// IsFinishHandlerRunning ..
-func (e *Experiment) IsFinishHandlerRunning() bool {
-	if !e.HasFinishHandler() {
-		return false
-	}
-	return e.Status.GetCondition(ExperimentConditionFinishHandlerLaunched).IsTrue() &&
-		e.Status.GetCondition(ExperimentConditionFinishHandlerCompleted).IsFalse()
-}
-
-// IsFinishHandlerCompleted ..
-func (e *Experiment) IsFinishHandlerCompleted() bool {
-	if !e.HasFinishHandler() {
-		return false
-	}
-	return e.Status.GetCondition(ExperimentConditionFinishHandlerLaunched).IsTrue() &&
-		e.Status.GetCondition(ExperimentConditionFinishHandlerCompleted).IsTrue()
-
-}
-
-// IsRollbackHandlerRunning ..
-func (e *Experiment) IsRollbackHandlerRunning() bool {
-	if !e.HasRollbackHandler() {
-		return false
-	}
-	return e.Status.GetCondition(ExperimentConditionRollbackHandlerLaunched).IsTrue() &&
-		e.Status.GetCondition(ExperimentConditionRollbackHandlerCompleted).IsFalse()
-}
-
-// IsRollbackHandlerCompleted ..
-func (e *Experiment) IsRollbackHandlerCompleted() bool {
-	if !e.HasFinishHandler() {
-		return false
-	}
-	return e.Status.GetCondition(ExperimentConditionRollbackHandlerLaunched).IsTrue() &&
-		e.Status.GetCondition(ExperimentConditionRollbackHandlerCompleted).IsTrue()
-}
-
-// IsFailureHandlerRunning ..
-func (e *Experiment) IsFailureHandlerRunning() bool {
-	if !e.HasFailureHandler() {
-		return false
-	}
-	return e.Status.GetCondition(ExperimentConditionFailureHandlerLaunched).IsTrue() &&
-		e.Status.GetCondition(ExperimentConditionFailureHandlerCompleted).IsFalse()
-}
-
-// IsFailureHandlerCompleted ..
-func (e *Experiment) IsFailureHandlerCompleted() bool {
-	if !e.HasFinishHandler() {
-		return false
-	}
-	return e.Status.GetCondition(ExperimentConditionFailureHandlerLaunched).IsTrue() &&
-		e.Status.GetCondition(ExperimentConditionFailureHandlerCompleted).IsTrue()
 }
 
 // GetCompletedIterations ..
@@ -177,60 +107,35 @@ func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
 func (s *ExperimentStatus) MarkExperimentCompleted(messageFormat string, messageA ...interface{}) (bool, string) {
 	reason := ReasonExperimentCompleted
 	message := composeMessage(reason, messageFormat, messageA...)
-	// s.Phase = PhaseCompleted
 	s.Message = &message
 	return s.GetCondition(ExperimentConditionExperimentCompleted).
 		markCondition(corev1.ConditionTrue, reason, messageFormat, messageA...), reason
 }
 
-// MarkAnalyticsServiceError sets the condition that the analytics service breaks down
+// MarkExperimentProgressing sets the condition that the experiemnt is progressing
+func (s *ExperimentStatus) MarkExperimentProgressing(reason string, messageFormat string, messageA ...interface{}) (bool, string) {
+	message := composeMessage(reason, messageFormat, messageA...)
+	s.Message = &message
+	return s.GetCondition(ExperimentConditionExperimentCompleted).
+		markCondition(corev1.ConditionFalse, reason, messageFormat, messageA...), reason
+}
+
+// MarkExperimentFailed sets the condition that the experiment failed
 // Return true if it's converted from true or unknown
-func (s *ExperimentStatus) MarkAnalyticsServiceError(messageFormat string, messageA ...interface{}) (bool, string) {
-	reason := ReasonAnalyticsServiceError
+func (s *ExperimentStatus) MarkExperimentFailed(reason string, messageFormat string, messageA ...interface{}) (bool, string) {
 	message := composeMessage(reason, messageFormat, messageA...)
 	s.Message = &message
-	// s.Phase = PhasePause
-	return s.GetCondition(ExperimentConditionAnalyticsServiceNormal).
-		markCondition(corev1.ConditionFalse, reason, messageFormat, messageA...), reason
-}
-
-// MarkAnalyticsServiceRunning sets the condition that the analytics service is operating normally
-// Return true if it's converted from false or unknown
-func (s *ExperimentStatus) MarkAnalyticsServiceRunning(messageFormat string, messageA ...interface{}) (bool, string) {
-	reason := ReasonAnalyticsServiceRunning
-	return s.GetCondition(ExperimentConditionAnalyticsServiceNormal).
+	return s.GetCondition(ExperimentConditionExperimentFailed).
 		markCondition(corev1.ConditionTrue, reason, messageFormat, messageA...), reason
 }
 
-// MarkMetricUnavailable sets a condition indicating that a required metric could not be found
-func (s *ExperimentStatus) MarkMetricUnavailable(messageFormat string, messageA ...interface{}) (bool, string) {
-	reason := ReasonMetricUnavailable
-	return s.GetCondition(ExperimentConditionMetricsSynced).
-		markCondition(corev1.ConditionFalse, reason, messageFormat, messageA...), reason
-}
-
-// MarkMetricsSynced sets a condition indicating that the all the required metrics have been found
-func (s *ExperimentStatus) MarkMetricsSynced(log logr.Logger, messageFormat string, messageA ...interface{}) (bool, string) {
-	reason := ReasonMetricsSynced
-	return s.GetCondition(ExperimentConditionMetricsSynced).
-		markConditionLogged(log, corev1.ConditionTrue, reason, messageFormat, messageA...), reason
-}
-
-// MarkIterationUpdate sets the condition that the iteration updated
-func (s *ExperimentStatus) MarkIterationUpdate(messageFormat string, messageA ...interface{}) (bool, string) {
-	reason := ReasonIterationUpdate
-	message := composeMessage(reason, messageFormat, messageA...)
-	// s.Phase = PhaseProgressing
-	s.Message = &message
-	now := metav1.Now()
-	s.LastUpdateTime = &now
-	return s.GetCondition(ExperimentConditionExperimentCompleted).
-		markCondition(corev1.ConditionFalse, reason, messageFormat, messageA...), reason
-}
-
-func (c *ExperimentCondition) markCondition(status corev1.ConditionStatus, reason, messageFormat string, messageA ...interface{}) bool {
+func (c *ExperimentCondition) markCondition(status corev1.ConditionStatus, reason string, messageFormat string, messageA ...interface{}) bool {
+	fmt.Printf("status = %v\n", status)
+	fmt.Printf("resason = %s\n", reason)
+	fmt.Printf("messageFormat = %s\n", messageFormat)
+	fmt.Printf("condition = %v\n", c)
 	message := fmt.Sprintf(messageFormat, messageA...)
-	updated := status != c.Status || reason != *c.Reason || message != *c.Message
+	updated := status != c.Status || c.Reason == nil || c.Message == nil || reason != *c.Reason || message != *c.Message
 	c.Status = status
 	c.Reason = &reason
 	c.Message = &message
@@ -239,21 +144,7 @@ func (c *ExperimentCondition) markCondition(status corev1.ConditionStatus, reaso
 	return updated
 }
 
-// this method is introduced for debugging
-// TODO remove this
-func (c *ExperimentCondition) markConditionLogged(log logr.Logger, status corev1.ConditionStatus, reason, messageFormat string, messageA ...interface{}) bool {
-	log.Info("markConditionLogged() called", "status", status, "reason", reason)
-	message := fmt.Sprintf(messageFormat, messageA...)
-	updated := status != c.Status || reason != *c.Reason || message != *c.Message
-	c.Status = status
-	c.Reason = &reason
-	c.Message = &message
-	now := metav1.Now()
-	c.LastTransitionTime = &now
-	log.Info("markConditionLogged() completed", "updated", updated, "condition", *c)
-	return updated
-}
-func composeMessage(reason, messageFormat string, messageA ...interface{}) string {
+func composeMessage(reason string, messageFormat string, messageA ...interface{}) string {
 	out := reason
 	msg := fmt.Sprintf(messageFormat, messageA...)
 	if len(msg) > 0 {

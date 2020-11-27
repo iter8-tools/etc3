@@ -21,8 +21,8 @@ const (
 	// DefaultRequestCounter is the default request counter metric
 	DefaultRequestCounter = "request-count"
 
-	// DefaultAnalyticsServiceEndpoint is the default analytics service endpoint
-	DefaultAnalyticsServiceEndpoint = "http://127.0.0.1:8080/v2/analytics_results"
+	// // DefaultAnalyticsServiceEndpoint is the default analytics service endpoint
+	// DefaultAnalyticsServiceEndpoint = "http://127.0.0.1:8080/v2/analytics_results"
 
 	// DefaultIter8Namespace is the default namespace where iter8 is installed
 	DefaultIter8Namespace = "default"
@@ -33,10 +33,10 @@ func GetRequestCount() string {
 	return DefaultRequestCounter
 }
 
-// GetAnalyticsService returns the default analytics service defined by the install config
-func GetAnalyticsService() string {
-	return DefaultAnalyticsServiceEndpoint
-}
+// // GetAnalyticsService returns the default analytics service defined by the install config
+// func GetAnalyticsService() string {
+// 	return DefaultAnalyticsServiceEndpoint
+// }
 
 // GetIter8InstallNamespace returns the namespace where iter8 is deployed
 func GetIter8InstallNamespace() string {

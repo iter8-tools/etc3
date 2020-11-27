@@ -20,6 +20,7 @@ package v2alpha1
 import (
 	"time"
 
+	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/util"
 )
 
@@ -74,29 +75,35 @@ func (s *ExperimentSpec) GetNumberOfBaseline() int {
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
 
-// HasStartHandler ..
-func (e *Experiment) HasStartHandler() bool {
-	return e.Spec.GetStartHandler() != nil
+func handlersForStrategy(cfg configuration.Iter8Config, strategy StrategyType) *configuration.Handlers {
+	for _, t := range cfg.ExperimentTypes {
+		if t.Name == string(strategy) {
+			return &t.Handlers
+		}
+	}
+	return nil
 }
 
 // GetStartHandler returns the name of the handler to be called when an experiment starts
-func (s *ExperimentSpec) GetStartHandler() *string {
+func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Start == nil {
-		return nil
+		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		if nil == handlers {
+			return nil
+		}
+		return &handlers.Start
 	}
 	return s.Strategy.Handlers.Start
 }
 
-// InitializeStartHandler initializes the start handler (if not already set) to the default handler
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeStartHandler() bool {
-	// This may be overkill since we don't have a default start handler
-	// We may for rollback; so we write parallel code
+// InitializeStartHandler iinitializes the start handler (if not already set) to the
+// default rollback handler defined by the iter8 config.
+func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) bool {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Start == nil {
-		handler := s.GetStartHandler()
+		handler := s.GetStartHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Start = handler
 			return true
@@ -105,29 +112,26 @@ func (s *ExperimentSpec) InitializeStartHandler() bool {
 	return false
 }
 
-// HasFinishHandler ..
-func (e *Experiment) HasFinishHandler() bool {
-	return e.Spec.GetFinishHandler() != nil
-}
-
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
-func (s *ExperimentSpec) GetFinishHandler() *string {
+func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Finish == nil {
-		return nil
+		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		if nil == handlers {
+			return nil
+		}
+		return &handlers.Finish
 	}
 	return s.Strategy.Handlers.Finish
 }
 
-// InitializeFinishHandler initializes the finish handler (if not already set) to the default handler
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeFinishHandler() bool {
-	// This may be overkill since we don't have a default finish handler
-	// We may for rollback; so we write parallel code
+// InitializeFinishHandler iinitializes the finish handler (if not already set) to the
+// default rollback handler defined by the iter8 config.
+func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) bool {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Finish == nil {
-		handler := s.GetFinishHandler()
+		handler := s.GetFinishHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Finish = handler
 			return true
@@ -136,33 +140,27 @@ func (s *ExperimentSpec) InitializeFinishHandler() bool {
 	return false
 }
 
-// HasRollbackHandler ..
-func (e *Experiment) HasRollbackHandler() bool {
-	return e.Spec.GetRollbackHandler() != nil
-}
-
 // GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
-func (s *ExperimentSpec) GetRollbackHandler() *string {
+func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Rollback == nil {
-		switch s.Strategy.Type {
-		case StrategyTypeBlueGreen:
-			handler := DefaultRollbackHandler
-			return &handler
+		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		if nil == handlers {
+			return nil
 		}
-		return nil
+		return &handlers.Rollback
 	}
 	return s.Strategy.Handlers.Rollback
 }
 
-// InitializeRollbackHandler initializes the finish handler (if not already set) to the default handler
+// InitializeRollbackHandler initializes the rollback handler (if not already set) to the
+// default rollback handler defined by the iter8 config.
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeRollbackHandler() bool {
-	// We gave a default handler if bluegreen; see GetRollbackHandler
+func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config) bool {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Rollback == nil {
-		handler := s.GetRollbackHandler()
+		handler := s.GetRollbackHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Rollback = handler
 			return true
@@ -171,29 +169,27 @@ func (s *ExperimentSpec) InitializeRollbackHandler() bool {
 	return false
 }
 
-// HasFailureHandler ..
-func (e *Experiment) HasFailureHandler() bool {
-	return e.Spec.GetFailureHandler() != nil
-}
-
-// GetFailureHandler returns the handler to be called if a candidate fails its objective(s)
-func (s *ExperimentSpec) GetFailureHandler() *string {
+// GetFailureHandler returns the handler to be called if there is a failure during experiment execution
+func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Failure == nil {
-		return nil
+		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		if nil == handlers {
+			return nil
+		}
+		return &handlers.Failure
+
 	}
 	return s.Strategy.Handlers.Failure
 }
 
 // InitializeFailureHandler initializes the finish handler (if not already set) to the default handler
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeFailureHandler() bool {
-	// This may be overkill since we don't have a default start handler
-	// We may for rollback; so we write parallel code
+func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config) bool {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Failure == nil {
-		handler := s.GetFailureHandler()
+		handler := s.GetFailureHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Failure = handler
 			return true
@@ -204,12 +200,12 @@ func (s *ExperimentSpec) InitializeFailureHandler() bool {
 
 // InitializeHandlers initialize handlers if not already set
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeHandlers() bool {
-	change := s.InitializeStartHandler()
-	change = s.InitializeFinishHandler() || change
-	change = s.InitializeRollbackHandler() || change
-	change = s.InitializeFailureHandler() || change
-	return change
+func (s *ExperimentSpec) InitializeHandlers(cfg configuration.Iter8Config) bool {
+	changed := s.InitializeStartHandler(cfg)
+	changed = s.InitializeFinishHandler(cfg) || changed
+	changed = s.InitializeRollbackHandler(cfg) || changed
+	changed = s.InitializeFailureHandler(cfg) || changed
+	return changed
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -483,18 +479,5 @@ func (s *ExperimentSpec) InitializeCriteria() bool {
 	}
 	change := s.InitializeRequestCount()
 	change = s.InitializeObjectives() || change
-	return change
-}
-
-// GetRollbackOnAnyFailure identifies if the experiment should be rolled back on the failure of any objective
-// do we need this?
-
-// InitializeSpec initializes any fields in spec not already set
-// Returns true if a change was made, false if not
-func (e *Experiment) SpecLateInitialization() bool {
-	change := e.Spec.InitializeHandlers()
-	change = e.Spec.InitializeWeights() || change
-	change = e.Spec.InitializeDuration() || change
-	change = e.Spec.InitializeCriteria() || change
 	return change
 }

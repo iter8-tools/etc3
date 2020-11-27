@@ -19,6 +19,8 @@ spec:
         fieldPath: /spec/canaryTrafficPercent
   strategy:
     type: Canary
+    handlers:
+      start: start
   criteria:
     indicators:
     - 95th-percentile-tail-latency

@@ -63,11 +63,11 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 
 // AlreadyReadMetrics determines if we have read the metrics already or not
 func (r *ExperimentReconciler) AlreadyReadMetrics(instance *v2alpha1.Experiment) bool {
-	// TODO remove depenency on condition; look at metrics instead
-	return instance.Status.GetCondition(v2alpha1.ExperimentConditionMetricsSynced).IsTrue()
+	return len(instance.Spec.Metrics) > 0 || instance.Spec.Criteria == nil
 }
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
+// returns true is add metrics to the instance.Spec
 func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) bool {
 	log := util.Logger(ctx)
 	log.Info("ReadMetrics() called")
@@ -75,8 +75,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 
 	criteria := instance.Spec.Criteria
 	if criteria == nil {
-		r.markMetricsSynced(ctx, instance, "No criteria specified")
-		return true
+		return false
 	}
 
 	metricsCache := make(map[string]*v2alpha1.Metric)
@@ -129,7 +128,5 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		instance.Spec.Metrics = append(instance.Spec.Metrics,
 			v2alpha1.MetricInfo{Name: name, MetricObj: *obj})
 	}
-	r.markMetricsSynced(ctx, instance, "Read all metrics")
-	r.SpecModified = true
 	return true
 }

@@ -27,6 +27,10 @@ import (
 // +kubebuilder:object:root=true
 // +groupName=iter8.tools
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.type"
+// +kubebuilder:printcolumn:name="target",type="string",JSONPath=".spec.target"
+// +kubebuilder:printcolumn:name="completed iterations",type="string",JSONPath=".status.completedIterations"
+// +kubebuilder:printcolumn:name="message",type="string",JSONPath=".status.message"
 type Experiment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -51,7 +55,7 @@ type ExperimentSpec struct {
 	// Target is used to enable concurrent experimentation
 	// Two experiments cannot be running concurrently for the same target.
 	// +kubebuilder:validation:MinLength:=1
-	Target *string `json:"target"`
+	Target string `json:"target"`
 
 	// VersionInfo is information about versions that is typically provided by the domain start handler
 	// +optional
@@ -283,9 +287,6 @@ type ExperimentStatus struct {
 	// It is undefined until the experiment starts.
 	// +optional
 	CompletedIterations *int32 `json:"completedIterations,omitempty"`
-
-	// Phase marks the phase the experiment is at
-	Phase PhaseType `json:"phase"`
 
 	// CurrentWeightDistribution is currently applied traffic weights
 	// +optional
