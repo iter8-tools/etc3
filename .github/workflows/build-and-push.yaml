@@ -72,5 +72,5 @@ jobs:
     - uses: docker/build-push-action@v2
       with:
         context: .
-        tags: iter8/iter8-analytics:${{ env.VERSION }}
+        tags: iter8/etc3:${{ env.VERSION }}
         push: true
