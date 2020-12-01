@@ -29,7 +29,7 @@ type Iter8Config struct {
 	ExperimentTypes []ExperimentType `yaml:"experimentTypes"`
 	Analytics       `json:"analytics" yaml:"analytics"`
 	Metrics         `json:"metrics" yaml:"metrics"`
-	Namespace       string `envconfig:"MY_POD_NAMESPACE"`
+	Namespace       string `envconfig:"ITER8_NAMESPACE"`
 }
 
 // ExperimentType is list of handlers for each supported experiment type
@@ -57,8 +57,8 @@ type Metrics struct {
 }
 
 // ReadConfig reads the configuration from a combination of files and the environment
-func ReadConfig(cfg *Iter8Config) error {
-	file, err := os.Open("default.yaml")
+func ReadConfig(configFile string, cfg *Iter8Config) error {
+	file, err := os.Open(configFile)
 	if err != nil {
 		return err
 	}

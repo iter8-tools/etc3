@@ -49,7 +49,7 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 	if err != nil {
 		// if not found and used DEFAULT namespace, try again with the iter8 namespace
 		if errors.IsNotFound(err) && !explicitNamespaceProvided {
-			err = r.Get(ctx, types.NamespacedName{Name: name, Namespace: util.GetIter8InstallNamespace()}, metric)
+			err = r.Get(ctx, types.NamespacedName{Name: name, Namespace: r.Iter8Config.Namespace}, metric)
 		}
 	}
 	if err != nil {
@@ -61,11 +61,6 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 	return nil
 }
 
-// AlreadyReadMetrics determines if we have read the metrics already or not
-func (r *ExperimentReconciler) AlreadyReadMetrics(instance *v2alpha1.Experiment) bool {
-	return len(instance.Spec.Metrics) > 0 || instance.Spec.Criteria == nil
-}
-
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
 // returns true is add metrics to the instance.Spec
 func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) bool {
@@ -74,24 +69,20 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 	defer log.Info("ReadMetrics() completed")
 
 	criteria := instance.Spec.Criteria
-	if criteria == nil {
+	if len(instance.Spec.Metrics) > 0 || criteria == nil {
 		return false
 	}
 
 	metricsCache := make(map[string]*v2alpha1.Metric)
 
 	// name of request counter
-	requestCount := criteria.RequestCount
-	if requestCount == nil {
-		rc := util.DefaultRequestCounter
-		requestCount = &rc
-	}
+	requestCount := instance.Spec.GetRequestCount(r.Iter8Config)
 	err := r.ReadMetric(ctx, instance, *requestCount, metricsCache)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			r.markMetricUnavailable(ctx, instance, "Unable to find metric %s", *requestCount)
+			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", *requestCount)
 		} else {
-			r.markMetricUnavailable(ctx, instance, "Unable to load metric %s", *requestCount)
+			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", *requestCount)
 		}
 		return false
 	}
@@ -101,9 +92,9 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		if metricsCache[indicator] == nil {
 			if err := r.ReadMetric(ctx, instance, indicator, metricsCache); err != nil {
 				if errors.IsNotFound(err) {
-					r.markMetricUnavailable(ctx, instance, "Unable to find metric %s", indicator)
+					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", indicator)
 				} else {
-					r.markMetricUnavailable(ctx, instance, "Unable to load metric %s", indicator)
+					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", indicator)
 				}
 				return false
 			}
@@ -114,9 +105,9 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		if metricsCache[objective.Metric] == nil {
 			if err := r.ReadMetric(ctx, instance, objective.Metric, metricsCache); err != nil {
 				if errors.IsNotFound(err) {
-					r.markMetricUnavailable(ctx, instance, "Unable to find metric %s", objective.Metric)
+					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", objective.Metric)
 				} else {
-					r.markMetricUnavailable(ctx, instance, "Unable to load metric %s", objective.Metric)
+					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", objective.Metric)
 				}
 				return false
 			}

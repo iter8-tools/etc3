@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -88,7 +89,11 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if err := r.Status().Update(ctx, instance); err != nil {
 			log.Error(err, "Failed to update Status after initialization.")
 		}
-		r.markExperimentInitialized(ctx, instance, "Experiment status initialized")
+		// r.markExperimentInitialized(ctx, instance, "xperiment status initialized")
+		// r.markExperimentProgress(ctx, instance, v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
+		r.record(ctx, instance,
+			v2alpha1.ExperimentConditionExperimentCompleted, v1.ConditionFalse,
+			v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
 		return r.endRequest(ctx, instance)
 	}
 	log.Info("Status initialized")
@@ -112,7 +117,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		case HandlerStatusComplete:
 			return r.endExperiment(ctx, instance)
 		case HandlerStatusFailed:
-			r.markHandlerFailedError(ctx, instance, "%s handler '%s' failed", handlerType, *handler)
+			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
 			return r.failExperiment(ctx, instance, nil)
 		default: // case HandlerStatusNoHandler, HandlerStatusNotLaunched
 			// do nothing
@@ -127,7 +132,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if err := r.Update(ctx, instance); err != nil && !validUpdateErr(err) {
 			log.Error(err, "Failed to update Spec after late initialization.")
 		}
-		r.markExperimentInitialized(ctx, instance, "Late initialization complete")
+		r.markExperimentProgress(ctx, instance, v2alpha1.ReasonExperimentInitialized, "Late initialization complete")
 		return r.endRequest(ctx, instance)
 	}
 	log.Info("Late initialization completed")
@@ -145,7 +150,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// if !TargetAquired() {
 	// 	if CanAquireTarget() {
 	// 		AquireTarget()
-	// 		   r.markTargetAcquired(ctx, instance, "Target '%s' acquired", instance.Spec.Target)
+	// 		   r.markExperimentProgress(ctx, instance, v2alpha1.ReasonTargetAcquired, "Target '%s' acquired", instance.Spec.Target)
 	// 	}
 	// 	r.endRequest()
 	// }
@@ -157,13 +162,13 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	switch r.GetHandlerStatus(ctx, instance, handler) {
 	case HandlerStatusNotLaunched:
 		if err := r.LaunchHandler(ctx, instance, *handler); err != nil {
-			r.markLaunchHandlerFailed(ctx, instance, "failure launching %s handler '%s': %s", HandlerTypeStart, *handler, err.Error())
+			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", HandlerTypeStart, *handler, err.Error())
 			return r.failExperiment(ctx, instance, err)
 		}
-		r.markStartHandlerLaunched(ctx, instance, "Start handler '%s' launched", *handler)
+		r.markExperimentProgress(ctx, instance, v2alpha1.ReasonStartHandlerLaunched, "Start handler '%s' launched", *handler)
 		return r.endRequest(ctx, instance)
 	case HandlerStatusFailed:
-		r.markHandlerFailedError(ctx, instance, "%s handler '%s' failed", HandlerTypeStart, *handler)
+		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", HandlerTypeStart, *handler)
 		return r.failExperiment(ctx, instance, nil)
 	case HandlerStatusRunning:
 		return r.endRequest(ctx, instance)
@@ -220,10 +225,8 @@ func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance 
 	changed := instance.Spec.InitializeHandlers(r.Iter8Config)
 	changed = instance.Spec.InitializeWeights() || changed
 	changed = instance.Spec.InitializeDuration() || changed
-	changed = instance.Spec.InitializeCriteria() || changed
-	if !r.AlreadyReadMetrics(instance) {
-		changed = r.ReadMetrics(ctx, instance) || changed
-	}
+	changed = instance.Spec.InitializeCriteria(r.Iter8Config) || changed
+	changed = r.ReadMetrics(ctx, instance) || changed
 
 	return changed
 }
@@ -298,14 +301,14 @@ func (r *ExperimentReconciler) terminate(ctx context.Context, instance *v2alpha1
 	handler := r.GetHandler(instance, handlerType)
 	if handler != nil {
 		if err := r.LaunchHandler(ctx, instance, *handler); err != nil {
-			r.markLaunchHandlerFailed(ctx, instance, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
+			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
 			if handlerType != HandlerTypeFailure {
 				// can't call failExperiment if we are already in failExperiment
 				return r.failExperiment(ctx, instance, err)
 			}
 			return r.endExperiment(ctx, instance)
 		}
-		r.markTerminalHandlerLaunched(ctx, instance, "%s handler '%s' launched", handlerType, *handler)
+		r.markExperimentProgress(ctx, instance, v2alpha1.ReasonTerminalHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
 		return r.endRequest(ctx, instance)
 	}
 	return r.endExperiment(ctx, instance)

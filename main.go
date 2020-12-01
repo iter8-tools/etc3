@@ -51,15 +51,15 @@ func init() {
 }
 
 func main() {
-	var analyticsEndpoint string
 	var metricsAddr string
 	var enableLeaderElection bool
-	flag.StringVar(&analyticsEndpoint, "analytics-endpoint", "http://foo//v2/analytics_results",
-		"The analytics service endpont")
+	var configFile string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&configFile, "config", "/defaults.yaml",
+		"Location of iter8 configuration file")
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
@@ -82,9 +82,8 @@ func main() {
 	}
 
 	cfg := configuration.Iter8Config{}
-	err = configuration.ReadConfig(&cfg)
+	err = configuration.ReadConfig(configFile, &cfg)
 	if err != nil {
-		// set default values? or fail
 		setupLog.Error(err, "unable to configure manager")
 		os.Exit(1)
 	}

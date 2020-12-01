@@ -61,7 +61,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
-		r.markAnalyticsServiceError(ctx, instance, "Unable to contact analytics engine %s", analyticsEndpoint)
+		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonAnalyticsServiceError, "Unable to contact analytics engine %s", analyticsEndpoint)
 		return r.failExperiment(ctx, instance, err)
 	}
 
@@ -83,7 +83,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// update weight distribution
 	// TODO if we failed some versions, how do we distribute weight?
 	if err := r.redistributeWeight(ctx, instance); err != nil {
-		r.markWeightRedistributionFailed(ctx, instance, "Failure redistributing weights: %s", err.Error())
+		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
 		return r.failExperiment(ctx, instance, err)
 	}
 
@@ -95,7 +95,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	if !moreIterationsNeeded(instance) {
 		return r.finishExperiment(ctx, instance)
 	}
-	r.markIterationCompleted(ctx, instance, "Completed Iteration %d", *instance.Status.CompletedIterations)
+	r.markExperimentProgress(ctx, instance, v2alpha1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
 	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
 }
 

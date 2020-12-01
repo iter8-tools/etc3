@@ -103,52 +103,26 @@ func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
 	return *s.CompletedIterations
 }
 
-// MarkExperimentCompleted sets the condition that the experiemnt is completed
-func (s *ExperimentStatus) MarkExperimentCompleted(messageFormat string, messageA ...interface{}) (bool, string) {
-	reason := ReasonExperimentCompleted
-	message := composeMessage(reason, messageFormat, messageA...)
-	s.Message = &message
-	return s.GetCondition(ExperimentConditionExperimentCompleted).
-		markCondition(corev1.ConditionTrue, reason, messageFormat, messageA...), reason
-}
+// MarkCondition sets a condition with a status, reason and message.
+// The reason and method are also combined to set status.Message
+// Note that we compare all fields to determine if we are actually changing anything.
+// We do this becasue we want to also expose the message externally (via Kubernetes events and
+// notifications) but want to do so only once -- the first time it is set.
+func (s *ExperimentStatus) MarkCondition(condition ExperimentConditionType, status corev1.ConditionStatus, reason string, messageFormat string, messageA ...interface{}) bool {
+	conditionMessage := fmt.Sprintf(messageFormat, messageA...)
 
-// MarkExperimentProgressing sets the condition that the experiemnt is progressing
-func (s *ExperimentStatus) MarkExperimentProgressing(reason string, messageFormat string, messageA ...interface{}) (bool, string) {
-	message := composeMessage(reason, messageFormat, messageA...)
-	s.Message = &message
-	return s.GetCondition(ExperimentConditionExperimentCompleted).
-		markCondition(corev1.ConditionFalse, reason, messageFormat, messageA...), reason
-}
+	statusMessage := reason
+	if len(conditionMessage) > 0 {
+		statusMessage += ": " + conditionMessage
+	}
+	s.Message = &statusMessage
 
-// MarkExperimentFailed sets the condition that the experiment failed
-// Return true if it's converted from true or unknown
-func (s *ExperimentStatus) MarkExperimentFailed(reason string, messageFormat string, messageA ...interface{}) (bool, string) {
-	message := composeMessage(reason, messageFormat, messageA...)
-	s.Message = &message
-	return s.GetCondition(ExperimentConditionExperimentFailed).
-		markCondition(corev1.ConditionTrue, reason, messageFormat, messageA...), reason
-}
-
-func (c *ExperimentCondition) markCondition(status corev1.ConditionStatus, reason string, messageFormat string, messageA ...interface{}) bool {
-	fmt.Printf("status = %v\n", status)
-	fmt.Printf("resason = %s\n", reason)
-	fmt.Printf("messageFormat = %s\n", messageFormat)
-	fmt.Printf("condition = %v\n", c)
-	message := fmt.Sprintf(messageFormat, messageA...)
-	updated := status != c.Status || c.Reason == nil || c.Message == nil || reason != *c.Reason || message != *c.Message
+	c := s.GetCondition(condition)
+	updated := status != c.Status || c.Reason == nil || c.Message == nil || reason != *c.Reason || conditionMessage != *c.Message
 	c.Status = status
 	c.Reason = &reason
-	c.Message = &message
+	c.Message = &conditionMessage
 	now := metav1.Now()
 	c.LastTransitionTime = &now
 	return updated
-}
-
-func composeMessage(reason string, messageFormat string, messageA ...interface{}) string {
-	out := reason
-	msg := fmt.Sprintf(messageFormat, messageA...)
-	if len(msg) > 0 {
-		out += ": " + msg
-	}
-	return out
 }

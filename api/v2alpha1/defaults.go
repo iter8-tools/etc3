@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/iter8-tools/etc3/configuration"
-	"github.com/iter8-tools/etc3/util"
 )
 
 const (
@@ -413,12 +412,12 @@ func (s *ExperimentSpec) InitializeDuration() bool {
 
 // GetRequestCount returns the requst count metric
 // If there are no criteria specified, this is nil
-func (s *ExperimentSpec) GetRequestCount() *string {
+func (s *ExperimentSpec) GetRequestCount(cfg configuration.Iter8Config) *string {
 	if s.Criteria == nil {
 		return nil
 	}
 	if s.Criteria.RequestCount == nil {
-		rc := util.GetRequestCount()
+		rc := cfg.RequestCount
 		return &rc
 	}
 	return s.Criteria.RequestCount
@@ -426,12 +425,12 @@ func (s *ExperimentSpec) GetRequestCount() *string {
 
 // InitializeRequestCount sets the request count metric to the default value if not already set
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeRequestCount() bool {
+func (s *ExperimentSpec) InitializeRequestCount(cfg configuration.Iter8Config) bool {
 	if s.Criteria == nil {
 		return false
 	}
 	if s.Criteria.RequestCount == nil {
-		s.Criteria.RequestCount = s.GetRequestCount()
+		s.Criteria.RequestCount = s.GetRequestCount(cfg)
 		return true
 	}
 	return false
@@ -473,11 +472,11 @@ func (s *ExperimentSpec) InitializeObjectives() bool {
 
 // InitializeCriteria initializes any criteria details not already set
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeCriteria() bool {
+func (s *ExperimentSpec) InitializeCriteria(cfg configuration.Iter8Config) bool {
 	if s.Criteria == nil {
 		return false
 	}
-	change := s.InitializeRequestCount()
+	change := s.InitializeRequestCount(cfg)
 	change = s.InitializeObjectives() || change
 	return change
 }

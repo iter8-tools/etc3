@@ -25,11 +25,11 @@ import (
 // IsVersionInfoValid verifies that Spec.versionInfo is valid
 func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
 	if !hasVersionInfo(instance.Spec) {
-		r.markInvalidExperiment(ctx, instance, "No versionInfo in experiment")
+		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "No versionInfo in experiment")
 		return false
 	}
 	if !candidatesMatchStrategy(instance.Spec) {
-		r.markInvalidExperiment(ctx, instance, "Invlid number of candidates for %s experiment", instance.Spec.Strategy.Type)
+		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invlid number of candidates for %s experiment", instance.Spec.Strategy.Type)
 		return false
 	}
 
