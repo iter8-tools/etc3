@@ -13,6 +13,7 @@ RUN go mod download
 COPY main.go main.go
 COPY analytics/ analytics/
 COPY api/ api/
+COPY configuration/ configuration/
 COPY controllers/ controllers/
 COPY util/ util/
 
