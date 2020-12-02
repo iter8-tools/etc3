@@ -21,8 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"strings"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/util"
@@ -159,7 +157,7 @@ func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.O
 
 	data, err := json.Marshal([]patchIntValue{{
 		Op:    "add",
-		Path:  path(objRef.FieldPath),
+		Path:  objRef.FieldPath,
 		Value: weight,
 	}})
 	if err != nil {
@@ -175,14 +173,4 @@ func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.O
 	}
 
 	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{FieldManager: "etc3"})
-}
-
-// fieldPath should be of the form "/spec/..."
-// However, we had it using "." as separaters for a while
-// This method allows for both
-func path(path string) string {
-	if strings.Contains(path, "/") {
-		return path
-	}
-	return fmt.Sprintf("/%s", strings.ReplaceAll(path, ".", "/"))
 }
