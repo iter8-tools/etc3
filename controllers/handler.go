@@ -155,7 +155,7 @@ func setEnvVariable(env []v1.EnvVar, name string, value string) []v1.EnvVar {
 		}
 	}
 	return append(env, v1.EnvVar{
-		Name:  "EXPERIMENT_NAME",
+		Name:  name,
 		Value: value,
 	})
 }
