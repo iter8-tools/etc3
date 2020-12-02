@@ -1,0 +1,48 @@
+# binding for controller and handlers
+# controllers are bound to roles: experiments, metrics and jobs
+# handlers are only bound to roles: experiments and metrics
+# additional roles and rolebindings come from domain package(s)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: experiments
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: experiments
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: system
+- kind: ServiceAccount
+  name: handlers
+  namespace: system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metrics
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: system
+- kind: ServiceAccount
+  name: handlers
+  namespace: system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jobs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jobs
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: system

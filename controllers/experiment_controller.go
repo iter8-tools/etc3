@@ -47,9 +47,12 @@ type ExperimentReconciler struct {
 	StatusModified bool
 }
 
-// +kubebuilder:rbac:groups=iter8.tools,resources=experiments,verbs=get;list;watch;create;update;patch;delete
+/* RBAC roles are handwritten in config/rbac-iter8 so that different roles can be assigned
+//   to the controller and to the handlers
+// +kubebuilder:rbac:groups=iter8.tools,resources=experiments,verbs=get;list;watch;update;patch;delete
 // +kubebuilder:rbac:groups=iter8.tools,resources=experiments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;delete
+// +kubebuilder:rbac:groups=iter8.tools.resources=metrics,verbs=get;list;watch
+*/
 
 // Reconcile attempts to align the resource with the spec
 func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
