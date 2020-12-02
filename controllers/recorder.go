@@ -29,23 +29,23 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (r *ExperimentReconciler) markExperimentFailed(ctx context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) recordExperimentFailed(ctx context.Context, instance *v2alpha1.Experiment,
 	reason string, messageFormat string, messageA ...interface{}) {
-	r.record(ctx, instance,
+	r.recordEvent(ctx, instance,
 		v2alpha1.ExperimentConditionExperimentFailed, corev1.ConditionTrue,
 		reason, messageFormat, messageA...)
 }
 
-func (r *ExperimentReconciler) markExperimentCompleted(ctx context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) recordExperimentCompleted(ctx context.Context, instance *v2alpha1.Experiment,
 	messageFormat string, messageA ...interface{}) {
-	r.record(ctx, instance,
+	r.recordEvent(ctx, instance,
 		v2alpha1.ExperimentConditionExperimentCompleted, corev1.ConditionTrue,
 		v2alpha1.ReasonExperimentCompleted, messageFormat, messageA...)
 }
 
-func (r *ExperimentReconciler) markExperimentProgress(ctx context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) recordExperimentProgress(ctx context.Context, instance *v2alpha1.Experiment,
 	reason string, messageFormat string, messageA ...interface{}) {
-	r.record(ctx, instance,
+	r.recordEvent(ctx, instance,
 		v2alpha1.ExperimentConditionExperimentCompleted, corev1.ConditionFalse,
 		reason, messageFormat, messageA...)
 }
@@ -54,7 +54,7 @@ func (r *ExperimentReconciler) markExperimentProgress(ctx context.Context, insta
 // in a log message, kubernetes event or notification. Consequently, we must pay attention to whether
 // or not we are recording an event for the first time or repeating it. We do this by first updating
 // a condition on instance.Status. If the condition changes, we report the event externally.
-func (r *ExperimentReconciler) record(ctx context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) recordEvent(ctx context.Context, instance *v2alpha1.Experiment,
 	condition v2alpha1.ExperimentConditionType, status corev1.ConditionStatus,
 	reason string, messageFormat string, messageA ...interface{}) {
 	ok := instance.Status.MarkCondition(condition, status, reason, messageFormat, messageA...)

@@ -22,22 +22,38 @@ import (
 	"github.com/iter8-tools/etc3/api/v2alpha1"
 )
 
-// IsVersionInfoValid verifies that Spec.versionInfo is valid
-func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
-	if !hasVersionInfo(instance.Spec) {
-		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "No versionInfo in experiment")
+// IsExperimentValid verifies that instance.Spec is valid; this should be done after late initialization
+// TODO 1. If fixed_split, we have an initial split (or are we just assuming start handler does it?)
+// TODO 2. Warning if no criteria?
+// TODO 3. For ab and abn there is a reward
+// TODO 4. If rollbackOnFailure there is a rollback handler?
+// DONE 5. maxIterations is >= 1
+func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
+	// 5. maxIterations is >= 1
+	if instance.Spec.GetMaxIterations() < 1 {
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Maximum number of iterations must greater than 0")
 		return false
 	}
+	return true
+}
+
+// IsVersionInfoValid verifies that Spec.versionInfo is valid
+// DONE 1. verify that versionInfo is present
+// DONE 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
+// TODO 3. verify any ObjectReferences are existing objects in the cluster
+func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
+	// 1. verify that versionInfo is present
+	if instance.Spec.VersionInfo == nil {
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "No versionInfo in experiment")
+		return false
+	}
+	// 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
 	if !candidatesMatchStrategy(instance.Spec) {
-		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invlid number of candidates for %s experiment", instance.Spec.Strategy.Type)
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invlid number of candidates for %s experiment", instance.Spec.Strategy.Type)
 		return false
 	}
 
 	return true
-}
-
-func hasVersionInfo(s v2alpha1.ExperimentSpec) bool {
-	return s.VersionInfo != nil
 }
 
 func candidatesMatchStrategy(s v2alpha1.ExperimentSpec) bool {

@@ -45,10 +45,10 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}) (*v2alpha1.An
 	defer raw.Body.Close()
 	body, err := ioutil.ReadAll(raw.Body)
 
-	//var prettyBody bytes.Buffer
-	//json.Indent(&prettyBody, body, "", "  ")
+	var prettyBody bytes.Buffer
+	json.Indent(&prettyBody, body, "", "  ")
 	log.Info("post response", "URL", endpoint)
-	//log.Info(string(prettyBody.Bytes()))
+	log.Info(string(prettyBody.Bytes()))
 
 	if raw.StatusCode >= 400 {
 		return nil, fmt.Errorf("%v", string(body))

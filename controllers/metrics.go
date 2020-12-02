@@ -80,9 +80,9 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 	err := r.ReadMetric(ctx, instance, *requestCount, metricsCache)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", *requestCount)
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", *requestCount)
 		} else {
-			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", *requestCount)
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", *requestCount)
 		}
 		return false
 	}
@@ -92,9 +92,9 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		if metricsCache[indicator] == nil {
 			if err := r.ReadMetric(ctx, instance, indicator, metricsCache); err != nil {
 				if errors.IsNotFound(err) {
-					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", indicator)
+					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", indicator)
 				} else {
-					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", indicator)
+					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", indicator)
 				}
 				return false
 			}
@@ -105,9 +105,9 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		if metricsCache[objective.Metric] == nil {
 			if err := r.ReadMetric(ctx, instance, objective.Metric, metricsCache); err != nil {
 				if errors.IsNotFound(err) {
-					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", objective.Metric)
+					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", objective.Metric)
 				} else {
-					r.markExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", objective.Metric)
+					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", objective.Metric)
 				}
 				return false
 			}

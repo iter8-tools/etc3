@@ -54,14 +54,21 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// record start time of experiment if not already set
 	if err := r.setStartTimeIfNotSet(ctx, instance); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, err // TODO don't want to reconcile if there is an error
 	}
+
+	if !r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
+		// not enough time has passed since the last iteration, wait
+		return r.endRequest(ctx, instance)
+	}
+
+	// TODO  GET CURRENT WEIGHTS (from cluster)
 
 	analyticsEndpoint := r.Iter8Config.Endpoint //r.GetAnalyticsService()
 	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
-		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonAnalyticsServiceError, "Unable to contact analytics engine %s", analyticsEndpoint)
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonAnalyticsServiceError, "Unable to contact analytics engine %s", analyticsEndpoint)
 		return r.failExperiment(ctx, instance, err)
 	}
 
@@ -81,11 +88,13 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	}
 
 	// update weight distribution
-	// TODO if we failed some versions, how do we distribute weight?
 	if err := r.redistributeWeight(ctx, instance); err != nil {
-		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
 		return r.failExperiment(ctx, instance, err)
 	}
+
+	// update status.recommendedBaseline if a new winner identified
+	instance.Status.SetRecommendedBaseline(instance.Spec.VersionInfo.Baseline.Name)
 
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)
@@ -95,7 +104,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	if !moreIterationsNeeded(instance) {
 		return r.finishExperiment(ctx, instance)
 	}
-	r.markExperimentProgress(ctx, instance, v2alpha1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
+	r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
 	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
 }
 
@@ -122,7 +131,6 @@ func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *
 	*instance.Status.CompletedIterations++
 	now := metav1.Now()
 	instance.Status.LastUpdateTime = &now
-	// TODO condition update
 	r.StatusModified = true
 }
 

@@ -21,7 +21,6 @@ import (
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -73,12 +72,12 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		}
 		// other error reading instance; return
 		log.Error(err, "Unable to read experiment object.")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, err // TODO
 	}
 
 	log.Info("found instance", "instance", instance, "updatedStatus", r.StatusModified) //, "spec", instance.Spec, "status", instance.Status)
 
-	// ADD FINALIZER
+	// ADD FINALIZER (check first...)
 	// If instance does not have a finalizer, add one here (if desired)
 	// IF DELETION, RUN FINALIZER and REMOVE FINALIZER
 	// If instance deleted and have a finalizer, run it now
@@ -89,11 +88,12 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if err := r.Status().Update(ctx, instance); err != nil {
 			log.Error(err, "Failed to update Status after initialization.")
 		}
-		// r.markExperimentInitialized(ctx, instance, "xperiment status initialized")
-		// r.markExperimentProgress(ctx, instance, v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
-		r.record(ctx, instance,
-			v2alpha1.ExperimentConditionExperimentCompleted, v1.ConditionFalse,
+		// r.recordExperimentInitialized(ctx, instance, "Experiment status initialized")
+		r.recordExperimentProgress(ctx, instance,
 			v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
+		// r.recordEvent(ctx, instance,
+		// 	v2alpha1.ExperimentConditionExperimentCompleted, v1.ConditionFalse,
+		// 	v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
 		return r.endRequest(ctx, instance)
 	}
 	log.Info("Status initialized")
@@ -117,8 +117,9 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		case HandlerStatusComplete:
 			return r.endExperiment(ctx, instance)
 		case HandlerStatusFailed:
-			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
-			return r.failExperiment(ctx, instance, nil)
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
+			// we don't call failExperiment here because we are already ending; we just end
+			return r.endExperiment(ctx, instance)
 		default: // case HandlerStatusNoHandler, HandlerStatusNotLaunched
 			// do nothing
 		}
@@ -132,17 +133,16 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if err := r.Update(ctx, instance); err != nil && !validUpdateErr(err) {
 			log.Error(err, "Failed to update Spec after late initialization.")
 		}
-		r.markExperimentProgress(ctx, instance, v2alpha1.ReasonExperimentInitialized, "Late initialization complete")
+		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonExperimentInitialized, "Late initialization complete")
 		return r.endRequest(ctx, instance)
 	}
 	log.Info("Late initialization completed")
 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
-	// 1. If fixed_split, we have an initial split (or are we just assuming start handler does it?)
-	// 2. Warning if no criteria?
-	// 3. For ab and abn there is a reward
-	// 4. If rollbackOnFailure there is a rollback handler?
-	// 5.
+	// See IsExperimentValid() for list of validations done
+	if !r.IsExperimentValid(ctx, instance) {
+		r.failExperiment(ctx, instance, nil)
+	}
 
 	// TARGET ACQUISITION
 	// ensure that the target is not involved in another experiment
@@ -162,13 +162,13 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	switch r.GetHandlerStatus(ctx, instance, handler) {
 	case HandlerStatusNotLaunched:
 		if err := r.LaunchHandler(ctx, instance, *handler); err != nil {
-			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", HandlerTypeStart, *handler, err.Error())
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", HandlerTypeStart, *handler, err.Error())
 			return r.failExperiment(ctx, instance, err)
 		}
-		r.markExperimentProgress(ctx, instance, v2alpha1.ReasonStartHandlerLaunched, "Start handler '%s' launched", *handler)
+		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonStartHandlerLaunched, "Start handler '%s' launched", *handler)
 		return r.endRequest(ctx, instance)
 	case HandlerStatusFailed:
-		r.markExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", HandlerTypeStart, *handler)
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", HandlerTypeStart, *handler)
 		return r.failExperiment(ctx, instance, nil)
 	case HandlerStatusRunning:
 		return r.endRequest(ctx, instance)
@@ -177,13 +177,14 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	}
 	log.Info("Start Handling Complete")
 
-	// VERSION VALIDATION
-	// 1. verify that versionInfo is present
-	// 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
-	// TODO 3. verify any ObjectReferences are real objects in the cluster
+	// VERSION VALIDATION (versionInfo should be created by start handler)
+	// See IsVersionInfoValid() for list of validations done
 	if !r.IsVersionInfoValid(ctx, instance) {
 		r.failExperiment(ctx, instance, nil)
 	}
+
+	// If not set, set an initial status.recommendedBaseline
+	instance.Status.SetRecommendedBaseline(instance.Spec.VersionInfo.Baseline.Name)
 
 	// INITIAL WEIGHT DISTRIBUTION (FixedSplit only)
 	// if instance.Spec.GetAlgorithm() == v2alpha1.AlgorithmTypeFixedSplit {
@@ -191,24 +192,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// }
 
 	// EXECUTE ITERATION
-	if moreIterationsNeeded(instance) {
-		if r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
-			log.Info("Executing Iteration",
-				"completed iterations", *instance.Status.CompletedIterations,
-				"maxIterations", instance.Spec.GetMaxIterations())
-			return r.doIteration(ctx, instance)
-		}
-		// not enough time has passed; keep waiting
-		return r.endRequest(ctx, instance)
-	}
-	log.Info("No more iterations to execute",
-		"completed iterations", *instance.Status.CompletedIterations,
-		"maxIterations", instance.Spec.GetMaxIterations())
-
-	// FUTURE PROMOTE LOGIC ?
-
-	// FINISH HANDLER
-	return r.finishExperiment(ctx, instance)
+	return r.doIteration(ctx, instance)
 }
 
 // SetupWithManager ..
@@ -262,7 +246,7 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	defer log.Info("finishExperiment completed")
 
 	result, err := r.terminate(ctx, instance, HandlerTypeFinish)
-	r.markExperimentCompleted(ctx, instance, "Experiment completed successfully")
+	r.recordExperimentCompleted(ctx, instance, "Experiment completed successfully")
 	return result, err
 }
 
@@ -272,7 +256,7 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	defer log.Info("rollbackExperiment ended")
 
 	result, err := r.terminate(ctx, instance, HandlerTypeRollback)
-	r.markExperimentCompleted(ctx, instance, "Experiment rolled back")
+	r.recordExperimentCompleted(ctx, instance, "Experiment rolled back")
 	return result, err
 }
 
@@ -285,7 +269,7 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 		log.Error(err, err.Error())
 	}
 	result, err := r.terminate(ctx, instance, HandlerTypeFailure)
-	r.markExperimentCompleted(ctx, instance, "Experiment failed")
+	r.recordExperimentCompleted(ctx, instance, "Experiment failed")
 	return result, err
 }
 
@@ -301,14 +285,14 @@ func (r *ExperimentReconciler) terminate(ctx context.Context, instance *v2alpha1
 	handler := r.GetHandler(instance, handlerType)
 	if handler != nil {
 		if err := r.LaunchHandler(ctx, instance, *handler); err != nil {
-			r.markExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
 			if handlerType != HandlerTypeFailure {
 				// can't call failExperiment if we are already in failExperiment
 				return r.failExperiment(ctx, instance, err)
 			}
 			return r.endExperiment(ctx, instance)
 		}
-		r.markExperimentProgress(ctx, instance, v2alpha1.ReasonTerminalHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
+		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonTerminalHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
 		return r.endRequest(ctx, instance)
 	}
 	return r.endExperiment(ctx, instance)

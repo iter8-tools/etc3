@@ -103,6 +103,34 @@ func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
 	return *s.CompletedIterations
 }
 
+// SetRecommendedBaseline sets a recommended baseline to either:
+// the recommended winner or the current baseline
+func (s *ExperimentStatus) SetRecommendedBaseline(currentBaseline string) {
+	recommendation := identfiedWinner(s.Analysis)
+	if recommendation == nil {
+		recommendation = &currentBaseline
+	}
+	if s.RecommendedBaseline == nil {
+		s.RecommendedBaseline = recommendation
+	}
+	if *s.RecommendedBaseline != *recommendation {
+		s.RecommendedBaseline = recommendation
+	}
+}
+
+func identfiedWinner(analysis *Analysis) *string {
+	if analysis == nil || analysis.WinnerAssessment == nil {
+		return nil
+	}
+	if !analysis.WinnerAssessment.Data.WinnerFound {
+		return nil
+	}
+	if analysis.WinnerAssessment.Data.Winner == nil {
+		return nil
+	}
+	return analysis.WinnerAssessment.Data.Winner
+}
+
 // MarkCondition sets a condition with a status, reason and message.
 // The reason and method are also combined to set status.Message
 // Note that we compare all fields to determine if we are actually changing anything.
