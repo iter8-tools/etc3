@@ -30,7 +30,7 @@ spec:
         - --enable-leader-election
         - -config 
         - defaults/defaults.yaml
-        image: controller:latest
+        image: iter8/etc3:latest
         name: manager
         env:
           - name: ITER8_ANALYTICS_ENDPOINT
