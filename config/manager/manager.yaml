@@ -22,13 +22,23 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      serviceAccountName: controller
       containers:
       - command:
         - /manager
         args:
         - --enable-leader-election
+        - -config 
+        - ./defaults.yaml
         image: controller:latest
         name: manager
+        env:
+          - name: ITER8_ANALYTICS_ENDPOINT
+            value: http://iter8-analytics/v2/analytics_results
+          - name: ITER8_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         resources:
           limits:
             cpu: 100m
@@ -36,4 +46,16 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        volumeMounts:
+          - mountPath: /
+            name: defaults-volume
+          - mountPath: /
+            name: handlers-volume
+      volumes:
+        - name: defaults-volume
+          configMap: 
+            name: iter8-defaults
+        - name: handlers-volume
+          configMap: 
+            name: iter8-handlers
       terminationGracePeriodSeconds: 10
