@@ -183,7 +183,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// VERSION VALIDATION (versionInfo should be created by start handler)
 	// See IsVersionInfoValid() for list of validations done
 	if !r.IsVersionInfoValid(ctx, instance) {
-		r.failExperiment(ctx, instance, nil)
+		return r.failExperiment(ctx, instance, nil)
 	}
 
 	// If not set, set an initial status.recommendedBaseline
