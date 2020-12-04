@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: start
+  namespace: iter8-system
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: ik-start
+        image: iter8/iter8-kfserving:latest
+        command: ["handlers/scripts/start.sh"]
+        env:
+        - name: EXPERIMENT_NAME
+          value: sklearn-iris-experiment-1
+        - name: EXPERIMENT_NAMESPACE
+          value: kfserving-test
+      restartPolicy: Never
+  backoffLimit: 4

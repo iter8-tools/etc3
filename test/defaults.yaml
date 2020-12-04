@@ -1,0 +1,26 @@
+experimentTypes: # keys are from enums
+  - name: canary
+    handlers:
+      start: start
+      rollback: finish
+      finish: finish
+      failure: finish
+  - name: ab
+    handlers:
+      start: start
+      rollback: finish
+      finish: finish
+      failure: finish
+  - name: performance
+    handlers:
+      start: start
+  - name: bluegreen
+    handlers:
+      start: start
+      rollback: finish
+      finish: finish
+      failure: finish
+analytics:
+  endpoint: http://iter-analytics:8080/v2/analytics_results
+metrics:
+  requestCount: request-count

@@ -83,7 +83,7 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 
 	cfg := configuration.Iter8Config{}
-	err = configuration.ReadConfig("defaults.yaml", &cfg)
+	err = configuration.ReadConfig("../test/defaults.yaml", &cfg)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&ExperimentReconciler{
