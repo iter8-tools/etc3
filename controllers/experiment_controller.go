@@ -75,7 +75,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		}
 		// other error reading instance; return
 		log.Error(err, "Unable to read experiment object.")
-		return ctrl.Result{}, err // TODO
+		return ctrl.Result{}, nil
 	}
 
 	log.Info("found instance", "instance", instance, "updatedStatus", r.StatusModified) //, "spec", instance.Spec, "status", instance.Status)
@@ -144,7 +144,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
 	// See IsExperimentValid() for list of validations done
 	if !r.IsExperimentValid(ctx, instance) {
-		r.failExperiment(ctx, instance, nil)
+		return r.failExperiment(ctx, instance, nil)
 	}
 
 	// TARGET ACQUISITION
@@ -248,9 +248,11 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	log.Info("finishExperiment called")
 	defer log.Info("finishExperiment completed")
 
-	result, err := r.terminate(ctx, instance, HandlerTypeFinish)
+	if err := r.launchTerminalHandler(ctx, instance, HandlerTypeFinish); err != nil {
+		log.Error(err, err.Error())
+	}
 	r.recordExperimentCompleted(ctx, instance, "Experiment completed successfully")
-	return result, err
+	return r.endExperiment(ctx, instance)
 }
 
 func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
@@ -258,9 +260,11 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	log.Info("rollbackExperiment called")
 	defer log.Info("rollbackExperiment ended")
 
-	result, err := r.terminate(ctx, instance, HandlerTypeRollback)
+	if err := r.launchTerminalHandler(ctx, instance, HandlerTypeRollback); err != nil {
+		log.Error(err, err.Error())
+	}
 	r.recordExperimentCompleted(ctx, instance, "Experiment rolled back")
-	return result, err
+	return r.endExperiment(ctx, instance)
 }
 
 func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2alpha1.Experiment, err error) (ctrl.Result, error) {
@@ -271,15 +275,17 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 	if err != nil {
 		log.Error(err, err.Error())
 	}
-	result, err := r.terminate(ctx, instance, HandlerTypeFailure)
+	if err := r.launchTerminalHandler(ctx, instance, HandlerTypeFailure); err != nil {
+		log.Error(err, err.Error())
+	}
 	r.recordExperimentCompleted(ctx, instance, "Experiment failed")
-	return result, err
+	return r.endExperiment(ctx, instance)
 }
 
-// terminate calls the specified terminal handler (finish, rollback or fail) and ends the request
+// launchTerminalHandler calls the specified terminal handler (finish, rollback or fail) and ends the request
 // Checking on completion of any terminal handlers takes place earlier, so can just launch
 // If no handler exists, we end the experiment instead
-func (r *ExperimentReconciler) terminate(ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType) (ctrl.Result, error) {
+func (r *ExperimentReconciler) launchTerminalHandler(ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType) error {
 	log := util.Logger(ctx)
 	log.Info("terminate called", "handlerType", handlerType)
 	defer log.Info("terminate completed", "handlerType", handlerType)
@@ -291,14 +297,14 @@ func (r *ExperimentReconciler) terminate(ctx context.Context, instance *v2alpha1
 			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
 			if handlerType != HandlerTypeFailure {
 				// can't call failExperiment if we are already in failExperiment
-				return r.failExperiment(ctx, instance, err)
+				return r.launchTerminalHandler(ctx, instance, HandlerTypeFailure)
 			}
-			return r.endExperiment(ctx, instance)
+			return nil
 		}
 		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonTerminalHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
-		return r.endRequest(ctx, instance)
+		return nil
 	}
-	return r.endExperiment(ctx, instance)
+	return nil
 }
 
 func validUpdateErr(err error) bool {

@@ -54,7 +54,10 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// record start time of experiment if not already set
 	if err := r.setStartTimeIfNotSet(ctx, instance); err != nil {
-		return ctrl.Result{}, err // TODO don't want to reconcile if there is an error
+		if err != nil {
+			log.Error(err, "Unable to set status.StartTime")
+		}
+		return ctrl.Result{}, nil
 	}
 
 	if !r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
@@ -76,7 +79,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// 1. has 4 entries: aggregatedMetrics, winnerAssessment, versionAssessments, weights
 	// 2. versionAssessments have entry for each version, objective
 	// 3. weights has entry for each version
-	// If not valid: r.failExperiment(context, instance)
+	// If not valid: return r.failExperiment(context, instance)
 
 	// update analytics in instance.status
 	instance.Status.Analysis = analysis
