@@ -76,7 +76,7 @@ var _ = Describe("Handler Initialization", func() {
 			Expect(changed).Should(Equal(true))
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
 			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgxStart"))
+			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgStart"))
 		})
 
 		It("the value of the start handler shoud match the value im the configuration when it is present", func() {
