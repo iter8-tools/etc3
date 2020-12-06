@@ -6,11 +6,6 @@ spec:
   target: kfserving-test/sklearn-iris
   strategy:
     type: Canary
-    handlers:
-      start: start
-      rollback: finish
-      failure: finish
-      finish: finish
   criteria:
     indicators:
     - 95th-percentile-tail-latency

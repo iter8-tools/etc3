@@ -37,6 +37,8 @@ import (
 type HandlerType string
 
 const (
+	// ServiceAccountForHandlers is the service account name to use for jobs
+	ServiceAccountForHandlers string = "iter8-handlers"
 	// HandlerTypeStart start handler
 	HandlerTypeStart HandlerType = "Start"
 	// HandlerTypeFinish finish handler
@@ -95,15 +97,17 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	// update job spec:
 	//   - assign a name unique for this experiment, handler type
 	//   - assign namespace same as namespace of iter8
+	//   - set serviceAccountName to iter8-handlers
 	//   - set environment variables: EXPERIMENT_NAME, EXPERIMENT_NAMESPACE
 	job.Name = jobName(instance, handler)
 	job.Namespace = r.Iter8Config.Namespace
+	job.Spec.Template.Spec.ServiceAccountName = ServiceAccountForHandlers
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAME", instance.Name)
-	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAMESPACE", r.Iter8Config.Namespace)
+	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAMESPACE", instance.Namespace)
 
 	// job := defineJob(jobHandlerConfig{
 	// 	JobName:               jobName(instance, handler),
-	// 	JobNamespace:          r.Iter8Config.Namespace,
+	// 	JobNamespace:          instance.Namespace,
 	// 	JobServiceAccountName: "default",
 	// 	Image:                 "iter8/iter8-kfserving:latest",
 	// 	Commands:              []string{"handlers/scripts/start.sh"},

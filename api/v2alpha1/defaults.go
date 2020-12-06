@@ -24,9 +24,6 @@ import (
 )
 
 const (
-	// DefaultRollbackHandler is default name of rollback handler
-	DefaultRollbackHandler string = "rollback"
-
 	// DefaultMaxCandidateWeight is the default traffic percentage used in experiment, which is 100
 	DefaultMaxCandidateWeight int32 = 100
 
@@ -87,7 +84,7 @@ func handlersForStrategy(cfg configuration.Iter8Config, strategy StrategyType) *
 func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Start == nil {
 		handlers := handlersForStrategy(cfg, s.Strategy.Type)
-		if nil == handlers {
+		if handlers == nil || handlers.Start == "" {
 			return nil
 		}
 		return &handlers.Start
@@ -115,7 +112,7 @@ func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) b
 func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Finish == nil {
 		handlers := handlersForStrategy(cfg, s.Strategy.Type)
-		if nil == handlers {
+		if handlers == nil || handlers.Finish == "" {
 			return nil
 		}
 		return &handlers.Finish
@@ -143,7 +140,7 @@ func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) 
 func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Rollback == nil {
 		handlers := handlersForStrategy(cfg, s.Strategy.Type)
-		if nil == handlers {
+		if handlers == nil || handlers.Rollback == "" {
 			return nil
 		}
 		return &handlers.Rollback
@@ -172,7 +169,7 @@ func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config
 func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Failure == nil {
 		handlers := handlersForStrategy(cfg, s.Strategy.Type)
-		if nil == handlers {
+		if handlers == nil || handlers.Failure == "" {
 			return nil
 		}
 		return &handlers.Failure

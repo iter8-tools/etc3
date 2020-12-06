@@ -1,5 +1,5 @@
 experimentTypes: # keys are from enums
-  - name: canary
+  - name: Canary
     handlers:
       start: start
       rollback: finish

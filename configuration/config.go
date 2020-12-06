@@ -19,6 +19,7 @@ package configuration
 
 import (
 	"os"
+	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v2"
@@ -73,4 +74,66 @@ func ReadConfig(configFile string, cfg *Iter8Config) error {
 		return err
 	}
 	return err
+}
+
+// Iter8ConfigBuilder type for building new config by hand
+type Iter8ConfigBuilder Iter8Config
+
+// NewIter8Config returns a new config builder
+func NewIter8Config() Iter8ConfigBuilder {
+	cfg := Iter8Config{}
+	return (Iter8ConfigBuilder)(cfg)
+}
+
+// WithStrategy ..
+func (b Iter8ConfigBuilder) WithStrategy(strategy string, handlers map[string]string) Iter8ConfigBuilder {
+	s := ExperimentType{Name: strategy}
+	for key, value := range handlers {
+		hdlr := value
+		switch strings.ToLower(key) {
+		case "start":
+			s.Handlers.Start = hdlr
+		case "finish":
+			s.Handlers.Finish = hdlr
+		case "failure":
+			s.Handlers.Failure = hdlr
+		case "rollback":
+			s.Handlers.Rollback = hdlr
+		default:
+		}
+	}
+
+	for i, exType := range b.ExperimentTypes {
+		if exType.Name == s.Name {
+			b.ExperimentTypes[i] = s
+			return b
+		}
+	}
+
+	b.ExperimentTypes = append(b.ExperimentTypes, s)
+
+	return b
+}
+
+// WithEndpoint ..
+func (b Iter8ConfigBuilder) WithEndpoint(endpoint string) Iter8ConfigBuilder {
+	b.Analytics.Endpoint = endpoint
+	return b
+}
+
+// WithRequestCount ..
+func (b Iter8ConfigBuilder) WithRequestCount(requestCount string) Iter8ConfigBuilder {
+	b.Metrics.RequestCount = requestCount
+	return b
+}
+
+// WithNamespace ..
+func (b Iter8ConfigBuilder) WithNamespace(namespace string) Iter8ConfigBuilder {
+	b.Namespace = namespace
+	return b
+}
+
+// Build ..
+func (b Iter8ConfigBuilder) Build() Iter8Config {
+	return (Iter8Config)(b)
 }
