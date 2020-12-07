@@ -28,8 +28,6 @@ spec:
         - /manager
         args:
         - --enable-leader-election
-        - -config 
-        - defaults/defaults.yaml
         image: iter8/etc3:latest
         name: manager
         env:
@@ -39,6 +37,14 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: DEFAULTS_DIR
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.template.spec.containers[0].volumeMounts[0]
+          - name: HANDLERS_DIR
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.template.spec.containers[0].volumeMounts[1]
         resources:
           limits:
             cpu: 100m

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -86,7 +87,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	log.Info("LaunchHandler called", "handler", handler)
 	defer log.Info("LaunchHandler completed", "handler", handler)
 
-	handlerJobYaml := fmt.Sprintf("%s.yaml", handler)
+	handlerJobYaml := path.Join(r.Iter8Config.HandlersDir, fmt.Sprintf("%s.yaml", handler))
 	log.Info("launchHandler", "jobYaml", handlerJobYaml)
 	job := batchv1.Job{}
 	if err := readJobSpec(handlerJobYaml, &job); err != nil {

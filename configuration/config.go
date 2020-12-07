@@ -31,6 +31,7 @@ type Iter8Config struct {
 	Analytics       `json:"analytics" yaml:"analytics"`
 	Metrics         `json:"metrics" yaml:"metrics"`
 	Namespace       string `envconfig:"ITER8_NAMESPACE"`
+	HandlersDir     string `envconfig:"HANDLERS_DIR"`
 }
 
 // ExperimentType is list of handlers for each supported experiment type
@@ -131,6 +132,12 @@ func (b Iter8ConfigBuilder) WithRequestCount(requestCount string) Iter8ConfigBui
 // WithNamespace ..
 func (b Iter8ConfigBuilder) WithNamespace(namespace string) Iter8ConfigBuilder {
 	b.Namespace = namespace
+	return b
+}
+
+// WithHandlersDir ..
+func (b Iter8ConfigBuilder) WithHandlersDir(handlersDir string) Iter8ConfigBuilder {
+	b.HandlersDir = handlersDir
 	return b
 }
 
