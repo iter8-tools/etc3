@@ -18,18 +18,12 @@ limitations under the License.
 package configuration
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v2"
 )
-
-// validStrategyTypes are legal strategy types iter8 is aware of
-// Should match list in github.com/iter8-tools/etc3/api/v2alpha1 (cf. constants.go)
-var validStrategyTypes []string = []string{"Canary", "A/B", "A/B/N", "Performance", "BlueGreen"}
 
 // Iter8Config describes structure of configuration file
 type Iter8Config struct {
@@ -78,19 +72,6 @@ func ReadConfig(configFile string, cfg *Iter8Config) error {
 
 	if err = envconfig.Process("", cfg); err != nil {
 		return err
-	}
-
-	// validate EnvironmentTypes
-	for _, expType := range cfg.ExperimentTypes {
-		ok := false
-		for _, validValue := range validStrategyTypes {
-			if expType.Name == string(validValue) {
-				ok = true
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("Invalid experiment type: %s, valid types are: %v", expType.Name, validStrategyTypes))
-		}
 	}
 
 	return nil

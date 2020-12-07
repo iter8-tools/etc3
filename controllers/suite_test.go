@@ -82,9 +82,13 @@ var _ = BeforeSuite(func(done Done) {
 	restCfg, err := config.GetConfig()
 	Expect(err).ToNot(HaveOccurred())
 
-	cfg := configuration.Iter8Config{}
-	err = configuration.ReadConfig("../test/defaults.yaml", &cfg)
-	Expect(err).ToNot(HaveOccurred())
+	cfg := configuration.NewIter8Config().
+		WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+		WithStrategy(string(v2alpha1.StrategyTypeAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+		WithStrategy(string(v2alpha1.StrategyTypePerformance), map[string]string{"start": "start"}).
+		WithStrategy(string(v2alpha1.StrategyTypeBlueGreen), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+		WithRequestCount("request-count").
+		Build()
 
 	err = (&ExperimentReconciler{
 		Client:     k8sManager.GetClient(),

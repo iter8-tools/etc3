@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -82,8 +83,11 @@ func main() {
 	}
 
 	cfg := configuration.Iter8Config{}
-	err = configuration.ReadConfig(configFile, &cfg)
-	if err != nil {
+	if err := configuration.ReadConfig(configFile, &cfg); err != nil {
+		setupLog.Error(err, "unable to configure manager")
+		os.Exit(1)
+	}
+	if err := validateConfig(cfg); err != nil {
 		setupLog.Error(err, "unable to configure manager")
 		os.Exit(1)
 	}
@@ -107,4 +111,20 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func validateConfig(cfg configuration.Iter8Config) error {
+	// validate EnvironmentTypes
+	for _, expType := range cfg.ExperimentTypes {
+		ok := false
+		for _, validValue := range v2alpha1.ValidStrategyTypes {
+			if expType.Name == string(validValue) {
+				ok = true
+			}
+		}
+		if !ok {
+			return fmt.Errorf("Invalid experiment type: %s, valid types are: %v", expType.Name, v2alpha1.ValidStrategyTypes)
+		}
+	}
+	return nil
 }

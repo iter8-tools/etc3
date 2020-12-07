@@ -37,6 +37,16 @@ const (
 	StrategyTypeBlueGreen StrategyType = "BlueGreen"
 )
 
+// ValidStrategyTypes are legal strategy types iter8 is aware of
+// Should match list in github.com/iter8-tools/etc3/api/v2alpha1 (cf. constants.go)
+var ValidStrategyTypes []StrategyType = []StrategyType{
+	StrategyTypeCanary,
+	StrategyTypeAB,
+	StrategyTypeABN,
+	StrategyTypePerformance,
+	StrategyTypeBlueGreen,
+}
+
 // AlgorithmType identifies the algorithms that can be used
 // +kubebuilder:validation:Enum=FixedSplit;Progressive
 type AlgorithmType string
