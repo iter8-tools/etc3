@@ -44,8 +44,6 @@ var (
 const (
 	// Iter8Controller string constant used to label event recorder
 	Iter8Controller = "iter8"
-	// ConfigFile name of the configurtion file
-	ConfigFile = "defaults.yaml"
 )
 
 func init() {
@@ -84,7 +82,7 @@ func main() {
 	}
 
 	cfg := configuration.Iter8Config{}
-	if err := configuration.ReadConfig(path.Join(os.Getenv("DEFAULTS_DIR"), ConfigFile), &cfg); err != nil {
+	if err := configuration.ReadConfig(path.Join(os.Getenv("DEFAULTS_DIR"), "defaults.yaml"), &cfg); err != nil {
 		setupLog.Error(err, "unable to configure manager")
 		os.Exit(1)
 	}
