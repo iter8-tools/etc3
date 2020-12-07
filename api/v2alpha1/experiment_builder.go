@@ -15,7 +15,6 @@ limitations under the License.
 package v2alpha1
 
 import (
-	"fmt"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +25,6 @@ type ExperimentBuilder Experiment
 
 // NewExperiment returns an iter8 experiment
 func NewExperiment(name, namespace string) *ExperimentBuilder {
-	fmt.Printf("EB.WS()\n")
 	e := &Experiment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: GroupVersion.String(),
@@ -55,7 +53,6 @@ func (b *ExperimentBuilder) WithTarget(target string) *ExperimentBuilder {
 // WithStrategy ..
 func (b *ExperimentBuilder) WithStrategy(strategy StrategyType) *ExperimentBuilder {
 	b.Spec.Strategy.Type = strategy
-	fmt.Printf("EB.WS(%s)\n", string(b.Spec.Strategy.Type))
 
 	return b
 }
