@@ -5,16 +5,16 @@ experimentTypes: # keys are from enums
       rollback: finish
       finish: finish
       failure: finish
-  - name: ab
+  - name: A/B
     handlers:
       start: start
       rollback: finish
       finish: finish
       failure: finish
-  - name: performance
+  - name: Performance
     handlers:
       start: start
-  - name: bluegreen
+  - name: BlueGreen
     handlers:
       start: start
       rollback: finish
