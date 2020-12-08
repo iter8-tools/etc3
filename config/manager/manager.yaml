@@ -38,13 +38,9 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: DEFAULTS_DIR
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.template.spec.containers[0].volumeMounts[0]
+            value: /defaults
           - name: HANDLERS_DIR
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.template.spec.containers[0].volumeMounts[1]
+            value: /handlers
         resources:
           limits:
             cpu: 100m
