@@ -136,7 +136,10 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	log.Info("No terminal handlers running")
 
 	// LATE INITIALIZATION of instance.Spec
-	specChanged := r.LateInitialization(ctx, instance)
+	specChanged, ok := r.LateInitialization(ctx, instance)
+	if !ok {
+		return r.failExperiment(ctx, instance, nil)
+	}
 	if specChanged {
 		log.Info("updating spec", "spec", instance.Spec)
 		if err := r.Update(ctx, instance); err != nil && !validUpdateErr(err) {
@@ -253,14 +256,15 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // LateInitialization initializes any fields in e.Spec not already set
 // Returns true if a change was made, false if not
-func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance *v2alpha1.Experiment) bool {
+func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance *v2alpha1.Experiment) (bool, bool) {
 	changed := instance.Spec.InitializeHandlers(r.Iter8Config)
 	changed = instance.Spec.InitializeWeights() || changed
 	changed = instance.Spec.InitializeDuration() || changed
 	changed = instance.Spec.InitializeCriteria(r.Iter8Config) || changed
-	changed = r.ReadMetrics(ctx, instance) || changed
+	metricsAdded, ok := r.ReadMetrics(ctx, instance)
+	changed = metricsAdded || changed
 
-	return changed
+	return changed, ok
 }
 
 // endRequest writes any changes (if needed) in preparation for ending processing of this reconcile request

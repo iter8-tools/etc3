@@ -62,15 +62,16 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 }
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
-// returns true is add metrics to the instance.Spec
-func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) bool {
+// first result is true if metrics were added to spec.Metrics
+// second result is false if an error occurred reading metrics
+func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) (bool, bool) {
 	log := util.Logger(ctx)
 	log.Info("ReadMetrics() called")
 	defer log.Info("ReadMetrics() completed")
 
 	criteria := instance.Spec.Criteria
 	if len(instance.Spec.Metrics) > 0 || criteria == nil {
-		return false
+		return false, true
 	}
 
 	metricsCache := make(map[string]*v2alpha1.Metric)
@@ -84,7 +85,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		} else {
 			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", *requestCount)
 		}
-		return false
+		return false, false
 	}
 
 	// indicators
@@ -96,7 +97,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 				} else {
 					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", indicator)
 				}
-				return false
+				return false, false
 			}
 		}
 	}
@@ -109,7 +110,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 				} else {
 					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", objective.Metric)
 				}
-				return false
+				return false, false
 			}
 		}
 	}
@@ -119,5 +120,5 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		instance.Spec.Metrics = append(instance.Spec.Metrics,
 			v2alpha1.MetricInfo{Name: name, MetricObj: *obj})
 	}
-	return true
+	return true, true
 }
