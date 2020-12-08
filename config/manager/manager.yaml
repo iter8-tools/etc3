@@ -29,10 +29,11 @@ spec:
         args:
         - --enable-leader-election
         image: iter8/etc3:latest
+        imagePullPolicy: Always
         name: manager
         env:
           - name: ITER8_ANALYTICS_ENDPOINT
-            value: http://iter8-analytics/v2/analytics_results
+            value: http://iter8-analytics:8080/v2/analytics_results
           - name: ITER8_NAMESPACE
             valueFrom:
               fieldRef:
