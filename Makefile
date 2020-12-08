@@ -79,7 +79,3 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
-
-# Partial install of iter8-kfserving
-iter8-kfserving:
-	
