@@ -23,10 +23,16 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/configuration"
@@ -200,9 +206,48 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 // SetupWithManager ..
 func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	jobPredicateFuncs := predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			return false
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			namespace := e.MetaNew.GetNamespace()
+			return namespace == r.Iter8Config.Namespace
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+	}
+
+	jobToExperiment := handler.ToRequestsFunc(
+		func(a handler.MapObject) []ctrl.Request {
+			lbls := a.Meta.GetLabels()
+			experimentName, ok := lbls["iter8/experimentName"]
+			if !ok {
+				return nil
+			}
+			experimentNamespace, ok := lbls["iter8/experimentNamespace"]
+			if !ok {
+				return nil
+			}
+			return []ctrl.Request{
+				{
+					NamespacedName: types.NamespacedName{
+						Name:      experimentName,
+						Namespace: experimentNamespace,
+					},
+				},
+			}
+		},
+	)
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v2alpha1.Experiment{}).
-		Owns(&batchv1.Job{}).
+		Watches(&source.Kind{Type: &batchv1.Job{}},
+			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
+			builder.WithPredicates(jobPredicateFuncs)).
+		// Owns(&batchv1.Job{}).
 		Complete(r)
 }
 

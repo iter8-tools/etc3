@@ -31,7 +31,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // HandlerType types of handlers
@@ -98,10 +97,16 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	// update job spec:
 	//   - assign a name unique for this experiment, handler type
 	//   - assign namespace same as namespace of iter8
+	//   - define labels "iter8/experimentName" and "iter8/experimentNamespace" used for event filtering
 	//   - set serviceAccountName to iter8-handlers
 	//   - set environment variables: EXPERIMENT_NAME, EXPERIMENT_NAMESPACE
 	job.Name = jobName(instance, handler)
 	job.Namespace = r.Iter8Config.Namespace
+	if job.Spec.Template.ObjectMeta.Labels == nil {
+		job.Spec.Template.ObjectMeta.SetLabels(map[string]string{})
+	}
+	job.Spec.Template.ObjectMeta.Labels["iter8/experimentName"] = instance.Name
+	job.Spec.Template.ObjectMeta.Labels["iter8/experimentNamespace"] = instance.Namespace
 	job.Spec.Template.Spec.ServiceAccountName = ServiceAccountForHandlers
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAME", instance.Name)
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAMESPACE", instance.Namespace)
@@ -116,9 +121,12 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	// 	ExperimentNamespace:   instance.Namespace,
 	// })
 
-	// assign owner to job (so job is automatically deleted when experiment is deleted)
-	controllerutil.SetControllerReference(instance, &job, r.Scheme)
-	log.Info("LaunchHandler job", "job", job)
+	// jobs are in iter8-system namespace; not experiment namespace
+	// so experiments can't be owners.
+	// Perhaps no owner is necessary. Or perhaps the iter8-controller Deployment
+	// // assign owner to job (so job is automatically deleted when experiment is deleted)
+	// controllerutil.SetControllerReference(instance, &job, r.Scheme)
+	// log.Info("LaunchHandler job", "job", job)
 
 	// launch job
 	if err := r.Create(ctx, &job); err != nil {
