@@ -250,11 +250,13 @@ type Objective struct {
 type Duration struct {
 	// IntervalSeconds is the length of an interval of the experiment in seconds
 	// Default is 20 (seconds)
+	// +kubebuilder:validation:Minimum:=1
 	// +optional
 	IntervalSeconds *int32 `json:"intervalSeconds,omitempty"`
 
 	// MaxIterations is the maximum number of iterations
 	// Default is 15
+	// +kubebuilder:validation:Minimum:=1
 	// +optional
 	MaxIterations *int32 `json:"maxIterations,omitempty"`
 }

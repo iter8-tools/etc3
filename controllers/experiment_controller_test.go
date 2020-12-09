@@ -24,6 +24,34 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+var _ = Describe("Experiment validation", func() {
+	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
+		It("Should fail to create experiment", func() {
+			ctx := context.Background()
+			experiment := v2alpha1.NewExperiment("test-invalid", "default").
+				WithTarget("target").
+				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithDuration(10, 0).
+				Build()
+			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
+		})
+	})
+})
+
+var _ = Describe("Experiment validation", func() {
+	Context("When creating an experiment with a valid spec.duration.maxIteration", func() {
+		It("Should succeed in creating experiment", func() {
+			ctx := context.Background()
+			experiment := v2alpha1.NewExperiment("test-valid", "default").
+				WithTarget("target").
+				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithDuration(10, 1).
+				Build()
+			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
+		})
+	})
+})
+
 var _ = Describe("Experiment controller", func() {
 	Context("When creating a new Experiment", func() {
 		It("Should set status.InitTime", func() {

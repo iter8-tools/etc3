@@ -27,13 +27,7 @@ import (
 // TODO 2. Warning if no criteria?
 // TODO 3. For ab and abn there is a reward
 // TODO 4. If rollbackOnFailure there is a rollback handler?
-// DONE 5. maxIterations is >= 1
 func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
-	// 5. maxIterations is >= 1
-	if instance.Spec.GetMaxIterations() < 1 {
-		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Maximum number of iterations must greater than 0")
-		return false
-	}
 	return true
 }
 

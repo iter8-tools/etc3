@@ -26,7 +26,6 @@ import (
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -79,8 +78,8 @@ var _ = BeforeSuite(func(done Done) {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	restCfg, err := config.GetConfig()
-	Expect(err).ToNot(HaveOccurred())
+	// restCfg, err := config.GetConfig()
+	// Expect(err).ToNot(HaveOccurred())
 
 	cfg := configuration.NewIter8Config().
 		WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
@@ -94,7 +93,7 @@ var _ = BeforeSuite(func(done Done) {
 		Client:     k8sManager.GetClient(),
 		Log:        ctrl.Log.WithName("controllers").WithName("Experiment"),
 		Scheme:     k8sManager.GetScheme(),
-		RestConfig: restCfg,
+		RestConfig: nil, // restCfg,
 		// TODO move Iter8Controller from main.go to recorder.go so that we can use constant
 		EventRecorder: k8sManager.GetEventRecorderFor("iter8"),
 		Iter8Config:   cfg,

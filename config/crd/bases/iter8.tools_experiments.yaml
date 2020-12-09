@@ -137,11 +137,13 @@ spec:
                     description: IntervalSeconds is the length of an interval of the
                       experiment in seconds Default is 20 (seconds)
                     format: int32
+                    minimum: 1
                     type: integer
                   maxIterations:
                     description: MaxIterations is the maximum number of iterations
                       Default is 15
                     format: int32
+                    minimum: 1
                     type: integer
                 type: object
               metrics:
