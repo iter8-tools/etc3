@@ -21,7 +21,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -80,7 +79,6 @@ var _ = Describe("Late Initialization", func() {
 			Expect(createdExperiment.Status.LastUpdateTime).ShouldNot(BeNil())
 			Expect(createdExperiment.Status.CompletedIterations).ShouldNot(BeNil())
 			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(2))
-			Expect(createdExperiment.Status.GetCondition((v2alpha1.ExperimentConditionExperimentCompleted)).Status).Should(Equal(corev1.ConditionFalse))
 			By("Inspecting spec")
 			Expect(createdExperiment.Spec.GetMaxIterations()).Should(Equal(v2alpha1.DefaultMaxIterations))
 			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
