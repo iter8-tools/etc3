@@ -21,6 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/configuration"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -53,13 +54,32 @@ var _ = Describe("Experiment validation", func() {
 })
 
 var _ = Describe("Late Initialization", func() {
-	Context("When creating a new Experiment", func() {
-		It("Should do late initialization", func() {
+	var ctx context.Context
+	Context("When creating a valid new Experiment", func() {
+		It("Should successfully complete late initialization", func() {
+			By("Providing a request-count metric")
+			ctx = context.Background()
+			m := v2alpha1.NewMetric("request-count", "default").
+				WithType(v2alpha1.CounterMetricType).
+				WithParams(map[string]string{"param": "value"}).
+				WithProvider("prometheus").
+				Build()
+			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
+			createdMetric := &v2alpha1.Metric{}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "default"}, createdMetric)
+				if err != nil {
+					return false
+				}
+				return true
+			}).Should(BeTrue())
+
 			By("Creating a new Experiment")
-			ctx := context.Background()
+			// ctx := context.Background()
 			experiment := v2alpha1.NewExperiment("test", "default").
 				WithTarget("target").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithRequestCount("request-count").
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 
@@ -85,6 +105,8 @@ var _ = Describe("Late Initialization", func() {
 			Expect(createdExperiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))
 			Expect(createdExperiment.Spec.GetAlgorithm()).Should(Equal(v2alpha1.DefaultAlgorithm))
+			Expect(len(createdExperiment.Spec.Metrics)).Should(Equal(1))
+			Expect(*createdExperiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
 		})
 	})
 })

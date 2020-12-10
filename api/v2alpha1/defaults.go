@@ -428,6 +428,15 @@ func (s *ExperimentSpec) InitializeRequestCount(cfg configuration.Iter8Config) b
 	return false
 }
 
+// GetReward returns the reward metric, if any
+// If there are no criteria specified, this is nil
+func (s *ExperimentSpec) GetReward() *Reward {
+	if s.Criteria == nil {
+		return nil
+	}
+	return s.Criteria.Reward
+}
+
 //////////////////////////////////////////////////////////////////////
 // objective
 //////////////////////////////////////////////////////////////////////

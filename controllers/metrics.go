@@ -30,7 +30,7 @@ import (
 // If the name is of the form "namespace/name", look in namespace for name.
 // Otherwise look for name. If not found, look in util.Iter8InstallNamespace() for name.
 // If not found returnd NotFound error
-func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha1.Experiment, name string, metricMap map[string]*v2alpha1.Metric) error {
+func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha1.Experiment, name string, metricMap map[string]*v2alpha1.Metric) bool {
 	key := name
 	// default namespace to use is the experiment namespace
 	namespace := instance.GetObjectMeta().GetNamespace()
@@ -47,18 +47,23 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 	metric := &v2alpha1.Metric{}
 	err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, metric)
 	if err != nil {
-		// if not found and used DEFAULT namespace, try again with the iter8 namespace
+		// if not found and we were not provided an explicit namespace, try again with the iter8 namespace
 		if errors.IsNotFound(err) && !explicitNamespaceProvided {
 			err = r.Get(ctx, types.NamespacedName{Name: name, Namespace: r.Iter8Config.Namespace}, metric)
 		}
 	}
 	if err != nil {
-		// could not read metric; skip it
-		return err
+		// could not read metric; record the problem and indicate that the read did not succeed
+		if errors.IsNotFound(err) {
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", name)
+		} else {
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", name)
+		}
+		return false // not ok
 	}
 
 	metricMap[key] = metric
-	return nil
+	return true // ok
 }
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
@@ -77,14 +82,22 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 
 	// name of request counter
 	requestCount := instance.Spec.GetRequestCount(r.Iter8Config)
-	if ok := r.foo(ctx, instance, *requestCount, metricsCache); !ok {
+	if ok := r.ReadMetric(ctx, instance, *requestCount, metricsCache); !ok {
 		return ok
+	}
+
+	// name of reward, if any
+	reward := instance.Spec.GetReward()
+	if reward != nil {
+		if ok := r.ReadMetric(ctx, instance, reward.Metric, metricsCache); !ok {
+			return ok
+		}
 	}
 
 	// indicators
 	for _, indicator := range criteria.Indicators {
 		if metricsCache[indicator] == nil {
-			if ok := r.foo(ctx, instance, indicator, metricsCache); !ok {
+			if ok := r.ReadMetric(ctx, instance, indicator, metricsCache); !ok {
 				return ok
 			}
 		}
@@ -92,7 +105,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 
 	for _, objective := range criteria.Objectives {
 		if metricsCache[objective.Metric] == nil {
-			if ok := r.foo(ctx, instance, objective.Metric, metricsCache); !ok {
+			if ok := r.ReadMetric(ctx, instance, objective.Metric, metricsCache); !ok {
 				return ok
 			}
 		}
@@ -102,18 +115,6 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 	for name, obj := range metricsCache {
 		instance.Spec.Metrics = append(instance.Spec.Metrics,
 			v2alpha1.MetricInfo{Name: name, MetricObj: *obj})
-	}
-	return true
-}
-
-func (r *ExperimentReconciler) foo(ctx context.Context, instance *v2alpha1.Experiment, metric string, metricsCache map[string]*v2alpha1.Metric) bool {
-	if err := r.ReadMetric(ctx, instance, metric, metricsCache); err != nil {
-		if errors.IsNotFound(err) {
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", metric)
-		} else {
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", metric)
-		}
-		return false
 	}
 	return true
 }
