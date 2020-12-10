@@ -195,13 +195,11 @@ func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config)
 }
 
 // InitializeHandlers initialize handlers if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeHandlers(cfg configuration.Iter8Config) bool {
-	changed := s.InitializeStartHandler(cfg)
-	changed = s.InitializeFinishHandler(cfg) || changed
-	changed = s.InitializeRollbackHandler(cfg) || changed
-	changed = s.InitializeFailureHandler(cfg) || changed
-	return changed
+func (s *ExperimentSpec) InitializeHandlers(cfg configuration.Iter8Config) {
+	s.InitializeStartHandler(cfg)
+	s.InitializeFinishHandler(cfg)
+	s.InitializeRollbackHandler(cfg)
+	s.InitializeFailureHandler(cfg)
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -329,15 +327,14 @@ func (s *ExperimentSpec) InitializeWeightDistribution() bool {
 }
 
 // InitializeWeights initializes weights if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeWeights() bool {
-	change := s.InitializeMaxCandidateWeight()
-	change = s.InitializeMaxCandidateWeightIncrement() || change
-	change = s.InitializeAlgorithm() || change
+func (s *ExperimentSpec) InitializeWeights() {
+	s.InitializeMaxCandidateWeight()
+	s.InitializeMaxCandidateWeightIncrement()
+	s.InitializeAlgorithm()
 	// Must wait until versionInfo has been defined by start handler before
 	// initializing weight distribution because need to know the candidates
-	// change = s.InitializeWeightDistribution() || change
-	return change
+	// s.InitializeWeightDistribution()
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -394,11 +391,9 @@ func (s *ExperimentSpec) InitializeMaxIterations() bool {
 }
 
 // InitializeDuration initializes spec.durations if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeDuration() bool {
-	change := s.InitializeInterval()
-	change = s.InitializeMaxIterations() || change
-	return change
+func (s *ExperimentSpec) InitializeDuration() {
+	s.InitializeInterval()
+	s.InitializeMaxIterations()
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -468,12 +463,17 @@ func (s *ExperimentSpec) InitializeObjectives() bool {
 }
 
 // InitializeCriteria initializes any criteria details not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeCriteria(cfg configuration.Iter8Config) bool {
-	if s.Criteria == nil {
-		return false
+func (s *ExperimentSpec) InitializeCriteria(cfg configuration.Iter8Config) {
+	if s.Criteria != nil {
+		s.InitializeRequestCount(cfg)
+		s.InitializeObjectives()
 	}
-	change := s.InitializeRequestCount(cfg)
-	change = s.InitializeObjectives() || change
-	return change
+}
+
+// InitializeSpec initializes values in Spec to default values if not already set
+func (s *ExperimentSpec) InitializeSpec(cfg configuration.Iter8Config) {
+	s.InitializeHandlers(cfg)
+	s.InitializeWeights()
+	s.InitializeDuration()
+	s.InitializeCriteria(cfg)
 }

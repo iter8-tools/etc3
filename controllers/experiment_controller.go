@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"time"
 
@@ -133,15 +134,14 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 			// do nothing
 		}
 	}
-	log.Info("No terminal handlers running")
 
 	// LATE INITIALIZATION of instance.Spec
-	specChanged, ok := r.LateInitialization(ctx, instance)
-	if !ok {
+	originalSpec := instance.Spec.DeepCopy()
+	if ok := r.LateInitialization(ctx, instance); !ok {
 		return r.failExperiment(ctx, instance, nil)
 	}
-	if specChanged {
-		log.Info("updating spec", "spec", instance.Spec)
+
+	if !reflect.DeepEqual(originalSpec, &instance.Spec) {
 		if err := r.Update(ctx, instance); err != nil && !validUpdateErr(err) {
 			log.Error(err, "Failed to update Spec after late initialization.")
 		}
@@ -255,16 +255,10 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // LateInitialization initializes any fields in e.Spec not already set
-// Returns true if a change was made, false if not
-func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance *v2alpha1.Experiment) (bool, bool) {
-	changed := instance.Spec.InitializeHandlers(r.Iter8Config)
-	changed = instance.Spec.InitializeWeights() || changed
-	changed = instance.Spec.InitializeDuration() || changed
-	changed = instance.Spec.InitializeCriteria(r.Iter8Config) || changed
-	metricsAdded, ok := r.ReadMetrics(ctx, instance)
-	changed = metricsAdded || changed
-
-	return changed, ok
+// Returns false if something went wrong
+func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance *v2alpha1.Experiment) bool {
+	instance.Spec.InitializeSpec(r.Iter8Config)
+	return r.ReadMetrics(ctx, instance)
 }
 
 // endRequest writes any changes (if needed) in preparation for ending processing of this reconcile request

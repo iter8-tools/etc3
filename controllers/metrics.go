@@ -62,63 +62,58 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 }
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
-// first result is true if metrics were added to spec.Metrics
-// second result is false if an error occurred reading metrics
-func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) (bool, bool) {
+// result is false if an error occurred reading metrics
+func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) bool {
 	log := util.Logger(ctx)
-	log.Info("ReadMetrics() called")
-	defer log.Info("ReadMetrics() completed")
+	log.Info("ReadMetrics called")
+	defer log.Info("ReadMetrics completed")
 
 	criteria := instance.Spec.Criteria
 	if len(instance.Spec.Metrics) > 0 || criteria == nil {
-		return false, true
+		return true
 	}
 
 	metricsCache := make(map[string]*v2alpha1.Metric)
 
 	// name of request counter
 	requestCount := instance.Spec.GetRequestCount(r.Iter8Config)
-	err := r.ReadMetric(ctx, instance, *requestCount, metricsCache)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", *requestCount)
-		} else {
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", *requestCount)
-		}
-		return false, false
+	if ok := r.foo(ctx, instance, *requestCount, metricsCache); !ok {
+		return ok
 	}
 
 	// indicators
 	for _, indicator := range criteria.Indicators {
 		if metricsCache[indicator] == nil {
-			if err := r.ReadMetric(ctx, instance, indicator, metricsCache); err != nil {
-				if errors.IsNotFound(err) {
-					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", indicator)
-				} else {
-					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", indicator)
-				}
-				return false, false
+			if ok := r.foo(ctx, instance, indicator, metricsCache); !ok {
+				return ok
 			}
 		}
 	}
 
 	for _, objective := range criteria.Objectives {
 		if metricsCache[objective.Metric] == nil {
-			if err := r.ReadMetric(ctx, instance, objective.Metric, metricsCache); err != nil {
-				if errors.IsNotFound(err) {
-					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", objective.Metric)
-				} else {
-					r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", objective.Metric)
-				}
-				return false, false
+			if ok := r.foo(ctx, instance, objective.Metric, metricsCache); !ok {
+				return ok
 			}
 		}
 	}
 
-	// found all metrics; copy into spec
+	// found all metrics; copy into instance.Spec
 	for name, obj := range metricsCache {
 		instance.Spec.Metrics = append(instance.Spec.Metrics,
 			v2alpha1.MetricInfo{Name: name, MetricObj: *obj})
 	}
-	return true, true
+	return true
+}
+
+func (r *ExperimentReconciler) foo(ctx context.Context, instance *v2alpha1.Experiment, metric string, metricsCache map[string]*v2alpha1.Metric) bool {
+	if err := r.ReadMetric(ctx, instance, metric, metricsCache); err != nil {
+		if errors.IsNotFound(err) {
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", metric)
+		} else {
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", metric)
+		}
+		return false
+	}
+	return true
 }

@@ -72,8 +72,7 @@ var _ = Describe("Handler Initialization", func() {
 			cfg := configuration.NewIter8Config().
 				WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
-			changed := experiment.Spec.InitializeHandlers(cfg)
-			Expect(changed).Should(Equal(true))
+			experiment.Spec.InitializeHandlers(cfg)
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
 			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
 			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgStart"))
