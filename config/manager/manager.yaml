@@ -33,7 +33,7 @@ spec:
         name: manager
         env:
           - name: ITER8_ANALYTICS_ENDPOINT
-            value: http://iter8-analytics:8080/v2/analytics_results
+            value: http://iter8-analytics.iter8-system:8080/v2/analytics_results
           - name: ITER8_NAMESPACE
             valueFrom:
               fieldRef:
