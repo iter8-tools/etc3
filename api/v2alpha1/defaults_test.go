@@ -47,6 +47,17 @@ var _ = Describe("Handler Initialization", func() {
 			Expect(experiment.Spec.GetRollbackHandler(cfg)).Should(BeNil())
 			Expect(experiment.Spec.GetFailureHandler(cfg)).Should(BeNil())
 		})
+		It("the value of GetStartHandler should should be nil when set to none even if a configuration is present", func() {
+			cfg = configuration.NewIter8Config().
+				WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				Build()
+			none := v2alpha1.NoneHandler
+			experiment.Spec.Strategy.Handlers.Start = &none
+
+			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
+			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
+			Expect(experiment.Spec.GetStartHandler(cfg)).Should(BeNil())
+		})
 		It("the value of the start handler should match the value in experiment when ca onfiguration is not present", func() {
 			cfg = configuration.NewIter8Config().
 				Build()

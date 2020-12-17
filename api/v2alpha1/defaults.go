@@ -24,6 +24,9 @@ import (
 )
 
 const (
+	// NoneHanlder is the keyword users can use to indicate no handler
+	NoneHandler string = "none"
+
 	// DefaultMaxCandidateWeight is the default traffic percentage used in experiment, which is 100
 	DefaultMaxCandidateWeight int32 = 100
 
@@ -89,6 +92,9 @@ func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string 
 		}
 		return &handlers.Start
 	}
+	if *s.Strategy.Handlers.Start == NoneHandler {
+		return nil
+	}
 	return s.Strategy.Handlers.Start
 }
 
@@ -117,6 +123,9 @@ func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string
 		}
 		return &handlers.Finish
 	}
+	if *s.Strategy.Handlers.Finish == NoneHandler {
+		return nil
+	}
 	return s.Strategy.Handlers.Finish
 }
 
@@ -144,6 +153,9 @@ func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *stri
 			return nil
 		}
 		return &handlers.Rollback
+	}
+	if *s.Strategy.Handlers.Rollback == NoneHandler {
+		return nil
 	}
 	return s.Strategy.Handlers.Rollback
 }
@@ -174,6 +186,9 @@ func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *strin
 		}
 		return &handlers.Failure
 
+	}
+	if *s.Strategy.Handlers.Failure == NoneHandler {
+		return nil
 	}
 	return s.Strategy.Handlers.Failure
 }
