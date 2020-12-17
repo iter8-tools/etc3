@@ -106,7 +106,7 @@ var _ = Describe("Late Initialization", func() {
 			Expect(createdExperiment.Status.InitTime).ShouldNot(BeNil())
 			Expect(createdExperiment.Status.LastUpdateTime).ShouldNot(BeNil())
 			Expect(createdExperiment.Status.CompletedIterations).ShouldNot(BeNil())
-			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(2))
+			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(3))
 			By("Inspecting spec")
 			Expect(createdExperiment.Spec.GetMaxIterations()).Should(Equal(v2alpha1.DefaultMaxIterations))
 			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))

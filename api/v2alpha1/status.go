@@ -75,6 +75,7 @@ func (e *Experiment) InitializeStatus() {
 	// sets relevant unset conditions to Unknown state.
 	e.Status.addCondition(ExperimentConditionExperimentCompleted, corev1.ConditionFalse)
 	e.Status.addCondition(ExperimentConditionExperimentFailed, corev1.ConditionFalse)
+	e.Status.addCondition(ExperimentConditionTargetAcquired, corev1.ConditionFalse)
 
 	now := metav1.Now()
 	e.Status.InitTime = &now // metav1.Now()

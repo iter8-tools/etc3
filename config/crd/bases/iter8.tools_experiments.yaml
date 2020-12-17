@@ -658,6 +658,7 @@ spec:
                       enum:
                       - ExperimentCompleted
                       - ExperimentFailed
+                      - TargetAcquired
                       type: string
                   required:
                   - status

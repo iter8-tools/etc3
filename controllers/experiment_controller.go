@@ -138,6 +138,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	}
 
 	// LATE INITIALIZATION of instance.Spec
+	// TODO move to mutating webhook
 	originalSpec := instance.Spec.DeepCopy()
 	if ok := r.LateInitialization(ctx, instance); !ok {
 		return r.failExperiment(ctx, instance, nil)
@@ -154,20 +155,18 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
 	// See IsExperimentValid() for list of validations done
+	// TODO move to validating web hook
 	if !r.IsExperimentValid(ctx, instance) {
 		return r.failExperiment(ctx, instance, nil)
 	}
 
 	// TARGET ACQUISITION
-	// ensure that the target is not involved in another experiment
-	// record experiment with annotation in target?
-	// if !TargetAquired() {
-	// 	if CanAquireTarget() {
-	// 		AquireTarget()
-	// 		   r.markExperimentProgress(ctx, instance, v2alpha1.ReasonTargetAcquired, "Target '%s' acquired", instance.Spec.Target)
-	// 	}
-	// 	r.endRequest()
-	// }
+	// Ensure that we are the only experiment proceding with the same target
+	// If we find another, end request and wait to be kicked
+	if !r.acquiredTarget(ctx, instance) {
+		// do not have the target, quit
+		return r.endRequest(ctx, instance)
+	}
 
 	// RUN START HANDLER
 	// Note: since we haven't already checked it may already have been started
@@ -247,11 +246,19 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	)
 
+	// experimentToExperiment := handler.ToRequestsFunc(
+	// 	func(a handler.MapObject) []ctrl.Request {
+	// 		return []ctrl.Request{}
+	// 	},
+	// )
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v2alpha1.Experiment{}).
 		Watches(&source.Kind{Type: &batchv1.Job{}},
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
 			builder.WithPredicates(jobPredicateFuncs)).
+		// Watches(&source.Kind{Type: &v2alpha1.Experiment{}},
+		// 	&handler.EnqueueRequestsFromMapFunc{ToRequests: experimentToExperiment})
 		// Owns(&batchv1.Job{}).
 		Complete(r)
 }

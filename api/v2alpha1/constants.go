@@ -72,7 +72,7 @@ const (
 )
 
 // ExperimentConditionType limits conditions can be set by controller
-// +kubebuilder:validation:Enum:=ExperimentCompleted;ExperimentFailed
+// +kubebuilder:validation:Enum:=ExperimentCompleted;ExperimentFailed;TargetAcquired
 type ExperimentConditionType string
 
 const (
@@ -83,6 +83,10 @@ const (
 	// ExperimentConditionExperimentFailed has status True when the experiment has failed
 	// False until failure occurs
 	ExperimentConditionExperimentFailed ExperimentConditionType = "ExperimentFailed"
+
+	// ExperimentConditionTargetAcquired has status True when an experiment has a lock on the target
+	// False until can lock the target
+	ExperimentConditionTargetAcquired ExperimentConditionType = "TargetAcquired"
 )
 
 // A set of reason setting the experiment condition status
