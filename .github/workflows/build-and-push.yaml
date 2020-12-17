@@ -12,7 +12,6 @@ jobs:
   # Ensure tests pass on PRs.
   build-and-test:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
