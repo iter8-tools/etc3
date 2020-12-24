@@ -39,22 +39,32 @@ import (
 
 func (r *ExperimentReconciler) redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment) error {
 	log := util.Logger(ctx)
-	log.Info("redistributeWeight() called")
-	defer log.Info("redistributeWeight() ended")
+	log.Info("redistributeWeight called")
+	defer log.Info("redistributeWeight ended")
 
+	// Get spec.versionInfo; it should be present by now
 	if versionInfo := instance.Spec.VersionInfo; versionInfo == nil {
-		// should never get here; should have been validated before this
-		log.Info("Cannot redistribute weight; no version information present.")
-		return nil
+		return errors.New("Cannot redistribute weight; no versiin information present")
 	}
 
-	// TODO collect multiple changes for each object
-	if err := r.updateWeightForVersion(ctx, instance, instance.Spec.VersionInfo.Baseline); err != nil {
+	// For each version, get the patch to apply
+	// Add to a map of Object --> []patchIntValue
+	patches := map[corev1.ObjectReference][]patchIntValue{}
+	if err := addPatch(ctx, instance, instance.Spec.VersionInfo.Baseline, &patches); err != nil {
 		return err
 	}
 	for _, version := range instance.Spec.VersionInfo.Candidates {
-		if err := r.updateWeightForVersion(ctx, instance, version); err != nil {
+		if err := addPatch(ctx, instance, version, &patches); err != nil {
 			return err
+		}
+	}
+
+	// go through map and apply the list of patches to the objects
+	for obj, p := range patches {
+		_, err := r.patchWeight(ctx, &obj, p)
+		log.Info("redistributeWeight", "err", err)
+		if err != nil {
+			log.Error(err, "Unable to patch", "object", obj, "patch", p)
 		}
 	}
 
@@ -67,32 +77,61 @@ func (r *ExperimentReconciler) redistributeWeight(ctx context.Context, instance 
 	return nil
 }
 
-func (r *ExperimentReconciler) updateWeightForVersion(ctx context.Context, instance *v2alpha1.Experiment, version v2alpha1.VersionDetail) error {
+func addPatch(ctx context.Context, instance *v2alpha1.Experiment, version v2alpha1.VersionDetail, patcheMap *map[corev1.ObjectReference][]patchIntValue) error {
 	log := util.Logger(ctx)
+	log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
+	defer log.Info("addPatch completed")
 
-	// n-1 versions should have a weightObjRef.fieldPath; should be caught by validation
+	// verify that there is a weightObjRef; there might not be -- only n-1 versions MUST have one
 	if version.WeightObjRef == nil {
 		log.Info("Unable to update weight; no weightObjectReference", "version", version)
 		return nil
 	}
+	// verify that the field path is present; again, it might not be -- only n-1 MUST be
 	if version.WeightObjRef.FieldPath == "" {
 		log.Info("Unable to update weight; no field specified", "version", version)
 		return nil
 	}
 
+	// get the latest recommended weight from the analytics service (cached in Status)
 	weight := getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
 	if weight == nil {
 		log.Info("Unable to find weight recommendation.", "version", version, "weights", instance.Status.Analysis.Weights)
 		// fatal error; expected a weight recommendation for all versions
-		return errors.New("Unable to find weight recommendation")
+		return errors.New("No weight recommendation provided")
 	}
-	_, err := r.patchWeight(ctx, version.WeightObjRef, *weight)
-	if err != nil {
-		log.Error(err, "Failed to update weight", "version", version)
-		return err
+
+	if weight == getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
+		log.Info("No change in weight distribution", "version", version.Name)
+		return nil
+	}
+
+	// create patch
+	patch := patchIntValue{
+		Op:    "add",
+		Path:  version.WeightObjRef.FieldPath,
+		Value: *weight,
+	}
+
+	// add patch to patchMap
+	key := getKey(*version.WeightObjRef)
+	if patchList, ok := (*patcheMap)[key]; !ok {
+		(*patcheMap)[key] = []patchIntValue{patch}
+	} else {
+		(*patcheMap)[key] = append(patchList, patch)
 	}
 
 	return nil
+}
+
+// key is just the obj without the FieldPath
+func getKey(obj corev1.ObjectReference) corev1.ObjectReference {
+	return corev1.ObjectReference{
+		APIVersion: obj.APIVersion,
+		Kind:       obj.Kind,
+		Namespace:  obj.Namespace,
+		Name:       obj.Name,
+	}
 }
 
 func getWeightRecommendation(version string, weights []v2alpha1.WeightData) *int32 {
@@ -103,6 +142,16 @@ func getWeightRecommendation(version string, weights []v2alpha1.WeightData) *int
 		}
 	}
 	return nil
+}
+
+func getCurrentWeight(version string, weights []v2alpha1.WeightData) *int32 {
+	zero := int32(0)
+	for _, weight := range weights {
+		if weight.Name == version {
+			return &weight.Value
+		}
+	}
+	return &zero
 }
 
 func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
@@ -150,21 +199,17 @@ type patchIntValue struct {
 	Value int32  `json:"value"`
 }
 
-func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.ObjectReference, weight int32) (*unstructured.Unstructured, error) {
+func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue) (*unstructured.Unstructured, error) {
 	log := util.Logger(ctx)
-	log.Info("patchWeight() called")
-	defer log.Info("patchWeight() ended")
+	log.Info("patchWeight called")
+	defer log.Info("patchWeight ended")
 
-	data, err := json.Marshal([]patchIntValue{{
-		Op:    "add",
-		Path:  objRef.FieldPath,
-		Value: weight,
-	}})
+	data, err := json.Marshal(patches)
 	if err != nil {
 		log.Error(err, "Unable to create JSON patch command")
 		return nil, err
 	}
-	log.Info("marshalled patch", "patch", string(data))
+	log.Info("patchWeight", "marshalled patch", string(data))
 
 	dr, err := getDynamicResourceInterface(r.RestConfig, objRef)
 	if err != nil {
@@ -172,5 +217,5 @@ func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.O
 		return nil, err
 	}
 
-	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{FieldManager: "etc3"})
+	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 }
