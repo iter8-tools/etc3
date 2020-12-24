@@ -44,7 +44,11 @@ func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, rest
 
 	// Get spec.versionInfo; it should be present by now
 	if versionInfo := instance.Spec.VersionInfo; versionInfo == nil {
+<<<<<<< HEAD
 		return errors.New("Cannot redistribute weight; no version information present")
+=======
+		return errors.New("Cannot redistribute weight; no versiin information present")
+>>>>>>> modify weights on object together
 	}
 
 	// For each version, get the patch to apply
@@ -61,7 +65,11 @@ func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, rest
 
 	// go through map and apply the list of patches to the objects
 	for obj, p := range patches {
+<<<<<<< HEAD
 		_, err := patchWeight(ctx, &obj, p, restCfg)
+=======
+		_, err := r.patchWeight(ctx, &obj, p)
+>>>>>>> modify weights on object together
 		log.Info("redistributeWeight", "err", err)
 		if err != nil {
 			log.Error(err, "Unable to patch", "object", obj, "patch", p)
@@ -79,7 +87,11 @@ func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, rest
 
 func addPatch(ctx context.Context, instance *v2alpha1.Experiment, version v2alpha1.VersionDetail, patcheMap *map[corev1.ObjectReference][]patchIntValue) error {
 	log := util.Logger(ctx)
+<<<<<<< HEAD
 	//log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
+=======
+	log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
+>>>>>>> modify weights on object together
 	defer log.Info("addPatch completed")
 
 	// verify that there is a weightObjRef; there might not be -- only n-1 versions MUST have one
@@ -94,17 +106,25 @@ func addPatch(ctx context.Context, instance *v2alpha1.Experiment, version v2alph
 	}
 
 	// get the latest recommended weight from the analytics service (cached in Status)
+<<<<<<< HEAD
 	var weight *int32
 	if instance.Status.Analysis != nil {
 		weight = getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
 	}
+=======
+	weight := getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
+>>>>>>> modify weights on object together
 	if weight == nil {
 		log.Info("Unable to find weight recommendation.", "version", version)
 		// fatal error; expected a weight recommendation for all versions
 		return errors.New("No weight recommendation provided")
 	}
 
+<<<<<<< HEAD
 	if *weight == *getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
+=======
+	if weight == getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
+>>>>>>> modify weights on object together
 		log.Info("No change in weight distribution", "version", version.Name)
 		return nil
 	}
@@ -202,7 +222,11 @@ type patchIntValue struct {
 	Value int32  `json:"value"`
 }
 
+<<<<<<< HEAD
 func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue, restCfg *rest.Config) (*unstructured.Unstructured, error) {
+=======
+func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue) (*unstructured.Unstructured, error) {
+>>>>>>> modify weights on object together
 	log := util.Logger(ctx)
 	log.Info("patchWeight called")
 	defer log.Info("patchWeight ended")
