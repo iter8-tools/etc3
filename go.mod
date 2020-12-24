@@ -9,6 +9,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	gopkg.in/yaml.v2 v2.3.0
 	istio.io/pkg v0.0.0-20210113155506-0291dc98a0b6
 	k8s.io/api v0.20.0
