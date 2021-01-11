@@ -9,7 +9,7 @@ This section is for iter8 developers and contains documentation on running and t
 ### Install KFServing and iter8-kfserving Domain Package
 Pre-requisites: `kubectl` with acccess to a kubernetes cluster.
 
-To install KFServing and the iter8-kfserving domain package, follow Steps 1 through 4 from [here](https://github.com/iter8-tools/iter8-kfserving#quick-start-on-minikube).
+To install KFServing and the iter8-kfserving domain package, follow Steps 1 and 2 from [here](https://github.com/iter8-tools/iter8-kfserving#quick-start-on-minikube).
 
 ### Partial Install of iter8-kfserving Domain
 For dev/local-test purposes, it is convenient to run the etc3 locally. Follow the above instructions for iter8-kfserving installation, and then delete the etc3 controller as follows.
@@ -25,7 +25,7 @@ kubectl delete deployment iter8-controller-manager -n iter8-system
 kubectl port-forward -n iter8-system svc/iter8-analytics 8080:8080
 ```
 
-You can now access the iter8-analytics service using the OpenAPI UI at http://localhost:8080/docs
+You should now be able to access the iter8-analytics service using the OpenAPI UI at http://localhost:8080/docs
 
 ### Run etc3 locally
 ```
