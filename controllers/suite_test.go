@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -42,6 +43,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var lg logr.Logger
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -89,9 +91,11 @@ var _ = BeforeSuite(func(done Done) {
 		WithRequestCount("request-count").
 		Build()
 
+	lg := ctrl.Log.WithName("controllers").WithName("Experiment")
+
 	err = (&ExperimentReconciler{
 		Client:     k8sManager.GetClient(),
-		Log:        ctrl.Log.WithName("controllers").WithName("Experiment"),
+		Log:        lg, // ctrl.Log.WithName("controllers").WithName("Experiment"),
 		Scheme:     k8sManager.GetScheme(),
 		RestConfig: nil, // restCfg,
 		// TODO move Iter8Controller from main.go to recorder.go so that we can use constant
