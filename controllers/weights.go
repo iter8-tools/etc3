@@ -37,14 +37,14 @@ import (
 	"k8s.io/client-go/restmapper"
 )
 
-func (r *ExperimentReconciler) redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment) error {
+func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, restCfg *rest.Config) error {
 	log := util.Logger(ctx)
 	log.Info("redistributeWeight called")
 	defer log.Info("redistributeWeight ended")
 
 	// Get spec.versionInfo; it should be present by now
 	if versionInfo := instance.Spec.VersionInfo; versionInfo == nil {
-		return errors.New("Cannot redistribute weight; no versiin information present")
+		return errors.New("Cannot redistribute weight; no version information present")
 	}
 
 	// For each version, get the patch to apply
@@ -61,7 +61,7 @@ func (r *ExperimentReconciler) redistributeWeight(ctx context.Context, instance 
 
 	// go through map and apply the list of patches to the objects
 	for obj, p := range patches {
-		_, err := r.patchWeight(ctx, &obj, p)
+		_, err := patchWeight(ctx, &obj, p, restCfg)
 		log.Info("redistributeWeight", "err", err)
 		if err != nil {
 			log.Error(err, "Unable to patch", "object", obj, "patch", p)
@@ -79,7 +79,7 @@ func (r *ExperimentReconciler) redistributeWeight(ctx context.Context, instance 
 
 func addPatch(ctx context.Context, instance *v2alpha1.Experiment, version v2alpha1.VersionDetail, patcheMap *map[corev1.ObjectReference][]patchIntValue) error {
 	log := util.Logger(ctx)
-	log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
+	//log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
 	defer log.Info("addPatch completed")
 
 	// verify that there is a weightObjRef; there might not be -- only n-1 versions MUST have one
@@ -94,14 +94,17 @@ func addPatch(ctx context.Context, instance *v2alpha1.Experiment, version v2alph
 	}
 
 	// get the latest recommended weight from the analytics service (cached in Status)
-	weight := getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
+	var weight *int32
+	if instance.Status.Analysis != nil {
+		weight = getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
+	}
 	if weight == nil {
-		log.Info("Unable to find weight recommendation.", "version", version, "weights", instance.Status.Analysis.Weights)
+		log.Info("Unable to find weight recommendation.", "version", version)
 		// fatal error; expected a weight recommendation for all versions
 		return errors.New("No weight recommendation provided")
 	}
 
-	if weight == getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
+	if *weight == *getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
 		log.Info("No change in weight distribution", "version", version.Name)
 		return nil
 	}
@@ -199,7 +202,7 @@ type patchIntValue struct {
 	Value int32  `json:"value"`
 }
 
-func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue) (*unstructured.Unstructured, error) {
+func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue, restCfg *rest.Config) (*unstructured.Unstructured, error) {
 	log := util.Logger(ctx)
 	log.Info("patchWeight called")
 	defer log.Info("patchWeight ended")
@@ -211,7 +214,7 @@ func (r *ExperimentReconciler) patchWeight(ctx context.Context, objRef *corev1.O
 	}
 	log.Info("patchWeight", "marshalled patch", string(data))
 
-	dr, err := getDynamicResourceInterface(r.RestConfig, objRef)
+	dr, err := getDynamicResourceInterface(restCfg, objRef)
 	if err != nil {
 		log.Error(err, "Unable to get dynamic resource interface")
 		return nil, err

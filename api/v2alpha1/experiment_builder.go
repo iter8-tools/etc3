@@ -17,6 +17,7 @@ package v2alpha1
 import (
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -104,5 +105,100 @@ func (b *ExperimentBuilder) WithHandlers(handlers map[string]string) *Experiment
 		}
 	}
 
+	return b
+}
+
+// WithBaselineVersion ..
+func (b *ExperimentBuilder) WithBaselineVersion(name string, objRef *corev1.ObjectReference) *ExperimentBuilder {
+
+	if b.Spec.VersionInfo == nil {
+		b.Spec.VersionInfo = &VersionInfo{
+			Baseline: VersionDetail{
+				Name: name,
+			},
+			Candidates: []VersionDetail{},
+		}
+	} else {
+		// override whatever candidate is there
+		b.Spec.VersionInfo.Baseline = VersionDetail{
+			Name: name,
+		}
+	}
+
+	if objRef != nil {
+		b.Spec.VersionInfo.Baseline.WeightObjRef = objRef
+	}
+
+	return b
+}
+
+// WithCandidateVersion ..
+// Expects VersionInfo to be defined already via WithBaselineVersion()
+func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *corev1.ObjectReference) *ExperimentBuilder {
+
+	candidate := VersionDetail{
+		Name: name,
+	}
+
+	if objRef != nil {
+		candidate.WeightObjRef = objRef
+	}
+
+	for _, c := range b.Spec.VersionInfo.Candidates {
+		if c.Name == name {
+			// overwrite
+			c.WeightObjRef = candidate.WeightObjRef
+			return b
+		}
+	}
+
+	// if not present, append candidate
+	b.Spec.VersionInfo.Candidates = append(b.Spec.VersionInfo.Candidates, candidate)
+	return b
+}
+
+// WithCurrentWeight ..
+func (b *ExperimentBuilder) WithCurrentWeight(name string, weight int32) *ExperimentBuilder {
+
+	for _, w := range b.Status.CurrentWeightDistribution {
+		if w.Name == name {
+			w.Value = weight
+			return b
+		}
+	}
+	b.Status.CurrentWeightDistribution = append(
+		b.Status.CurrentWeightDistribution,
+		WeightData{Name: name, Value: weight},
+	)
+	return b
+}
+
+// WithRecommendedWeight ..
+func (b *ExperimentBuilder) WithRecommendedWeight(name string, weight int32) *ExperimentBuilder {
+
+	if b.Status.Analysis == nil {
+		b.Status.Analysis = &Analysis{}
+	}
+	if b.Status.Analysis.Weights == nil {
+		now := metav1.Now()
+		b.Status.Analysis.Weights = &WeightsAnalysis{
+			AnalysisMetaData: AnalysisMetaData{
+				Provenance: "provenance",
+				Timestamp:  now,
+			},
+			Data: []WeightData{},
+		}
+	}
+
+	for _, w := range b.Status.Analysis.Weights.Data {
+		if w.Name == name {
+			w.Value = weight
+			return b
+		}
+	}
+	b.Status.Analysis.Weights.Data = append(
+		b.Status.Analysis.Weights.Data,
+		WeightData{Name: name, Value: weight},
+	)
 	return b
 }
