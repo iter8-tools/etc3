@@ -156,3 +156,49 @@ func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *corev1.Obj
 	b.Spec.VersionInfo.Candidates = append(b.Spec.VersionInfo.Candidates, candidate)
 	return b
 }
+
+// WithCurrentWeight ..
+func (b *ExperimentBuilder) WithCurrentWeight(name string, weight int32) *ExperimentBuilder {
+
+	for _, w := range b.Status.CurrentWeightDistribution {
+		if w.Name == name {
+			w.Value = weight
+			return b
+		}
+	}
+	b.Status.CurrentWeightDistribution = append(
+		b.Status.CurrentWeightDistribution,
+		WeightData{Name: name, Value: weight},
+	)
+	return b
+}
+
+// WithRecommendedWeight ..
+func (b *ExperimentBuilder) WithRecommendedWeight(name string, weight int32) *ExperimentBuilder {
+
+	if b.Status.Analysis == nil {
+		b.Status.Analysis = &Analysis{}
+	}
+	if b.Status.Analysis.Weights == nil {
+		now := metav1.Now()
+		b.Status.Analysis.Weights = &WeightsAnalysis{
+			AnalysisMetaData: AnalysisMetaData{
+				Provenance: "provenance",
+				Timestamp:  now,
+			},
+			Data: []WeightData{},
+		}
+	}
+
+	for _, w := range b.Status.Analysis.Weights.Data {
+		if w.Name == name {
+			w.Value = weight
+			return b
+		}
+	}
+	b.Status.Analysis.Weights.Data = append(
+		b.Status.Analysis.Weights.Data,
+		WeightData{Name: name, Value: weight},
+	)
+	return b
+}

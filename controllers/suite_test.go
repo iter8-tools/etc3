@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -43,6 +44,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var lg logr.Logger
 var reconciler *ExperimentReconciler
 
 type testHTTP struct {
@@ -108,6 +110,8 @@ var _ = BeforeSuite(func(done Done) {
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).ToNot(BeNil())
 
+	lg := ctrl.Log.WithName("controllers").WithName("Experiment")
+
 	testTransport := &testHTTP{
 		analysis: &v2alpha1.Analysis{
 			AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
@@ -130,11 +134,10 @@ var _ = BeforeSuite(func(done Done) {
 	}
 
 	reconciler := &ExperimentReconciler{
-		Client:     k8sClient, // k8sManager.GetClient(),
-		Log:        ctrl.Log.WithName("controllers").WithName("Experiment"),
-		Scheme:     k8sManager.GetScheme(),
-		RestConfig: nil, // restCfg,
-		// TODO move Iter8Controller from main.go to recorder.go so that we can use constant
+		Client:        k8sClient,
+		Log:           lg,
+		Scheme:        k8sManager.GetScheme(),
+		RestConfig:    nil, // restCfg,
 		EventRecorder: k8sManager.GetEventRecorderFor("iter8"),
 		Iter8Config:   cfg,
 		HTTP:          testTransport,

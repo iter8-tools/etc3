@@ -98,7 +98,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	}
 
 	// update weight distribution
-	if err := r.redistributeWeight(ctx, instance); err != nil {
+	if err := redistributeWeight(ctx, instance, r.RestConfig); err != nil {
 		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
 		return r.failExperiment(ctx, instance, err)
 	}
