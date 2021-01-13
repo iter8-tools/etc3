@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"testing"
 
@@ -42,6 +43,20 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var reconciler *ExperimentReconciler
+
+type testHTTP struct {
+	analysis *v2alpha1.Analysis
+}
+
+func (t *testHTTP) Post(url, contentType string, body []byte) ([]byte, int, error) {
+	statuscode := 200
+	b, err := json.Marshal(t.analysis)
+	if err != nil {
+		statuscode = 500
+	}
+	return b, statuscode, err
+}
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -87,26 +102,50 @@ var _ = BeforeSuite(func(done Done) {
 		WithStrategy(string(v2alpha1.StrategyTypePerformance), map[string]string{"start": "start"}).
 		WithStrategy(string(v2alpha1.StrategyTypeBlueGreen), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithRequestCount("request-count").
+		WithEndpoint("http://iter8-analytics:8080").
 		Build()
 
-	err = (&ExperimentReconciler{
-		Client:     k8sManager.GetClient(),
+	k8sClient = k8sManager.GetClient()
+	Expect(k8sClient).ToNot(BeNil())
+
+	testTransport := &testHTTP{
+		analysis: &v2alpha1.Analysis{
+			AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
+				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
+				Data:             map[string]v2alpha1.AggregatedMetricsData{},
+			},
+			WinnerAssessment: &v2alpha1.WinnerAssessmentAnalysis{
+				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
+				Data:             v2alpha1.WinnerAssessmentData{},
+			},
+			VersionAssessments: &v2alpha1.VersionAssessmentAnalysis{
+				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
+				Data:             map[string]v2alpha1.BooleanList{},
+			},
+			Weights: &v2alpha1.WeightsAnalysis{
+				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
+				Data:             []v2alpha1.WeightData{},
+			},
+		},
+	}
+
+	reconciler := &ExperimentReconciler{
+		Client:     k8sClient, // k8sManager.GetClient(),
 		Log:        ctrl.Log.WithName("controllers").WithName("Experiment"),
 		Scheme:     k8sManager.GetScheme(),
 		RestConfig: nil, // restCfg,
 		// TODO move Iter8Controller from main.go to recorder.go so that we can use constant
 		EventRecorder: k8sManager.GetEventRecorderFor("iter8"),
 		Iter8Config:   cfg,
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
+		HTTP:          testTransport,
+	}
+
+	Expect(reconciler.SetupWithManager(k8sManager)).Should(Succeed())
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
 		Expect(err).ToNot(HaveOccurred())
 	}()
-
-	k8sClient = k8sManager.GetClient()
-	Expect(k8sClient).ToNot(BeNil())
 
 	close(done)
 }, 60)

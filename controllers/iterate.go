@@ -20,6 +20,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/iter8-tools/etc3/analytics"
@@ -38,13 +39,22 @@ func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx co
 	log := util.Logger(ctx)
 
 	// Is this the first iteration or has enough time passed since last iteration?
-	if *instance.Status.CompletedIterations == 0 {
+	if *instance.Status.CompletedIterations == 0 || instance.Status.LastUpdateTime == nil {
 		return true
 	}
+
 	now := time.Now()
 	interval := instance.Spec.GetIntervalAsDuration()
-	log.Info("sufficientTimePassedSincePreviousIteration", "lastUpdateTime", instance.Status.LastUpdateTime, "interval", interval, "sum", instance.Status.LastUpdateTime.Add(interval), "now", now)
-	return instance.Status.LastUpdateTime == nil || now.After(instance.Status.LastUpdateTime.Add(interval))
+	expectedTime := instance.Status.LastUpdateTime.Add(interval)
+	log.Info("sufficientTimePassedSincePreviousIteration", "lastUpdateTime", instance.Status.LastUpdateTime, "interval", interval, "sum", expectedTime, "now", now)
+
+	if now.Before(expectedTime) {
+		// is it close enough?
+		difference := expectedTime.Sub(now)
+		return difference < 100*time.Millisecond
+	}
+	// now is after expectedTime
+	return true
 }
 
 func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
@@ -54,21 +64,18 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// record start time of experiment if not already set
 	if err := r.setStartTimeIfNotSet(ctx, instance); err != nil {
-		if err != nil {
-			log.Error(err, "Unable to set status.StartTime")
-		}
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 
 	if !r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
 		// not enough time has passed since the last iteration, wait
-		return r.endRequest(ctx, instance)
+		return ctrl.Result{}, errors.New("Insufficient time has passed since previous iteration")
 	}
 
 	// TODO  GET CURRENT WEIGHTS (from cluster)
 
 	analyticsEndpoint := r.Iter8Config.Endpoint //r.GetAnalyticsService()
-	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance)
+	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance, r.HTTP)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
 		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonAnalyticsServiceError, "Unable to contact analytics engine %s", analyticsEndpoint)
@@ -117,7 +124,7 @@ func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instanc
 		instance.Status.StartTime = &now
 
 		if err := r.Status().Update(ctx, instance); err != nil {
-			util.Logger(ctx).Error(err, "Failed to update when initializing status")
+			util.Logger(ctx).Info("Failed to update when initializing status: " + err.Error())
 			return err
 		}
 		r.StatusModified = false
@@ -154,6 +161,10 @@ func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instanc
 
 	strategy := instance.Spec.Strategy.Type
 	failedVersions := make([]string, 0)
+	if instance.Spec.Criteria == nil {
+		// there are no criteria
+		return failedVersions
+	}
 	for index, o := range instance.Spec.Criteria.Objectives {
 		if o.GetRollbackOnFailure(strategy) {
 			// need to rollback on failure; did some version fail for this objective?

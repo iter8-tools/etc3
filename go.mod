@@ -10,6 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	gopkg.in/yaml.v2 v2.3.0
+	istio.io/pkg v0.0.0-20210113155506-0291dc98a0b6
 	k8s.io/api v0.20.0
 	k8s.io/apiextensions-apiserver v0.19.2 // indirect
 	k8s.io/apimachinery v0.20.0

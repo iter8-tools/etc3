@@ -16,22 +16,26 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/configuration"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Experiment validation", func() {
 	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
+		testName := "test-invalid-duration"
+		testNamespace := "default"
 		It("Should fail to create experiment", func() {
 			ctx := context.Background()
-			experiment := v2alpha1.NewExperiment("test-invalid", "default").
+			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 0).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
@@ -41,11 +45,14 @@ var _ = Describe("Experiment validation", func() {
 
 var _ = Describe("Experiment validation", func() {
 	Context("When creating an experiment with a valid spec.duration.maxIteration", func() {
+		testName := "test-valid-duration"
+		testNamespace := "default"
 		It("Should succeed in creating experiment", func() {
 			ctx := context.Background()
-			experiment := v2alpha1.NewExperiment("test-valid", "default").
+			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
@@ -79,6 +86,7 @@ var _ = Describe("Late Initialization", func() {
 			experiment := v2alpha1.NewExperiment("test", "default").
 				WithTarget("target").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
@@ -107,6 +115,46 @@ var _ = Describe("Late Initialization", func() {
 			Expect(createdExperiment.Spec.GetAlgorithm()).Should(Equal(v2alpha1.DefaultAlgorithm))
 			Expect(len(createdExperiment.Spec.Metrics)).Should(Equal(1))
 			Expect(*createdExperiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
+		})
+	})
+})
+
+var _ = Describe("Experiment proceeds", func() {
+	Context("Early event trigger", func() {
+		ctx := context.Background()
+		testName := "early-reconcile"
+		testNamespace := "default"
+		It("Experiment should complete", func() {
+			By("Creating Experiment with 10s interval")
+			expectedIterations := int32(2)
+			initialInterval := int32(5)
+			modifiedInterval := int32(10)
+			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+				WithTarget("target").
+				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+				WithDuration(initialInterval, expectedIterations).
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate", nil).
+				Build()
+			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
+
+			By("Changing the interval before the reconcile event triggers")
+			time.Sleep(2 * time.Second)
+			createdExperiment := &v2alpha1.Experiment{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)).Should(Succeed())
+			createdExperiment.Spec.Duration.IntervalSeconds = &modifiedInterval
+			Expect(k8sClient.Update(ctx, createdExperiment)).Should(Succeed())
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)
+				if err != nil {
+					return false
+				}
+				return createdExperiment.Status.GetCompletedIterations() == expectedIterations
+				// return true
+			}, 2*modifiedInterval*expectedIterations).Should(BeTrue())
+
 		})
 	})
 })

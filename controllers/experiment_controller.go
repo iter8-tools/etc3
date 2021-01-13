@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/iter8-tools/etc3/analytics"
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/util"
@@ -51,6 +52,7 @@ type ExperimentReconciler struct {
 	RestConfig     *rest.Config
 	EventRecorder  record.EventRecorder
 	Iter8Config    configuration.Iter8Config
+	HTTP           analytics.HTTP
 	StatusModified bool
 }
 

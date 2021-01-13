@@ -17,11 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 
+	"istio.io/pkg/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -51,6 +56,26 @@ func init() {
 
 	_ = v2alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
+}
+
+type iter8Http struct{}
+
+func (m *iter8Http) Post(url, contentType string, body []byte) (resp []byte, statuscocode int, err error) {
+	var prettyJSON bytes.Buffer
+	json.Indent(&prettyJSON, body, "", "  ")
+	log.Info("post request", "URL", url)
+	log.Info(string(prettyJSON.Bytes()))
+	raw, err := http.Post(url, contentType, bytes.NewBuffer(body))
+	log.Info("post result", "raw", raw)
+	log.Info("post error", "err", err)
+	if err != nil {
+		return nil, 500, err
+	}
+
+	defer raw.Body.Close()
+	log.Info("reading Body")
+	b, err := ioutil.ReadAll(raw.Body)
+	return b, raw.StatusCode, err
 }
 
 func main() {
@@ -99,6 +124,7 @@ func main() {
 		RestConfig:    restCfg,
 		EventRecorder: mgr.GetEventRecorderFor(Iter8Controller),
 		Iter8Config:   cfg,
+		HTTP:          &iter8Http{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Experiment")
 		os.Exit(1)

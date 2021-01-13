@@ -17,6 +17,7 @@ package v2alpha1
 import (
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -104,5 +105,54 @@ func (b *ExperimentBuilder) WithHandlers(handlers map[string]string) *Experiment
 		}
 	}
 
+	return b
+}
+
+// WithBaselineVersion ..
+func (b *ExperimentBuilder) WithBaselineVersion(name string, objRef *corev1.ObjectReference) *ExperimentBuilder {
+
+	if b.Spec.VersionInfo == nil {
+		b.Spec.VersionInfo = &VersionInfo{
+			Baseline: VersionDetail{
+				Name: name,
+			},
+			Candidates: []VersionDetail{},
+		}
+	} else {
+		// override whatever candidate is there
+		b.Spec.VersionInfo.Baseline = VersionDetail{
+			Name: name,
+		}
+	}
+
+	if objRef != nil {
+		b.Spec.VersionInfo.Baseline.WeightObjRef = objRef
+	}
+
+	return b
+}
+
+// WithCandidateVersion ..
+// Expects VersionInfo to be defined already via WithBaselineVersion()
+func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *corev1.ObjectReference) *ExperimentBuilder {
+
+	candidate := VersionDetail{
+		Name: name,
+	}
+
+	if objRef != nil {
+		candidate.WeightObjRef = objRef
+	}
+
+	for _, c := range b.Spec.VersionInfo.Candidates {
+		if c.Name == name {
+			// overwrite
+			c.WeightObjRef = candidate.WeightObjRef
+			return b
+		}
+	}
+
+	// if not present, append candidate
+	b.Spec.VersionInfo.Candidates = append(b.Spec.VersionInfo.Candidates, candidate)
 	return b
 }
