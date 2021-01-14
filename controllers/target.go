@@ -44,17 +44,21 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 	// If no one has acquired the target, we will compare priorities
 	earliest := metav1.Now()
 	for _, e := range shareTarget {
-		if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
-			return false
-		}
-		// keep track of the competitor with the highest priority (earliest init time)
-		if e.Status.InitTime.Before(&earliest) {
-			earliest = *e.Status.InitTime
+		if !sameInstance(instance, e) {
+			if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
+				log.Info("acquiredTarget", "target owned by", e.Name)
+				return false
+			}
+			// keep track of the competitor with the highest priority (earliest init time)
+			if e.Status.InitTime.Before(&earliest) {
+				earliest = *e.Status.InitTime
+			}
 		}
 	}
 
 	// we didn't find a competeitor who has already acquired the target
 	// we can if we have the highest priority (started first)
+	log.Info("acquiredTarget", "instance InitTime", instance.Status.InitTime, "earliest", earliest.Time)
 	if instance.Status.InitTime.Before(&earliest) {
 		return r.acquireTarget(ctx, instance)
 	}
@@ -70,9 +74,9 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 
 	r.recordTargetAcquired(ctx, instance, "")
 	if err := r.updateIfNeeded(ctx, instance); err != nil {
-
 		return false
 	}
+
 	return true
 }
 
@@ -97,5 +101,10 @@ func (r *ExperimentReconciler) otherActiveContendersForTarget(ctx context.Contex
 		}
 	}
 
+	log.Info("otherContendersForTarget", "result", result)
 	return result
+}
+
+func sameInstance(instance1 *v2alpha1.Experiment, instance2 *v2alpha1.Experiment) bool {
+	return instance1.Name == instance2.Name && instance1.Namespace == instance2.Namespace
 }
