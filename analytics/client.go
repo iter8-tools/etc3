@@ -43,7 +43,6 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTT
 	log.Info("post response", "URL", endpoint)
 	log.Info(string(prettyBody.Bytes()))
 
-	// if raw.StatusCode >= 400 {
 	if statuscode >= 400 {
 		return nil, fmt.Errorf("%v", string(body))
 	}
