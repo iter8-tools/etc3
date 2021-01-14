@@ -185,7 +185,7 @@ var _ = Describe("Weight Patching", func() {
 		})
 	})
 
-	Context("When multiple versions require updates to the same object", func() {
+	Context("When multiple versions require updates to different objects", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
 			WithStrategy(v2alpha1.StrategyTypeCanary).
@@ -209,7 +209,7 @@ var _ = Describe("Weight Patching", func() {
 			WithRecommendedWeight("baseline", int32(35)).
 			WithRecommendedWeight("candidate", int32(65)).
 			Build()
-		It("There are multiple patches for one object", func() {
+		It("There is one patch for each object", func() {
 			patches := map[corev1.ObjectReference][]patchIntValue{}
 			err := addPatch(ctx, experiment, experiment.Spec.VersionInfo.Baseline, &patches)
 			Expect(err).Should(BeNil())

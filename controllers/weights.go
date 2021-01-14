@@ -49,6 +49,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, rest
 
 	// For each version, get the patch to apply
 	// Add to a map of Object --> []patchIntValue
+	// Map keys are the kubernetes objects to be modified; values are a list of patches to apply
 	patches := map[corev1.ObjectReference][]patchIntValue{}
 	if err := addPatch(ctx, instance, instance.Spec.VersionInfo.Baseline, &patches); err != nil {
 		return err
