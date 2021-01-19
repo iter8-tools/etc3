@@ -37,10 +37,27 @@ import (
 	"k8s.io/client-go/restmapper"
 )
 
+func shouldRedistribute(instance *v2alpha1.Experiment) bool {
+	experimentType := instance.Spec.Strategy.Type
+	if experimentType == v2alpha1.StrategyTypePerformance {
+		return false
+	}
+	algorithm := instance.Spec.GetAlgorithm()
+	if algorithm == v2alpha1.AlgorithmTypeFixedSplit {
+		return false
+	}
+	return true
+}
+
 func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, restCfg *rest.Config) error {
 	log := util.Logger(ctx)
 	log.Info("redistributeWeight called")
 	defer log.Info("redistributeWeight ended")
+
+	if !shouldRedistribute(instance) {
+		log.Info("No weight redistribution", "strategy", instance.Spec.Strategy.Type, "algorithm", instance.Spec.GetAlgorithm())
+		return nil
+	}
 
 	// Get spec.versionInfo; it should be present by now
 	if versionInfo := instance.Spec.VersionInfo; versionInfo == nil {

@@ -58,6 +58,16 @@ func (b *ExperimentBuilder) WithStrategy(strategy StrategyType) *ExperimentBuild
 	return b
 }
 
+// WithAlgorithm ..
+func (b *ExperimentBuilder) WithAlgorithm(algorithm AlgorithmType) *ExperimentBuilder {
+	if nil == b.Spec.Strategy.Weights {
+		b.Spec.Strategy.Weights = &Weights{}
+	}
+	b.Spec.Strategy.Weights.Algorithm = &algorithm
+
+	return b
+}
+
 // WithDuration ..
 func (b *ExperimentBuilder) WithDuration(interval int32, maxIterations int32) *ExperimentBuilder {
 

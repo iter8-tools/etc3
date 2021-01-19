@@ -34,6 +34,27 @@ var _ = Describe("Weight Patching", func() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 
+	Context("When experimentType is Performance", func() {
+		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
+			WithTarget("target").
+			WithStrategy(v2alpha1.StrategyTypePerformance).
+			Build()
+		It("should succeed without error", func() {
+			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())
+		})
+	})
+
+	Context("When algorithm is FixedSplit", func() {
+		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
+			WithTarget("target").
+			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithAlgorithm(v2alpha1.AlgorithmTypeFixedSplit).
+			Build()
+		It("should succeed without error", func() {
+			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())
+		})
+	})
+
 	Context("When no versionInfo", func() {
 		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
