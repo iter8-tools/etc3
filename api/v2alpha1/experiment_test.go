@@ -18,6 +18,8 @@ import (
 	"context"
 	"io/ioutil"
 
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	"github.com/ghodss/yaml"
 	"github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/util"
@@ -56,7 +58,7 @@ var _ = Describe("Experiment's handler field", func() {
 					Version: v2alpha1.GroupVersion.Version,
 					Kind:    "Experiment",
 				})
-				testLogger.Info("unstructured object", "us", us)
+				log.Log.Info("unstructured object", "us", us)
 				Expect(k8sClient.Create(ctx, us)).Should(Succeed())
 			})
 
@@ -70,7 +72,7 @@ var _ = Describe("Experiment's handler field", func() {
 				Expect(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      "exp"}, exp2)).Should(Succeed())
-				testLogger.Info("fetched", "experiment", exp2)
+				log.Log.Info("fetched", "experiment", exp2)
 				_, found, err := unstructured.NestedFieldCopy(exp2.Object, "spec", "strategy", "handlers", "startTasks")
 				Expect(found).To(BeTrue())
 				Expect(err).To(BeNil())
