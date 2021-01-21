@@ -263,6 +263,7 @@ spec:
                           resource.
                         type: string
                     type: object
+                    x-kubernetes-preserve-unknown-fields: true
                   type:
                     description: Type is the experiment strategy
                     enum:

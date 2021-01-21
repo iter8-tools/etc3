@@ -1,0 +1,31 @@
+spec:
+  target: default/my-model
+  strategy:
+    type: Canary
+    handlers:
+      startTasks:
+      - library: kfserving
+        type: setup-experiment
+      - library: default
+        type: initialize-weights
+      - library: kfserving
+        type: readiness-check
+      endTasks:
+      - library: default
+        type: exec
+        cmd: kubectl
+        args:
+        - apply
+        - -k
+        - https://github.com/my-org/my-repo/path/to/overlays/{{ Status.RecommendedBaseline }}
+  criteria:
+    indicators:
+    - 95th-percentile-tail-latency
+    objectives:
+    - metric: mean-latency
+      upperLimit: 1000
+    - metric: error-rate
+      upperLimit: "0.01"
+  duration:
+    intervalSeconds: 15
+    maxIterations: 12

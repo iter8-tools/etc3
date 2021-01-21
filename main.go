@@ -26,7 +26,6 @@ import (
 	"os"
 	"path"
 
-	"istio.io/pkg/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -63,17 +62,17 @@ type iter8Http struct{}
 func (m *iter8Http) Post(url, contentType string, body []byte) (resp []byte, statuscocode int, err error) {
 	var prettyJSON bytes.Buffer
 	json.Indent(&prettyJSON, body, "", "  ")
-	log.Info("post request", "URL", url)
-	log.Info(string(prettyJSON.Bytes()))
+	setupLog.Info("post request", "URL", url)
+	setupLog.Info(string(prettyJSON.Bytes()))
 	raw, err := http.Post(url, contentType, bytes.NewBuffer(body))
-	log.Info("post result", "raw", raw)
-	log.Info("post error", "err", err)
+	setupLog.Info("post result", "raw", raw)
+	setupLog.Info("post error", "err", err)
 	if err != nil {
 		return nil, 500, err
 	}
 
 	defer raw.Body.Close()
-	log.Info("reading Body")
+	setupLog.Info("reading Body")
 	b, err := ioutil.ReadAll(raw.Body)
 	return b, raw.StatusCode, err
 }

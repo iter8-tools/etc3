@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	// NoneHanlder is the keyword users can use to indicate no handler
+	// NoneHandler is the keyword users can use to indicate no handler
 	NoneHandler string = "none"
 
 	// DefaultMaxCandidateWeight is the default traffic percentage used in experiment, which is 100
