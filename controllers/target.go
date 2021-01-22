@@ -38,16 +38,16 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 
 	// get the set of experiments (across all namespaces) that share the target and which are not completed
 	// the members of this set are our competetors for the target
-	shareTarget := r.otherActiveContendersForTarget(ctx, instance)
+	shareTarget := r.activeContendersForTarget(ctx, instance)
 
-	// If another experiment has aquired the target, we cannot
+	// If another experiment has acquired the target, we cannot
 	// While checking, keep track of the highest priority (earliest init time) among the set of competitors
 	// If no one has acquired the target, we will compare priorities
 	earliest := instance.Status.InitTime
 	for _, e := range shareTarget {
 		if !sameInstance(instance, e) {
 			if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
-				log.Info("acquiredTarget", "target owned by", e.Name)
+				log.Info("acquireTarget", "target already owned by", e.Name)
 				return false
 			}
 			// keep track of the competitor with the highest priority (earliest init time)
@@ -59,37 +59,37 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 
 	// we didn't find a competeitor who has already acquired the target
 	// we can if we have the highest priority (started first)
-	log.Info("acquiredTarget", "instance InitTime", instance.Status.InitTime, "earliest", earliest.Time)
+	log.Info("acquireTarget", "instance InitTime", instance.Status.InitTime, "earliest", earliest.Time)
 	if !earliest.Before(instance.Status.InitTime) {
-		log.Info("acquiredTarget acquiring")
+		log.Info("acquireTarget target available; acquiring")
 		r.recordTargetAcquired(ctx, instance, "")
 	}
 
-	// otherwise, return we cannot aquire target: there is another experiment with priority
+	// otherwise, return we cannot acquire target: there is another experiment with priority
 	return false
 }
 
-func (r *ExperimentReconciler) otherActiveContendersForTarget(ctx context.Context, instance *v2alpha1.Experiment) []*v2alpha1.Experiment {
+func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, instance *v2alpha1.Experiment) []*v2alpha1.Experiment {
 	log := util.Logger(ctx)
-	log.Info("otherContendersForTarget called")
-	defer log.Info("otherContendersForTarget completed")
+	log.Info("activeContendersForTarget called")
+	defer log.Info("activeContendersForTarget completed")
 
 	result := []*v2alpha1.Experiment{}
 
 	experiments := &v2alpha1.ExperimentList{}
 	if err := r.List(ctx, experiments); err != nil {
-		log.Error(err, "Unable to list experiments")
+		log.Error(err, "activeContendersForTarget Unable to list experiments")
 		return result
 	}
 
-	for _, exp := range experiments.Items {
-		if exp.Spec.Target == instance.Spec.Target &&
-			exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsFalse() {
-			result = append(result, &exp)
+	for i := range experiments.Items {
+		if experiments.Items[i].Spec.Target == instance.Spec.Target &&
+			experiments.Items[i].Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsFalse() {
+			result = append(result, &experiments.Items[i])
 		}
 	}
 
-	log.Info("otherContendersForTarget", "result", result)
+	log.Info("activeContendersForTarget", "result", result)
 	return result
 }
 
@@ -103,7 +103,7 @@ func (r *ExperimentReconciler) nextExperimentToRun(ctx context.Context, instance
 	log.Info("nextExperimentToRun called")
 	defer log.Info("nextExperimentToRun completed")
 
-	shareTarget := r.otherActiveContendersForTarget(ctx, instance)
+	shareTarget := r.activeContendersForTarget(ctx, instance)
 
 	earliest := metav1.Now()
 	next := (*v2alpha1.Experiment)(nil)
@@ -117,7 +117,7 @@ func (r *ExperimentReconciler) nextExperimentToRun(ctx context.Context, instance
 		// Note that we've already filtered out the completed ones so if there is another
 		// experiment that thas acquired the target, we can't/shouldn't suggest another
 		if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
-			log.Info("acquiredTarget", "target owned by", e.Name)
+			log.Info("nextExperimentToRun", "target owned by", e.Name)
 			return nil
 		}
 		// keep track of the competitor with the highest priority (earliest init time)
@@ -126,16 +126,24 @@ func (r *ExperimentReconciler) nextExperimentToRun(ctx context.Context, instance
 			next = e
 		}
 	}
+	if next != nil {
+		log.Info("nextExperimentToRun", "name", next.Name, "namespace", next.Namespace)
+	}
 	return next
 }
 
 func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, instance *v2alpha1.Experiment) {
+	log := util.Logger(ctx)
+	log.Info("triggerNextExperiment called")
+	defer log.Info("triggerNextExperiment completed")
+
 	next := r.nextExperimentToRun(ctx, instance)
 	if nil != next {
+		log.Info("triggerNextExperiment", "name", next.Name, "namespace", next.Namespace)
 		// found one
 		r.ReleaseEvents <- event.GenericEvent{
-			Meta:   nil,
-			Object: nil,
+			Meta:   next,
+			Object: next,
 		}
 	}
 }

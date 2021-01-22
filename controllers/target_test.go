@@ -75,7 +75,6 @@ var _ = Describe("Target Acquisition", func() {
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
-
 			By("Eventually the first experiment completes")
 			Eventually(func() bool { return completes(ctx, hasName, testNamespace) }, 8).Should(BeTrue())
 

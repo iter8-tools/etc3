@@ -419,8 +419,12 @@ func (r *ExperimentReconciler) updateIfNeeded(ctx context.Context, instance *v2a
 	if r.StatusModified {
 		log.Info("updating status", "status", instance.Status)
 		if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
-			log.Error(err, "Failed to update status")
-			return err
+			// try again
+			log.Info("updating status trying again")
+			if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
+				log.Error(err, "Failed to update status")
+				return err
+			}
 		}
 		r.StatusModified = false
 	}
