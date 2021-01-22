@@ -275,12 +275,6 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	)
 
-	// experimentToExperiment := handler.ToRequestsFunc(
-	// 	func(a handler.MapObject) []ctrl.Request {
-	// 		return []ctrl.Request{}
-	// 	},
-	// )
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v2alpha1.Experiment{}).
 		Watches(&source.Kind{Type: &batchv1.Job{}},
