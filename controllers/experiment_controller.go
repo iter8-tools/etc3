@@ -253,9 +253,6 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
 			builder.WithPredicates(jobPredicateFuncs)).
 		Watches(&source.Channel{Source: r.ReleaseEvents}, &handler.EnqueueRequestForObject{}).
-		// Watches(&source.Kind{Type: &v2alpha1.Experiment{}},
-		// 	&handler.EnqueueRequestsFromMapFunc{ToRequests: experimentToExperiment})
-		// Owns(&batchv1.Job{}).
 		Complete(r)
 }
 
