@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -134,13 +135,15 @@ var _ = BeforeSuite(func(done Done) {
 	}
 
 	reconciler := &ExperimentReconciler{
-		Client:        k8sClient,
-		Log:           lg,
-		Scheme:        k8sManager.GetScheme(),
-		RestConfig:    nil, // restCfg,
+		Client:     k8sClient,
+		Log:        lg,
+		Scheme:     k8sManager.GetScheme(),
+		RestConfig: nil, // restCfg,
+		// TODO move Iter8Controller from main.go to recorder.go so that we can use constant
 		EventRecorder: k8sManager.GetEventRecorderFor("iter8"),
 		Iter8Config:   cfg,
 		HTTP:          testTransport,
+		ReleaseEvents: make(chan event.GenericEvent),
 	}
 
 	Expect(reconciler.SetupWithManager(k8sManager)).Should(Succeed())

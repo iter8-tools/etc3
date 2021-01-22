@@ -54,6 +54,7 @@ type ExperimentReconciler struct {
 	Iter8Config    configuration.Iter8Config
 	HTTP           analytics.HTTP
 	StatusModified bool
+	ReleaseEvents  chan event.GenericEvent
 }
 
 /* RBAC roles are handwritten in config/rbac-iter8 so that different roles can be assigned
@@ -246,17 +247,12 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	)
 
-	// experimentToExperiment := handler.ToRequestsFunc(
-	// 	func(a handler.MapObject) []ctrl.Request {
-	// 		return []ctrl.Request{}
-	// 	},
-	// )
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v2alpha1.Experiment{}).
 		Watches(&source.Kind{Type: &batchv1.Job{}},
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
 			builder.WithPredicates(jobPredicateFuncs)).
+		// Watches(&source.Channel{Source: r.ReleaseEvents}, &handler.EnqueueRequestForObject{}).
 		// Watches(&source.Kind{Type: &v2alpha1.Experiment{}},
 		// 	&handler.EnqueueRequestsFromMapFunc{ToRequests: experimentToExperiment})
 		// Owns(&batchv1.Job{}).
@@ -291,7 +287,7 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	log.Info("endExperiment called")
 	defer log.Info("endExperiment completed")
 
-	// trigger next experiment
+	r.triggerNextExperiment(ctx, instance)
 	return r.endRequest(ctx, instance)
 }
 

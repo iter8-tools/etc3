@@ -32,6 +32,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
@@ -124,6 +125,7 @@ func main() {
 		EventRecorder: mgr.GetEventRecorderFor(Iter8Controller),
 		Iter8Config:   cfg,
 		HTTP:          &iter8Http{},
+		ReleaseEvents: make(chan event.GenericEvent),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Experiment")
 		os.Exit(1)

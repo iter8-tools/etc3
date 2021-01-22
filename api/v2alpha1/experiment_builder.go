@@ -210,5 +210,12 @@ func (b *ExperimentBuilder) WithRecommendedWeight(name string, weight int32) *Ex
 		b.Status.Analysis.Weights.Data,
 		WeightData{Name: name, Value: weight},
 	)
+
+	return b
+}
+
+// WithCondition ..
+func (b *ExperimentBuilder) WithCondition(condition ExperimentConditionType, status corev1.ConditionStatus, reason string, messageFormat string, messageA ...interface{}) *ExperimentBuilder {
+	b.Status.MarkCondition(condition, status, reason, messageFormat, messageA...)
 	return b
 }
