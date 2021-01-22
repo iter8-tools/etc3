@@ -164,7 +164,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// TARGET ACQUISITION
 	// Ensure that we are the only experiment proceding with the same target
 	// If we find another, end request and wait to be kicked
-	if !r.acquiredTarget(ctx, instance) {
+	if !r.acquireTarget(ctx, instance) {
 		// do not have the target, quit
 		return r.endRequest(ctx, instance)
 	}
@@ -252,7 +252,7 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&source.Kind{Type: &batchv1.Job{}},
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
 			builder.WithPredicates(jobPredicateFuncs)).
-		// Watches(&source.Channel{Source: r.ReleaseEvents}, &handler.EnqueueRequestForObject{}).
+		Watches(&source.Channel{Source: r.ReleaseEvents}, &handler.EnqueueRequestForObject{}).
 		// Watches(&source.Kind{Type: &v2alpha1.Experiment{}},
 		// 	&handler.EnqueueRequestsFromMapFunc{ToRequests: experimentToExperiment})
 		// Owns(&batchv1.Job{}).
@@ -368,8 +368,12 @@ func (r *ExperimentReconciler) updateIfNeeded(ctx context.Context, instance *v2a
 	if r.StatusModified {
 		log.Info("updating status", "status", instance.Status)
 		if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
-			log.Error(err, "Failed to update status")
-			return err
+			// try again
+			log.Info("updating status trying again")
+			if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
+				log.Error(err, "Failed to update status")
+				return err
+			}
 		}
 		r.StatusModified = false
 	}
