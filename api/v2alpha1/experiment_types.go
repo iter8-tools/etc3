@@ -177,7 +177,7 @@ type Weights struct {
 	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty" yaml:"maxCandidateWeightIncrement,omitempty"`
 
 	// Algorithm is the traffic split algorithm
-	// Default will be None for performance experiments,
+	// Default will be None for conformance experiments,
 	// "fixed_split" for bluegreen experiments, and
 	// "progressive" otherwise
 	// +optional

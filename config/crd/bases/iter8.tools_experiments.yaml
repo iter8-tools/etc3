@@ -271,6 +271,7 @@ spec:
                     - A/B
                     - A/B/N
                     - Performance
+                    - Conformance
                     - BlueGreen
                     type: string
                   weights:
@@ -279,7 +280,7 @@ spec:
                     properties:
                       algorithm:
                         description: Algorithm is the traffic split algorithm Default
-                          will be None for performance experiments, "fixed_split"
+                          will be None for conformance experiments, "fixed_split"
                           for bluegreen experiments, and "progressive" otherwise
                         enum:
                         - FixedSplit

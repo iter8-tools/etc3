@@ -34,10 +34,10 @@ var _ = Describe("Weight Patching", func() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 
-	Context("When experimentType is Performance", func() {
+	Context("When experimentType is Conformance", func() {
 		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithStrategy(v2alpha1.StrategyTypeConformance).
 			Build()
 		It("should succeed without error", func() {
 			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())

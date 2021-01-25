@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -26,9 +27,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -49,6 +52,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var lg logr.Logger
+var recorder record.EventRecorder
 var reconciler *ExperimentReconciler
 
 type testHTTP struct {
@@ -62,6 +66,18 @@ func (t *testHTTP) Post(url, contentType string, body []byte) ([]byte, int, erro
 		statuscode = 500
 	}
 	return b, statuscode, err
+}
+
+type testRecorder struct{}
+
+func (r testRecorder) Event(object runtime.Object, eventtype, reason, message string) {
+	fmt.Printf("%s (%s): %s\n", eventtype, reason, message)
+}
+func (r testRecorder) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {
+	fmt.Printf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...))
+}
+func (r testRecorder) AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
+	fmt.Printf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...))
 }
 
 func TestAPIs(t *testing.T) {
@@ -105,7 +121,7 @@ var _ = BeforeSuite(func(done Done) {
 	cfg := configuration.NewIter8Config().
 		WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithStrategy(string(v2alpha1.StrategyTypeAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-		WithStrategy(string(v2alpha1.StrategyTypePerformance), map[string]string{"start": "start"}).
+		WithStrategy(string(v2alpha1.StrategyTypeConformance), map[string]string{"start": "start"}).
 		WithStrategy(string(v2alpha1.StrategyTypeBlueGreen), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithRequestCount("request-count").
 		WithEndpoint("http://iter8-analytics:8080").
@@ -137,13 +153,14 @@ var _ = BeforeSuite(func(done Done) {
 		},
 	}
 
-	reconciler := &ExperimentReconciler{
-		Client:     k8sClient,
-		Log:        lg,
-		Scheme:     k8sManager.GetScheme(),
-		RestConfig: nil, // restCfg,
-		// TODO move Iter8Controller from main.go to recorder.go so that we can use constant
-		EventRecorder: k8sManager.GetEventRecorderFor("iter8"),
+	recorder = testRecorder{}
+
+	reconciler = &ExperimentReconciler{
+		Client:        k8sClient,
+		Log:           lg,
+		Scheme:        k8sManager.GetScheme(),
+		RestConfig:    nil, // restCfg,
+		EventRecorder: recorder,
 		Iter8Config:   cfg,
 		HTTP:          testTransport,
 		ReleaseEvents: make(chan event.GenericEvent),
