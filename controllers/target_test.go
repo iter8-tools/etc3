@@ -119,7 +119,6 @@ var _ = Describe("Finalizer", func() {
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
-
 			By("Deleting the first experiment")
 			exp := &v2alpha1.Experiment{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())
