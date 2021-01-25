@@ -20,8 +20,10 @@ import (
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -68,7 +70,7 @@ var _ = Describe("Target Acquisition", func() {
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
 		})
 
-		It("will not acquire the target when another experiment already had it", func() {
+		It("will not acquire the target when another experiment already has it", func() {
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
 			Eventually(func() bool { return isDeployed(ctx, wantsName, testNamespace) }).Should(BeTrue())
@@ -89,43 +91,54 @@ var _ = Describe("Target Acquisition", func() {
 
 })
 
-func isDeployed(ctx context.Context, name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
+var _ = Describe("Finalizer", func() {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
+	testNamespace := "default"
 
-	return true
-}
+	Context("Experiment wanting to acquire a target", func() {
+		hasName := "willget-target-finalizer"
+		wantsName := "wants-target-finalizer"
+		has := v2alpha1.NewExperiment(hasName, testNamespace).
+			WithTarget("unavailable-target").
+			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+			WithDuration(3, 2).
+			WithBaselineVersion("baseline", nil).
+			Build()
+		wants := v2alpha1.NewExperiment(wantsName, testNamespace).
+			WithTarget("unavailable-target").
+			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+			WithDuration(1, 1).
+			WithBaselineVersion("baseline", nil).
+			Build()
+		It("will acquire the target if no other experiments using it", func() {
+			By("Creating an experiment with a unique target name")
+			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
+			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
+		})
 
-func hasTarget(ctx context.Context, name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
+		It("will not acquire the target when another experiment already has it", func() {
+			By("Creating experiment wanting the same target")
+			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
+			Eventually(func() bool { return isDeployed(ctx, wantsName, testNamespace) }).Should(BeTrue())
 
-	return exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue()
-}
+			By("Waiting for the target")
+			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
+		})
 
-func completes(ctx context.Context, name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-	return exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
-}
+		It("will get the target when the original holder is deleted", func() {
+			By("Deleting the first experiment")
+			exp := &v2alpha1.Experiment{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())
+			Expect(k8sClient.Delete(ctx, exp, client.PropagationPolicy(metav1.DeletePropagationBackground))).Should(Succeed())
+			Eventually(func() bool { return isDeleted(ctx, hasName, testNamespace) }, 8).Should(BeTrue())
 
-func completesSuccessfully(ctx context.Context, name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
-	successful := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsFalse()
+			By("Allowing the second to acquire the target and proceed")
+			Eventually(func() bool { return hasTarget(ctx, wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool { return completes(ctx, wantsName, testNamespace) }).Should(BeTrue())
+		})
+	})
 
-	return completed && successful
-}
+})

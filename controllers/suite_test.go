@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"path/filepath"
 	"testing"
@@ -24,6 +25,8 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -161,3 +164,51 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
+
+func isDeployed(ctx context.Context, name string, ns string) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func hasTarget(ctx context.Context, name string, ns string) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	if err != nil {
+		return false
+	}
+
+	return exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue()
+}
+
+func completes(ctx context.Context, name string, ns string) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	if err != nil {
+		return false
+	}
+	return exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
+}
+
+func completesSuccessfully(ctx context.Context, name string, ns string) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	if err != nil {
+		return false
+	}
+	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
+	successful := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsFalse()
+
+	return completed && successful
+}
+
+func isDeleted(ctx context.Context, name string, ns string) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	return err != nil &&
+		(errors.IsNotFound(err) || errors.IsGone(err))
+}
