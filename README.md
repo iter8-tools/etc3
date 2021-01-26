@@ -1,7 +1,7 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/iter8-tools/etc3)](https://goreportcard.com/report/github.com/iter8-tools/default-tasks)
-[![Coverage](https://codecov.io/gh/iter8-tools/default-tasks/branch/main/graphs/badge.svg?branch=main)](https://codecov.io/gh/iter8-tools/default-tasks)
+[![Go Report Card](https://goreportcard.com/badge/github.com/iter8-tools/etc3)](https://goreportcard.com/report/github.com/kalantar/etc3)
+[![Coverage](https://codecov.io/gh/iter8-tools/default-tasks/branch/main/graphs/badge.svg?branch=main)](https://codecov.io/gh/kalantar/etc3)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Reference](https://pkg.go.dev/badge/github.com/iter8-tools/default-tasks.svg)](https://pkg.go.dev/github.com/iter8-tools/default-tasks)
+[![Go Reference](https://pkg.go.dev/badge/github.com/iter8-tools/default-tasks.svg)](https://pkg.go.dev/github.com/kalantar/etc3)
 # etc3: Extensible Thin Controller with Composable CRD
 
 > The etc3 controller provides core capabilities to orchestrate iter8 experiments across different Kubernetes and Openshift stacks.
