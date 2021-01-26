@@ -17,7 +17,7 @@ limitations under the License.
 package v2alpha1
 
 // StrategyType identifies the type of experiment type
-// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Performance;Conformance;BlueGreen
+// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance;BlueGreen
 type StrategyType string
 
 const (
@@ -29,9 +29,6 @@ const (
 
 	// StrategyTypeABN indicates an experiment is a A/B/n experiment
 	StrategyTypeABN StrategyType = "A/B/N"
-
-	// StrategyTypePerformance indicates an experiment is a performance experiment
-	StrategyTypePerformance StrategyType = "Performance"
 
 	// StrategyTypeConformance indicates an experiment is a conformance experiment
 	StrategyTypeConformance StrategyType = "Conformance"
@@ -46,7 +43,6 @@ var ValidStrategyTypes []StrategyType = []StrategyType{
 	StrategyTypeCanary,
 	StrategyTypeAB,
 	StrategyTypeABN,
-	StrategyTypePerformance,
 	StrategyTypeConformance,
 	StrategyTypeBlueGreen,
 }

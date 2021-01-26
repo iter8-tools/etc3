@@ -39,8 +39,7 @@ import (
 
 func shouldRedistribute(instance *v2alpha1.Experiment) bool {
 	experimentType := instance.Spec.Strategy.Type
-	if experimentType == v2alpha1.StrategyTypePerformance ||
-		experimentType == v2alpha1.StrategyTypeConformance {
+	if experimentType == v2alpha1.StrategyTypeConformance {
 		return false
 	}
 	algorithm := instance.Spec.GetAlgorithm()

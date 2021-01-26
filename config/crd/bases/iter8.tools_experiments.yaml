@@ -270,7 +270,6 @@ spec:
                     - Canary
                     - A/B
                     - A/B/N
-                    - Performance
                     - Conformance
                     - BlueGreen
                     type: string

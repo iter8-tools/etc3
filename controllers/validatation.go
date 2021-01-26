@@ -52,7 +52,7 @@ func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance 
 
 func candidatesMatchStrategy(s v2alpha1.ExperimentSpec) bool {
 	switch s.Strategy.Type {
-	case v2alpha1.StrategyTypeConformance, v2alpha1.StrategyTypePerformance:
+	case v2alpha1.StrategyTypeConformance:
 		return len(s.VersionInfo.Candidates) == 0
 	case v2alpha1.StrategyTypeAB, v2alpha1.StrategyTypeCanary, v2alpha1.StrategyTypeBlueGreen:
 		return len(s.VersionInfo.Candidates) == 1
