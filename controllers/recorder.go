@@ -69,6 +69,5 @@ func (r *ExperimentReconciler) recordEvent(ctx context.Context, instance *v2alph
 		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		r.EventRecorder.Eventf(instance, corev1.EventTypeNormal, reason, messageFormat, messageA...)
 		// FUTURE: send notifications
-		r.StatusModified = true
 	}
 }

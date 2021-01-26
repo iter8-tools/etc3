@@ -1,29 +1,34 @@
 // Package util provides logging and testing related utility functions.
 package util
 
+// util.go - utility methods
+//    including methods to retrieve values from context.Context
+
 import (
 	"context"
 	"path/filepath"
 	"runtime"
 
 	"github.com/go-logr/logr"
+	"github.com/iter8-tools/etc3/api/v2alpha1"
 )
-
-type loggerKeyType string
 
 const (
 	// LoggerKey is the key used to extract logger from context
-	LoggerKey = loggerKeyType("logger")
+	LoggerKey = "logger"
 
-	// NamespaceKey is a key used to store/retrieve a namespace from the context
-	NamespaceKey = "namespace"
+	// OriginalStatusKey is the key used to extract the original status from the context
+	OriginalStatusKey = "originalStatus"
 )
-
-// util.go - utility methods; currently supporting storing and retreiving values from context.Context
 
 // Logger gets the logger from the context.
 func Logger(ctx context.Context) logr.Logger {
 	return ctx.Value(LoggerKey).(logr.Logger)
+}
+
+// OriginalStatus gets the status from the context
+func OriginalStatus(ctx context.Context) *v2alpha1.ExperimentStatus {
+	return ctx.Value(OriginalStatusKey).(*v2alpha1.ExperimentStatus)
 }
 
 // CompletePath is a helper function for converting file paths, specified relative to the caller of this function, into absolute ones.
@@ -32,7 +37,3 @@ func CompletePath(prefix string, suffix string) string {
 	_, testFilename, _, _ := runtime.Caller(1) // one step up the call stack
 	return filepath.Join(filepath.Dir(testFilename), prefix, suffix)
 }
-
-// func Namespace(ctx context.Context) string {
-// 	return string(ctx.Value(NamespaceKey))
-// }
