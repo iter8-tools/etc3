@@ -64,22 +64,18 @@ var _ = Describe("Target Acquisition", func() {
 			WithDuration(1, 1).
 			WithBaselineVersion("baseline", nil).
 			Build()
-		It("will acquire the target if no other experiments using it", func() {
+		It("will acquire the target only after a target holder is completed", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
-		})
 
-		It("will not acquire the target when another experiment already has it", func() {
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
 			Eventually(func() bool { return isDeployed(ctx, wantsName, testNamespace) }).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
-		})
 
-		It("will get the target when the original holder finishes", func() {
 			By("Eventually the first experiment completes")
 			Eventually(func() bool { return completes(ctx, hasName, testNamespace) }, 8).Should(BeTrue())
 
@@ -113,22 +109,18 @@ var _ = Describe("Finalizer", func() {
 			WithDuration(1, 1).
 			WithBaselineVersion("baseline", nil).
 			Build()
-		It("will acquire the target if no other experiments using it", func() {
+		It("will acquire the target when a holder is deleted", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
-		})
 
-		It("will not acquire the target when another experiment already has it", func() {
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
 			Eventually(func() bool { return isDeployed(ctx, wantsName, testNamespace) }).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
-		})
 
-		It("will get the target when the original holder is deleted", func() {
 			By("Deleting the first experiment")
 			exp := &v2alpha1.Experiment{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())

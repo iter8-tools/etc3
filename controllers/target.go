@@ -37,7 +37,6 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 	}
 
 	// get the set of experiments (across all namespaces) that share the target and which are not completed
-	// the members of this set are our competetors for the target
 	shareTarget := r.activeContendersForTarget(ctx, instance)
 
 	// If another experiment has acquired the target, we cannot
@@ -115,7 +114,7 @@ func (r *ExperimentReconciler) nextExperimentToRun(ctx context.Context, instance
 		}
 
 		// Note that we've already filtered out the completed ones so if there is another
-		// experiment that thas acquired the target, we can't/shouldn't suggest another
+		// experiment that has acquired the target, we can't/shouldn't suggest another
 		if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
 			log.Info("nextExperimentToRun", "target owned by", e.Name)
 			return nil

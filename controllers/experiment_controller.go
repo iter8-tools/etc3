@@ -95,7 +95,6 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	log.Info("found instance", "instance", instance, "updatedStatus", r.StatusModified) //, "spec", instance.Spec, "status", instance.Status)
 
 	// Add FINALIZER if not present; run finalizer if deleting experiment
-	// If instance does not have a finalizer, add one here (if desired)
 	if instance.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The experiment is not being deleted, so if it doesn't have a finalizer we add one
 		// and return; update will retrigger reconcile
@@ -117,9 +116,11 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 			if err := r.Update(ctx, instance); err != nil {
 				return ctrl.Result{}, err
 			}
-			// on success, remove finalizer so that it deletion can proceed
+			// on success, remove finalizer so that deletion can proceed
 			return ctrl.Result{}, nil
 		}
+		// is being deleted and there was no finalizer; just exit
+		return ctrl.Result{}, nil
 	}
 
 	// If instance has never been seen before, initialize status object
@@ -190,7 +191,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	// TARGET ACQUISITION
 	// Ensure that we are the only experiment proceding with the same target
-	// If we find another, end request and wait to be kicked
+	// If we find another, end request and wait to be triggered again
 	if !r.acquireTarget(ctx, instance) {
 		// do not have the target, quit
 		return r.endRequest(ctx, instance)
@@ -418,12 +419,8 @@ func (r *ExperimentReconciler) updateIfNeeded(ctx context.Context, instance *v2a
 	if r.StatusModified {
 		log.Info("updating status", "status", instance.Status)
 		if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
-			// try again
-			log.Info("updating status trying again")
-			if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
-				log.Error(err, "Failed to update status")
-				return err
-			}
+			log.Error(err, "Failed to update status")
+			return err
 		}
 		r.StatusModified = false
 	}
