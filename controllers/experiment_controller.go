@@ -47,14 +47,13 @@ import (
 // ExperimentReconciler reconciles a Experiment object
 type ExperimentReconciler struct {
 	client.Client
-	Log            logr.Logger
-	Scheme         *runtime.Scheme
-	RestConfig     *rest.Config
-	EventRecorder  record.EventRecorder
-	Iter8Config    configuration.Iter8Config
-	HTTP           analytics.HTTP
-	StatusModified bool
-	ReleaseEvents  chan event.GenericEvent
+	Log           logr.Logger
+	Scheme        *runtime.Scheme
+	RestConfig    *rest.Config
+	EventRecorder record.EventRecorder
+	Iter8Config   configuration.Iter8Config
+	HTTP          analytics.HTTP
+	ReleaseEvents chan event.GenericEvent
 }
 
 const (
@@ -84,15 +83,16 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		// if object not found, it has been deleted, we can ignore
 		// (if it is being deleted and there is a finalizer, we would have found it)
 		if errors.IsNotFound(err) {
-			log.Info("Experiment not found.")
+			log.Info("Experiment not found")
 			return ctrl.Result{}, nil
 		}
 		// other error reading instance; return
-		log.Error(err, "Unable to read experiment object.")
+		log.Error(err, "Unable to read experiment object")
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("found instance", "instance", instance, "updatedStatus", r.StatusModified) //, "spec", instance.Spec, "status", instance.Status)
+	log.Info("Reconcile", "instance", instance)
+	ctx = context.WithValue(ctx, util.OriginalStatusKey, instance.Status.DeepCopy())
 
 	// Add FINALIZER if not present; run finalizer if deleting experiment
 	if instance.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -323,13 +323,13 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha
 	log.Info("endRequest called")
 	defer log.Info("endRequest completed")
 
-	r.updateIfNeeded(ctx, instance)
+	err := r.updateStatus(ctx, instance)
 
 	if len(interval) > 0 {
 		log.Info("Requeue for next iteration", "interval", interval, "iterations", instance.Status.GetCompletedIterations())
-		return ctrl.Result{RequeueAfter: interval[0]}, nil
+		return ctrl.Result{RequeueAfter: interval[0]}, err
 	}
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, err
 }
 
 // endExperiment is called to mark an experiment as completed and triggers next experiment object
@@ -414,17 +414,18 @@ func validUpdateErr(err error) bool {
 	return strings.Contains(err.Error(), benignMsg)
 }
 
-func (r *ExperimentReconciler) updateIfNeeded(ctx context.Context, instance *v2alpha1.Experiment) error {
+func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alpha1.Experiment) error {
 	log := util.Logger(ctx)
-	if r.StatusModified {
-		log.Info("updating status", "status", instance.Status)
+	originalStatus := util.OriginalStatus(ctx)
+
+	// log.Info("updateStatus", "original status", *originalStatus)
+	log.Info("updateStatus", "status", instance.Status)
+	if !reflect.DeepEqual(originalStatus, &instance.Status) {
 		if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
 			log.Error(err, "Failed to update status")
 			return err
 		}
-		r.StatusModified = false
 	}
-
 	return nil
 }
 
