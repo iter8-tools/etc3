@@ -418,16 +418,12 @@ func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alp
 	log := util.Logger(ctx)
 	originalStatus := util.OriginalStatus(ctx)
 
-	log.Info("updateStatus", "original status", *originalStatus)
+	// log.Info("updateStatus", "original status", *originalStatus)
 	log.Info("updateStatus", "status", instance.Status)
 	if !reflect.DeepEqual(originalStatus, &instance.Status) {
 		if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
-			// try again
-			log.Info("updating status trying again")
-			if err := r.Status().Update(ctx, instance); err != nil && !validUpdateErr(err) {
-				log.Error(err, "Failed to update status")
-				return err
-			}
+			log.Error(err, "Failed to update status")
+			return err
 		}
 	}
 	return nil
