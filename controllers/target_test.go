@@ -52,14 +52,14 @@ var _ = Describe("Target Acquisition", func() {
 		wantsName := "wants-target"
 		has := v2alpha1.NewExperiment(hasName, testNamespace).
 			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithStrategy(v2alpha1.StrategyTypeConformance).
 			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 			WithDuration(3, 2).
 			WithBaselineVersion("baseline", nil).
 			Build()
 		wants := v2alpha1.NewExperiment(wantsName, testNamespace).
 			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithStrategy(v2alpha1.StrategyTypeConformance).
 			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 			WithDuration(1, 1).
 			WithBaselineVersion("baseline", nil).
@@ -97,14 +97,14 @@ var _ = Describe("Finalizer", func() {
 		wantsName := "wants-target-finalizer"
 		has := v2alpha1.NewExperiment(hasName, testNamespace).
 			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithStrategy(v2alpha1.StrategyTypeConformance).
 			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 			WithDuration(3, 2).
 			WithBaselineVersion("baseline", nil).
 			Build()
 		wants := v2alpha1.NewExperiment(wantsName, testNamespace).
 			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithStrategy(v2alpha1.StrategyTypeConformance).
 			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 			WithDuration(1, 1).
 			WithBaselineVersion("baseline", nil).
