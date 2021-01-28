@@ -29,7 +29,7 @@ import (
 // ReadMetric reads a metric from the cluster using the name as the key
 // If the name is of the form "namespace/name", look in namespace for name.
 // Otherwise look for name. If not found, look in util.Iter8InstallNamespace() for name.
-// If not found returnd NotFound error
+// If not found return NotFound error
 func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha1.Experiment, name string, metricMap map[string]*v2alpha1.Metric) bool {
 	key := name
 	// default namespace to use is the experiment namespace
