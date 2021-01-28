@@ -8,6 +8,6 @@ spec:
     foo: bar
   type: gauge
   provider: prometheus
-  sample_size:
+  sampleSize:
     namespace: foo
     
