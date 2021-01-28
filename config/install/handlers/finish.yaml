@@ -9,7 +9,7 @@ spec:
       containers:
       - name: iter8-finish
         image: iter8/handler:latest
-        command: ["handler", "run", "finish"]
+        command: ["handler", "run", "-a", "finish"]
         env:
         - name: EXPERIMENT_NAMESPACE
           value: EXPERIMENT_NAMESPACE_VALUE
