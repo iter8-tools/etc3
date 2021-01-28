@@ -177,17 +177,29 @@ spec:
                               description: Text description of the metric
                               type: string
                             params:
-                              additionalProperties:
-                                type: string
                               description: Params are key/value pairs used to construct
-                                the REST query to the metrics backend
-                              type: object
+                                a REST query to the metrics backend
+                              items:
+                                description: Param name/value to be used in constructing
+                                  a REST query to backend metrics server
+                                properties:
+                                  name:
+                                    description: Name of parameter
+                                    type: string
+                                  value:
+                                    description: Value of parameter
+                                    type: string
+                                required:
+                                - name
+                                - value
+                                type: object
+                              type: array
                             provider:
                               description: Provider identifies the metric backend
                                 including its authentication properties and its unmarshaller
                               minLength: 1
                               type: string
-                            sample_size:
+                            sampleSize:
                               description: SampleSize is a reference to a counter
                                 metric resource. It needs to indicte the number of
                                 data points over which this metric is computed.

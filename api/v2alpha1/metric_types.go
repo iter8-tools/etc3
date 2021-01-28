@@ -36,12 +36,11 @@ const (
 
 // MetricSpec defines the desired state of Metric
 type MetricSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Params are key/value pairs used to construct the REST query to the metrics backend
+	// Params are key/value pairs used to construct a REST query to the metrics backend
 	// +optional
-	Params *map[string]string `json:"params,omitempty" yaml:"params,omitempty"`
+	Params *[]Param `json:"params,omitempty" yaml:"params,omitempty"`
 
 	// Text description of the metric
 	// +optional
@@ -59,11 +58,20 @@ type MetricSpec struct {
 	// SampleSize is a reference to a counter metric resource.
 	// It needs to indicte the number of data points over which this metric is computed.
 	// +optional
-	SampleSize *MetricReference `json:"sample_size,omitempty" yaml:"sample_size,omitempty"`
+	SampleSize *MetricReference `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 
 	// Provider identifies the metric backend including its authentication properties and its unmarshaller
 	// +kubebuilder:validation:MinLength:=1
 	Provider string `json:"provider" yaml:"provider"`
+}
+
+// Param name/value to be used in constructing a REST query to backend metrics server
+type Param struct {
+	// Name of parameter
+	Name string `json:"name" yaml:"name"`
+
+	// Value of parameter
+	Value string `json:"value" yaml:"value"`
 }
 
 // MetricReference is a reference to another metric

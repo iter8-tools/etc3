@@ -46,7 +46,11 @@ func (b *MetricBuilder) WithDescription(description string) *MetricBuilder {
 
 // WithParams ..
 func (b *MetricBuilder) WithParams(params map[string]string) *MetricBuilder {
-	b.Spec.Params = &params
+	paramsList := make([]Param, 0)
+	for name, value := range params {
+		paramsList = append(paramsList, Param{Name: name, Value: value})
+	}
+	b.Spec.Params = &paramsList
 	return b
 }
 
