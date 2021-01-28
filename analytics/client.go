@@ -36,7 +36,7 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTT
 		return nil, err
 	}
 
-	body, statuscode, err := transport.Post(endpoint, "application/json", data)
+	body, statuscode, _ := transport.Post(endpoint, "application/json", data)
 
 	var prettyBody bytes.Buffer
 	json.Indent(&prettyBody, body, "", "  ")

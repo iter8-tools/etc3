@@ -135,7 +135,7 @@ func identfiedWinner(analysis *Analysis) *string {
 // MarkCondition sets a condition with a status, reason and message.
 // The reason and method are also combined to set status.Message
 // Note that we compare all fields to determine if we are actually changing anything.
-// We do this becasue we want to also expose the message externally (via Kubernetes events and
+// We do this because we want to also expose the message externally (via Kubernetes events and
 // notifications) but want to do so only once -- the first time it is set.
 func (s *ExperimentStatus) MarkCondition(condition ExperimentConditionType, status corev1.ConditionStatus, reason string, messageFormat string, messageA ...interface{}) bool {
 	conditionMessage := fmt.Sprintf(messageFormat, messageA...)
