@@ -90,7 +90,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// update analytics in instance.status
 	instance.Status.Analysis = analysis
-	r.StatusModified = true
 
 	// Handle failure of objective (possibly rollback)
 	if r.mustRollback(ctx, instance) {
@@ -127,7 +126,6 @@ func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instanc
 			util.Logger(ctx).Info("Failed to update when initializing status: " + err.Error())
 			return err
 		}
-		r.StatusModified = false
 	}
 	return nil
 }
@@ -141,7 +139,6 @@ func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *
 	*instance.Status.CompletedIterations++
 	now := metav1.Now()
 	instance.Status.LastUpdateTime = &now
-	r.StatusModified = true
 }
 
 // mustRollback determines if the experiment should be rolled back.

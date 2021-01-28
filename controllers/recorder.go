@@ -50,6 +50,13 @@ func (r *ExperimentReconciler) recordExperimentProgress(ctx context.Context, ins
 		reason, messageFormat, messageA...)
 }
 
+func (r *ExperimentReconciler) recordTargetAcquired(ctx context.Context, instance *v2alpha1.Experiment,
+	messageFormat string, messageA ...interface{}) {
+	r.recordEvent(ctx, instance,
+		v2alpha1.ExperimentConditionTargetAcquired, corev1.ConditionTrue,
+		v2alpha1.ReasonTargetAcquired, messageFormat, messageA...)
+}
+
 // record the event in a variety of ways. Note that we do not want to report an event more than once
 // in a log message, kubernetes event or notification. Consequently, we must pay attention to whether
 // or not we are recording an event for the first time or repeating it. We do this by first updating
@@ -62,6 +69,5 @@ func (r *ExperimentReconciler) recordEvent(ctx context.Context, instance *v2alph
 		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		r.EventRecorder.Eventf(instance, corev1.EventTypeNormal, reason, messageFormat, messageA...)
 		// FUTURE: send notifications
-		r.StatusModified = true
 	}
 }

@@ -18,12 +18,11 @@ import (
 	"context"
 	"time"
 
+	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/configuration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
-	"github.com/iter8-tools/etc3/configuration"
 )
 
 var _ = Describe("Experiment validation", func() {
@@ -82,8 +81,9 @@ var _ = Describe("Late Initialization", func() {
 			}).Should(BeTrue())
 
 			By("Creating a new Experiment")
-			// ctx := context.Background()
-			experiment := v2alpha1.NewExperiment("test", "default").
+			testName := "late-initialization"
+			testNamespace := "default"
+			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
@@ -94,7 +94,7 @@ var _ = Describe("Late Initialization", func() {
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
 			createdExperiment := &v2alpha1.Experiment{}
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test", Namespace: "default"}, createdExperiment)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)
 				if err != nil {
 					return false
 				}
@@ -106,7 +106,7 @@ var _ = Describe("Late Initialization", func() {
 			Expect(createdExperiment.Status.InitTime).ShouldNot(BeNil())
 			Expect(createdExperiment.Status.LastUpdateTime).ShouldNot(BeNil())
 			Expect(createdExperiment.Status.CompletedIterations).ShouldNot(BeNil())
-			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(2))
+			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(3))
 			By("Inspecting spec")
 			Expect(createdExperiment.Spec.GetMaxIterations()).Should(Equal(v2alpha1.DefaultMaxIterations))
 			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
@@ -130,7 +130,7 @@ var _ = Describe("Experiment proceeds", func() {
 			initialInterval := int32(5)
 			modifiedInterval := int32(10)
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
-				WithTarget("target").
+				WithTarget("early-reconcile-targets").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(initialInterval, expectedIterations).
