@@ -1,0 +1,7 @@
+namePrefix: iter8-
+resources:
+- handlers
+- ../crd
+- ../rbac-iter8
+- ../manager
+# To use a tagged release, for example v0.1.0-rc, change main to v0.1.0-rc in the above three lines
