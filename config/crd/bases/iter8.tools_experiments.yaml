@@ -656,8 +656,8 @@ spec:
                     type:
                       description: Type of the condition
                       enum:
-                      - ExperimentCompleted
-                      - ExperimentFailed
+                      - Completed
+                      - Failed
                       - TargetAcquired
                       type: string
                   required:
