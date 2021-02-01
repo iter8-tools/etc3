@@ -23,6 +23,9 @@ spec:
     - jsonPath: .spec.target
       name: target
       type: string
+    - jsonPath: .status.stage
+      name: stage
+      type: string
     - jsonPath: .status.completedIterations
       name: completed iterations
       type: string
@@ -705,6 +708,16 @@ spec:
                   baseline after the experiment completes. Will be set to the winner
                   (status.analysis[].data.winner) or to the current baseline in the
                   case of a rollback.
+                type: string
+              stage:
+                description: Stage indicates where the experiment is in its process
+                  of execution
+                enum:
+                - Waiting
+                - Initializing
+                - Running
+                - Finishing
+                - Completed
                 type: string
               startTime:
                 description: StartTime is the time when the experiment starts (after

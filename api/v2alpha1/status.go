@@ -82,6 +82,9 @@ func (e *Experiment) InitializeStatus() {
 
 	e.Status.LastUpdateTime = &now // metav1.Now()
 
+	stage := ExperimentStageWaiting
+	e.Status.Stage = &stage
+
 	completedIterations := int32(0)
 	e.Status.CompletedIterations = &completedIterations
 }

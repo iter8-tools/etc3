@@ -106,3 +106,49 @@ const (
 	ReasonWeightRedistributionFailed = "WeightRedistributionFailed"
 	ReasonInvalidExperiment          = "InvalidExperiment"
 )
+
+// ExperimentStageType identifies valid stages of an experiment
+// +kubebuilder:validation:Enum:=Waiting;Initializing;Running;Finishing;Completed
+type ExperimentStageType string
+
+const (
+	// ExperimentStageWaiting indicates the experiment is not yet scheduled to run because it
+	// does not yet have exclusive experiment access to the target
+	ExperimentStageWaiting ExperimentStageType = "Waiting"
+
+	// ExperimentStageInitializing indicates an experiment has acquired access to the target
+	// and a start handler, if  any, is running
+	ExperimentStageInitializing ExperimentStageType = "Initializing"
+
+	// ExperimentStageRunning indicates an experiment is running
+	ExperimentStageRunning ExperimentStageType = "Running"
+
+	// ExperimentStageFinishing indicates an experiment has completed its iterations and is
+	// running any termination handler (either success or  failure)
+	ExperimentStageFinishing ExperimentStageType = "Finishing"
+
+	// ExperimentStageCompleted indicates an experiment has completed
+	ExperimentStageCompleted ExperimentStageType = "Completed"
+)
+
+// Determine if a stage is after another
+func (stage ExperimentStageType) After(otherStage ExperimentStageType) bool {
+	orderedStages := []ExperimentStageType{
+		ExperimentStageWaiting,
+		ExperimentStageInitializing,
+		ExperimentStageRunning,
+		ExperimentStageFinishing,
+		ExperimentStageCompleted,
+	}
+
+	return stageIndex(stage, orderedStages) > stageIndex(otherStage, orderedStages)
+}
+
+func stageIndex(value ExperimentStageType, stages []ExperimentStageType) int {
+	for pos, val := range stages {
+		if val == value {
+			return pos
+		}
+	}
+	return -1
+}

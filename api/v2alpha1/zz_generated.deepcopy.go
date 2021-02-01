@@ -427,6 +427,11 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 		in, out := &in.LastUpdateTime, &out.LastUpdateTime
 		*out = (*in).DeepCopy()
 	}
+	if in.Stage != nil {
+		in, out := &in.Stage, &out.Stage
+		*out = new(ExperimentStageType)
+		**out = **in
+	}
 	if in.CompletedIterations != nil {
 		in, out := &in.CompletedIterations, &out.CompletedIterations
 		*out = new(int32)

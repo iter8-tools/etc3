@@ -29,6 +29,7 @@ import (
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.type"
 // +kubebuilder:printcolumn:name="target",type="string",JSONPath=".spec.target"
+// +kubebuilder:printcolumn:name="stage",type="string",JSONPath=".status.stage"
 // +kubebuilder:printcolumn:name="completed iterations",type="string",JSONPath=".status.completedIterations"
 // +kubebuilder:printcolumn:name="message",type="string",JSONPath=".status.message"
 type Experiment struct {
@@ -285,6 +286,10 @@ type ExperimentStatus struct {
 	// LastUpdateTime is the last time iteration has been updated
 	// +optional
 	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty" yaml:"lastUpdateTime,omitempty"`
+
+	// Stage indicates where the experiment is in its process of execution
+	// +optional
+	Stage *ExperimentStageType `json:"stage,omitempty" yaml:"stage,omitempty"`
 
 	// CurrentIteration is the current iteration number.
 	// It is undefined until the experiment starts.
