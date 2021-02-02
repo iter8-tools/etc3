@@ -73,16 +73,10 @@ var _ = Describe("Target Acquisition", func() {
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
 			defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
-			// Eventtually hasName should be Initializing
-			Eventually(func() bool {
-				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
-				})
-			}).Should(BeTrue())
 			// Eventually hasName should be Running
 			Eventually(func() bool {
 				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
 				})
 			}).Should(BeTrue())
 
@@ -165,7 +159,7 @@ var _ = Describe("Finalizer", func() {
 			// Eventually hasName should be Running
 			Eventually(func() bool {
 				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
 				})
 			}).Should(BeTrue())
 
@@ -191,7 +185,7 @@ var _ = Describe("Finalizer", func() {
 
 			By("Allowing the second to acquire the target and proceed")
 			Eventually(func() bool { return hasTarget(ctx, wantsName, testNamespace) }).Should(BeTrue())
-			// wantsName should be Waiting
+			// wantsName should be Running
 			Eventually(func() bool {
 				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
 					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
