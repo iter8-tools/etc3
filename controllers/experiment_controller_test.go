@@ -25,12 +25,16 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Experiment validation", func() {
+var _ = Describe("Experiment Validation", func() {
+	ctx := context.Background()
+	BeforeEach(func() {
+		k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})
+	})
+
 	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
 		testName := "test-invalid-duration"
 		testNamespace := "default"
 		It("Should fail to create experiment", func() {
-			ctx := context.Background()
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithStrategy(v2alpha1.StrategyTypeCanary).
@@ -38,11 +42,10 @@ var _ = Describe("Experiment validation", func() {
 				WithDuration(10, 0).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
+			defer k8sClient.Delete(ctx, experiment)
 		})
 	})
-})
 
-var _ = Describe("Experiment validation", func() {
 	Context("When creating an experiment with a valid spec.duration.maxIteration", func() {
 		testName := "test-valid-duration"
 		testNamespace := "default"
@@ -55,22 +58,20 @@ var _ = Describe("Experiment validation", func() {
 				WithDuration(10, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
+			defer k8sClient.Delete(ctx, experiment)
 		})
 	})
-})
 
-var _ = Describe("Late Initialization", func() {
-	var ctx context.Context
 	Context("When creating a valid new Experiment", func() {
 		It("Should successfully complete late initialization", func() {
 			By("Providing a request-count metric")
-			ctx = context.Background()
 			m := v2alpha1.NewMetric("request-count", "default").
 				WithType(v2alpha1.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
 			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
+			defer k8sClient.Delete(ctx, m)
 			createdMetric := &v2alpha1.Metric{}
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "default"}, createdMetric)
@@ -90,6 +91,7 @@ var _ = Describe("Late Initialization", func() {
 				WithRequestCount("request-count").
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
+			defer k8sClient.Delete(ctx, experiment)
 
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
 			createdExperiment := &v2alpha1.Experiment{}
@@ -120,8 +122,12 @@ var _ = Describe("Late Initialization", func() {
 })
 
 var _ = Describe("Experiment proceeds", func() {
+	ctx := context.Background()
+	BeforeEach(func() {
+		k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})
+	})
+
 	Context("Early event trigger", func() {
-		ctx := context.Background()
 		testName := "early-reconcile"
 		testNamespace := "default"
 		It("Experiment should complete", func() {
@@ -138,6 +144,7 @@ var _ = Describe("Experiment proceeds", func() {
 				WithCandidateVersion("candidate", nil).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
+			defer k8sClient.Delete(ctx, experiment)
 
 			By("Changing the interval before the reconcile event triggers")
 			time.Sleep(2 * time.Second)

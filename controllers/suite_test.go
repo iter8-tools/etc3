@@ -222,3 +222,14 @@ func isDeleted(ctx context.Context, name string, ns string) bool {
 	return err != nil &&
 		(errors.IsNotFound(err) || errors.IsGone(err))
 }
+
+type check func(*v2alpha1.Experiment) bool
+
+func hasValue(ctx context.Context, name string, ns string, check check) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	if err != nil {
+		return false
+	}
+	return check(exp)
+}

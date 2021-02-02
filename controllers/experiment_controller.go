@@ -489,7 +489,7 @@ func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance 
 	for _, handlerType := range []HandlerType{HandlerTypeStart, HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback} {
 		handler := r.GetHandler(instance, handlerType)
 		if handler != nil {
-			log.Info("finalizeExperiment deleting job for handler", handler)
+			log.Info("finalizeExperiment deleting job for handler", "handler", handler)
 			if err := r.deleteHandlerJob(ctx, instance, handler); err != nil {
 				return err
 			}

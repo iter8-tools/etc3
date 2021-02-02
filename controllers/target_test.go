@@ -34,6 +34,10 @@ var _ = Describe("Target Acquisition", func() {
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 	testNamespace := "default"
 
+	BeforeEach(func() {
+		k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})
+	})
+
 	// This is indirectly tested by the test case below; this is an explicit test
 	Context("Experiment already has the target", func() {
 		experiment := v2alpha1.NewExperiment("already-has-target", testNamespace).
@@ -67,28 +71,59 @@ var _ = Describe("Target Acquisition", func() {
 		It("will acquire the target only after a target holder is completed", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
+			defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
-			// hasName should be Running
-			exp := &v2alpha1.Experiment{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())
-			Expect(*exp.Status.Stage).Should(Equal(v2alpha1.ExperimentStageRunning))
+			// Eventtually hasName should be Initializing
+			Eventually(func() bool {
+				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
+				})
+			}).Should(BeTrue())
+			// Eventually hasName should be Running
+			Eventually(func() bool {
+				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
+				})
+			}).Should(BeTrue())
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
+			defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return isDeployed(ctx, wantsName, testNamespace) }).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
-			// // wantsName should be "Waiting"
-			// Expect(k8sClient.Get(ctx, types.NamespacedName{Name: wantsName, Namespace: testNamespace}, exp)).Should(Succeed())
-			// Expect(*exp.Status.Stage).Should(Equal(v2alpha1.ExperimentStageWaiting))
+			// wantsName should be Waiting
+			Eventually(func() bool {
+				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageWaiting
+				})
+			}).Should(BeTrue())
 
 			By("Eventually the first experiment completes")
 			Eventually(func() bool { return completes(ctx, hasName, testNamespace) }, 8).Should(BeTrue())
+			// hasName should be Completed
+			Eventually(func() bool {
+				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
+				})
+			}).Should(BeTrue())
 
 			By("Allowing the second to acquire the target and proceed")
 			Eventually(func() bool { return hasTarget(ctx, wantsName, testNamespace) }).Should(BeTrue())
+			// wantsName should be Waiting
+			Eventually(func() bool {
+				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+				})
+			}).Should(BeTrue())
 			Eventually(func() bool { return completes(ctx, wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool {
+				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
+				})
+			}).Should(BeTrue())
+
 		})
 	})
 
@@ -119,14 +154,34 @@ var _ = Describe("Finalizer", func() {
 		It("will acquire the target when a holder is deleted", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
+			defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
+			// Eventtually hasName should be Initializing
+			Eventually(func() bool {
+				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
+				})
+			}).Should(BeTrue())
+			// Eventually hasName should be Running
+			Eventually(func() bool {
+				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
+				})
+			}).Should(BeTrue())
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
+			defer k8sClient.Delete(ctx, wants)
 			Eventually(func() bool { return isDeployed(ctx, wantsName, testNamespace) }).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
+			// wantsName should be Waiting
+			Eventually(func() bool {
+				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageWaiting
+				})
+			}).Should(BeTrue())
 
 			By("Deleting the first experiment")
 			exp := &v2alpha1.Experiment{}
@@ -136,7 +191,18 @@ var _ = Describe("Finalizer", func() {
 
 			By("Allowing the second to acquire the target and proceed")
 			Eventually(func() bool { return hasTarget(ctx, wantsName, testNamespace) }).Should(BeTrue())
+			// wantsName should be Waiting
+			Eventually(func() bool {
+				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+				})
+			}).Should(BeTrue())
 			Eventually(func() bool { return completes(ctx, wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool {
+				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
+				})
+			}).Should(BeTrue())
 		})
 	})
 
