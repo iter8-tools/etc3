@@ -68,6 +68,10 @@ var _ = Describe("Target Acquisition", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
+			// hasName should be Running
+			exp := &v2alpha1.Experiment{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())
+			Expect(*exp.Status.Stage).Should(Equal(v2alpha1.ExperimentStageRunning))
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx, wants)).Should(Succeed())
@@ -75,6 +79,9 @@ var _ = Describe("Target Acquisition", func() {
 
 			By("Waiting for the target")
 			Expect(hasTarget(ctx, wantsName, testNamespace)).Should(BeFalse())
+			// // wantsName should be "Waiting"
+			// Expect(k8sClient.Get(ctx, types.NamespacedName{Name: wantsName, Namespace: testNamespace}, exp)).Should(Succeed())
+			// Expect(*exp.Status.Stage).Should(Equal(v2alpha1.ExperimentStageWaiting))
 
 			By("Eventually the first experiment completes")
 			Eventually(func() bool { return completes(ctx, hasName, testNamespace) }, 8).Should(BeTrue())

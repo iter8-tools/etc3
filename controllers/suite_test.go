@@ -106,19 +106,12 @@ var _ = BeforeSuite(func(done Done) {
 
 	// +kubebuilder:scaffold:scheme
 
-	// k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
-	// Expect(err).ToNot(HaveOccurred())
-	// Expect(k8sClient).ToNot(BeNil())
-
 	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme.Scheme,
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	// restCfg, err := config.GetConfig()
-	// Expect(err).ToNot(HaveOccurred())
-
-	cfg := configuration.NewIter8Config().
+	iter8config := configuration.NewIter8Config().
 		WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithStrategy(string(v2alpha1.StrategyTypeAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithStrategy(string(v2alpha1.StrategyTypeConformance), map[string]string{"start": "start"}).
@@ -159,9 +152,9 @@ var _ = BeforeSuite(func(done Done) {
 		Client:        k8sClient,
 		Log:           lg,
 		Scheme:        k8sManager.GetScheme(),
-		RestConfig:    nil, // restCfg,
+		RestConfig:    cfg,
 		EventRecorder: recorder,
-		Iter8Config:   cfg,
+		Iter8Config:   iter8config,
 		HTTP:          testTransport,
 		ReleaseEvents: make(chan event.GenericEvent),
 	}
