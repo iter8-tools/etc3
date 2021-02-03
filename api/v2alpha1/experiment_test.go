@@ -47,7 +47,7 @@ var _ = Describe("Experiment with unknown fields", func() {
 		},
 		{
 			file:      "expspec.yaml",
-			feature:   "with handlers containing unknown fields",
+			feature:   "with baseline containing unknown fields",
 			fieldPath: []string{"spec", "versionInfo", "baseline", "revision"},
 		},
 	}
