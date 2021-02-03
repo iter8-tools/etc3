@@ -108,7 +108,7 @@ var _ = Describe("Target Acquisition", func() {
 			// wantsName should be Waiting
 			Eventually(func() bool {
 				return hasValue(ctx, wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+					return exp.Status.Stage != nil && (*exp.Status.Stage == v2alpha1.ExperimentStageRunning || *exp.Status.Stage == v2alpha1.ExperimentStageCompleted)
 				})
 			}).Should(BeTrue())
 			Eventually(func() bool { return completes(ctx, wantsName, testNamespace) }).Should(BeTrue())
