@@ -376,6 +376,7 @@ spec:
                     required:
                     - name
                     type: object
+                    x-kubernetes-preserve-unknown-fields: true
                   candidates:
                     description: Candidates is list candidate versions
                     items:
@@ -432,6 +433,7 @@ spec:
                       required:
                       - name
                       type: object
+                      x-kubernetes-preserve-unknown-fields: true
                     type: array
                 required:
                 - baseline

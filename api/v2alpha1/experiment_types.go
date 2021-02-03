@@ -102,6 +102,7 @@ type VersionInfo struct {
 }
 
 // VersionDetail is detail about a single version
+// +kubebuilder:validation:XPreserveUnknownFields
 type VersionDetail struct {
 
 	// Name is a name for the version
