@@ -150,12 +150,6 @@ var _ = Describe("Finalizer", func() {
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
 			defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return hasTarget(ctx, hasName, testNamespace) }).Should(BeTrue())
-			// Eventtually hasName should be Initializing
-			Eventually(func() bool {
-				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageInitializing
-				})
-			}).Should(BeTrue())
 			// Eventually hasName should be Running
 			Eventually(func() bool {
 				return hasValue(ctx, hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
