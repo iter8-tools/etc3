@@ -144,7 +144,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		log.Info("Experiment already completed.")
 		return r.endRequest(ctx, instance)
 	}
-	log.Info("Experiment active")
+	log.Info("Experiment is active")
 
 	// Check if we are in the process of terminating an experiment and take appropriate action:
 	// If a terminal handler (finish, failure, or rollback) is running, just quit (wait until done)
@@ -372,11 +372,8 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	// when we do so for the first time, record the completion event and trigger the next experiment
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
 		r.recordExperimentCompleted(ctx, instance, msg)
+		r.updateStatus(ctx, instance)
 		r.triggerNextExperiment(ctx, instance)
-		// IS THERE a possible race condition?
-		// r.updateStatus(ctx, instance)
-		// r.triggerNextExperiment(ctx, instance)
-		// return ctrl.Result{}, nil
 	}
 
 	return r.endRequest(ctx, instance)
