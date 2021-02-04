@@ -34,10 +34,6 @@ var _ = Describe("Target Acquisition", func() {
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 	testNamespace := "default"
 
-	BeforeEach(func() {
-		k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})
-	})
-
 	// This is indirectly tested by the test case below; this is an explicit test
 	Context("Experiment already has the target", func() {
 		experiment := v2alpha1.NewExperiment("already-has-target", testNamespace).
