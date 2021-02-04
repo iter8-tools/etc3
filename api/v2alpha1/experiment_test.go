@@ -30,13 +30,30 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Experiment's handler field", func() {
+var _ = Describe("Experiment with unknown fields", func() {
 	ctx := context.Background()
 
-	for file, feature := range map[string]string{
-		"expspec.yaml": "containing unknown fields",
-	} {
-		Context("when "+feature, func() {
+	type testcase struct {
+		file      string
+		feature   string
+		fieldPath []string
+	}
+
+	testcases := []testcase{
+		{
+			file:      "expspec.yaml",
+			feature:   "with handlers containing unknown fields",
+			fieldPath: []string{"spec", "strategy", "handlers", "startTask"},
+		},
+		{
+			file:      "expspec.yaml",
+			feature:   "with baseline containing unknown fields",
+			fieldPath: []string{"spec", "versionInfo", "baseline", "revision"},
+		},
+	}
+
+	for _, tc := range testcases {
+		Context(tc.feature, func() {
 			us := &unstructured.Unstructured{}
 			us.Object = map[string]interface{}{
 				"metadata": map[string]interface{}{
@@ -46,13 +63,13 @@ var _ = Describe("Experiment's handler field", func() {
 				"spec": map[string]interface{}{},
 			}
 
-			It("should read experiment successfully", func() {
+			It("should deal with unknown handler fields", func() {
+				By("reading experiment")
 				s := map[string]interface{}{}
-				Expect(readExperimentFromFile(util.CompletePath("../../test/data", file), &s)).To(Succeed())
+				Expect(readExperimentFromFile(util.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
 				us.Object["spec"] = s["spec"]
-			})
 
-			It("should create the experiment", func() {
+				By("creating the experiment")
 				us.SetGroupVersionKind(schema.GroupVersionKind{
 					Group:   v2alpha1.GroupVersion.Group,
 					Version: v2alpha1.GroupVersion.Version,
@@ -60,22 +77,24 @@ var _ = Describe("Experiment's handler field", func() {
 				})
 				log.Log.Info("unstructured object", "us", us)
 				Expect(k8sClient.Create(ctx, us)).Should(Succeed())
-			})
 
-			exp2 := &unstructured.Unstructured{}
-			exp2.SetGroupVersionKind(schema.GroupVersionKind{
-				Group:   v2alpha1.GroupVersion.Group,
-				Version: v2alpha1.GroupVersion.Version,
-				Kind:    "Experiment",
-			})
-			It("should fetch the experiment with the unknown fields", func() {
+				By("fetching the experiment with unknown fields")
+				exp2 := &unstructured.Unstructured{}
+				exp2.SetGroupVersionKind(schema.GroupVersionKind{
+					Group:   v2alpha1.GroupVersion.Group,
+					Version: v2alpha1.GroupVersion.Version,
+					Kind:    "Experiment",
+				})
 				Expect(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      "exp"}, exp2)).Should(Succeed())
 				log.Log.Info("fetched", "experiment", exp2)
-				_, found, err := unstructured.NestedFieldCopy(exp2.Object, "spec", "strategy", "handlers", "startTasks")
+				_, found, err := unstructured.NestedFieldCopy(exp2.Object, tc.fieldPath...)
 				Expect(found).To(BeTrue())
 				Expect(err).To(BeNil())
+
+				By("deleting the experiment")
+				Expect(k8sClient.Delete(ctx, us)).Should(Succeed())
 			})
 		})
 	}

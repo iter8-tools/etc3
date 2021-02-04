@@ -18,6 +18,13 @@ spec:
         - apply
         - -k
         - https://github.com/my-org/my-repo/path/to/overlays/{{ Status.RecommendedBaseline }}
+  versionInfo:
+    baseline:
+      name: baseline
+      revision: baseline-revision
+    candidates:
+    - name: candidate
+      revision: candidate-revision
   criteria:
     indicators:
     - 95th-percentile-tail-latency
