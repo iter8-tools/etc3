@@ -37,9 +37,7 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
     - name: Test
-      run: |
-        cd controllers
-        go test -ginkgo.v
+      run: make test
 
   # Compute and upload code coverage
   code-coverage:
