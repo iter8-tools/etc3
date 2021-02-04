@@ -43,7 +43,7 @@ func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance 
 	}
 	// 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
 	if !candidatesMatchStrategy(instance.Spec) {
-		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invlid number of candidates for %s experiment", instance.Spec.Strategy.Type)
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invalid number of candidates for %s experiment", instance.Spec.Strategy.Type)
 		return false
 	}
 
