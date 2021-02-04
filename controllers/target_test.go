@@ -168,7 +168,7 @@ var _ = Describe("Finalizer", func() {
 				WithBaselineVersion("baseline", nil).
 				Build()
 		})
-		It("will acquire the target when a holder is deleted", func() {
+		FIt("will acquire the target when a holder is deleted", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx(), has)).Should(Succeed())
 			// defer k8sClient.Delete(ctx, has)
