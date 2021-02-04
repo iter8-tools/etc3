@@ -486,7 +486,7 @@ func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance 
 	for _, handlerType := range []HandlerType{HandlerTypeStart, HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback} {
 		handler := r.GetHandler(instance, handlerType)
 		if handler != nil {
-			log.Info("finalizeExperiment deleting job for handler", "handler", handler)
+			log.Info("finalizeExperiment deleting job", "handler", handler)
 			if err := r.deleteHandlerJob(ctx, instance, handler); err != nil {
 				return err
 			}
@@ -496,6 +496,10 @@ func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance 
 	//     2. Trigger any waiting experiments
 	// endExperiment() triggers any waiting experiment
 	log.Info("finalizeExperiment triggering next experiment")
+	// to avoid a possible race condition, we mark the experiment completed
+	// and update its status before triggering the next experiment
+	r.recordExperimentCompleted(ctx, instance, "Experiment deleted")
+	r.updateStatus(ctx, instance)
 	r.triggerNextExperiment(ctx, instance)
 
 	return nil

@@ -42,6 +42,7 @@ import (
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/configuration"
+	"github.com/iter8-tools/etc3/util"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -175,9 +176,9 @@ var _ = AfterSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-func isDeployed(ctx context.Context, name string, ns string) bool {
+func isDeployed(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
@@ -185,9 +186,9 @@ func isDeployed(ctx context.Context, name string, ns string) bool {
 	return true
 }
 
-func hasTarget(ctx context.Context, name string, ns string) bool {
+func hasTarget(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
@@ -195,18 +196,18 @@ func hasTarget(ctx context.Context, name string, ns string) bool {
 	return exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue()
 }
 
-func completes(ctx context.Context, name string, ns string) bool {
+func completes(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
 	return exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
 }
 
-func completesSuccessfully(ctx context.Context, name string, ns string) bool {
+func completesSuccessfully(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
@@ -216,20 +217,24 @@ func completesSuccessfully(ctx context.Context, name string, ns string) bool {
 	return completed && successful
 }
 
-func isDeleted(ctx context.Context, name string, ns string) bool {
+func isDeleted(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	return err != nil &&
 		(errors.IsNotFound(err) || errors.IsGone(err))
 }
 
 type check func(*v2alpha1.Experiment) bool
 
-func hasValue(ctx context.Context, name string, ns string, check check) bool {
+func hasValue(name string, ns string, check check) bool {
 	exp := &v2alpha1.Experiment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, exp)
+	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
 	return check(exp)
+}
+
+func ctx() context.Context {
+	return context.WithValue(context.Background(), util.LoggerKey, ctrl.Log)
 }
