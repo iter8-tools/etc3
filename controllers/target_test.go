@@ -30,17 +30,30 @@ import (
 )
 
 var _ = Describe("Target Acquisition", func() {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
-	testNamespace := "default"
+	var (
+		ctx           context.Context
+		testNamespace string
+	)
+	BeforeEach(func() {
+		ctx = context.WithValue(context.Background(), util.LoggerKey, ctrl.Log)
+		testNamespace = "default"
+
+		// Expect(k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})).Should(Succeed())
+	})
+	AfterEach(func() {
+		// Expect(k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})).Should(Succeed())
+	})
 
 	// This is indirectly tested by the test case below; this is an explicit test
 	Context("Experiment already has the target", func() {
-		experiment := v2alpha1.NewExperiment("already-has-target", testNamespace).
-			WithTarget("targettest1").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
-			WithCondition(v2alpha1.ExperimentConditionTargetAcquired, corev1.ConditionTrue, v2alpha1.ReasonTargetAcquired, "").
-			Build()
+		var experiment *v2alpha1.Experiment
+		JustBeforeEach(func() {
+			experiment = v2alpha1.NewExperiment("already-has-target", testNamespace).
+				WithTarget("targettest1").
+				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithCondition(v2alpha1.ExperimentConditionTargetAcquired, corev1.ConditionTrue, v2alpha1.ReasonTargetAcquired, "").
+				Build()
+		})
 		It("should know it has the target", func() {
 			ok := reconciler.acquireTarget(ctx, experiment)
 			Expect(ok).Should(BeTrue())
@@ -48,22 +61,28 @@ var _ = Describe("Target Acquisition", func() {
 	})
 
 	Context("Experiment wanting to acquire a target", func() {
-		hasName := "willget-target"
-		wantsName := "wants-target"
-		has := v2alpha1.NewExperiment(hasName, testNamespace).
-			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypeConformance).
-			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-			WithDuration(3, 2).
-			WithBaselineVersion("baseline", nil).
-			Build()
-		wants := v2alpha1.NewExperiment(wantsName, testNamespace).
-			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypeConformance).
-			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-			WithDuration(1, 1).
-			WithBaselineVersion("baseline", nil).
-			Build()
+		var (
+			hasName, wantsName string
+			has, wants         *v2alpha1.Experiment
+		)
+		JustBeforeEach(func() {
+			hasName = "willget-target"
+			wantsName = "wants-target"
+			has = v2alpha1.NewExperiment(hasName, testNamespace).
+				WithTarget("unavailable-target").
+				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+				WithDuration(3, 2).
+				WithBaselineVersion("baseline", nil).
+				Build()
+			wants = v2alpha1.NewExperiment(wantsName, testNamespace).
+				WithTarget("unavailable-target").
+				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+				WithDuration(1, 1).
+				WithBaselineVersion("baseline", nil).
+				Build()
+		})
 		It("will acquire the target only after a target holder is completed", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
@@ -120,27 +139,43 @@ var _ = Describe("Target Acquisition", func() {
 })
 
 var _ = Describe("Finalizer", func() {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
-	testNamespace := "default"
+	var (
+		ctx           context.Context
+		testNamespace string
+	)
+	BeforeEach(func() {
+		ctx = context.WithValue(context.Background(), util.LoggerKey, ctrl.Log)
+		testNamespace = "default"
+
+		// Expect(k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})).Should(Succeed())
+	})
+	AfterEach(func() {
+		// Expect(k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})).Should(Succeed())
+	})
 
 	Context("Experiment wanting to acquire a target", func() {
-		hasName := "willget-target-finalizer"
-		wantsName := "wants-target-finalizer"
-		has := v2alpha1.NewExperiment(hasName, testNamespace).
-			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypeConformance).
-			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-			WithDuration(3, 2).
-			WithBaselineVersion("baseline", nil).
-			Build()
-		wants := v2alpha1.NewExperiment(wantsName, testNamespace).
-			WithTarget("unavailable-target").
-			WithStrategy(v2alpha1.StrategyTypeConformance).
-			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-			WithDuration(1, 1).
-			WithBaselineVersion("baseline", nil).
-			Build()
+		var (
+			hasName, wantsName string
+			has, wants         *v2alpha1.Experiment
+		)
+		JustBeforeEach(func() {
+			hasName = "willget-target-finalizer"
+			wantsName = "wants-target-finalizer"
+			has = v2alpha1.NewExperiment(hasName, testNamespace).
+				WithTarget("unavailable-target-finalizer").
+				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+				WithDuration(3, 2).
+				WithBaselineVersion("baseline", nil).
+				Build()
+			wants = v2alpha1.NewExperiment(wantsName, testNamespace).
+				WithTarget("unavailable-target-finalizer").
+				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+				WithDuration(1, 1).
+				WithBaselineVersion("baseline", nil).
+				Build()
+		})
 		It("will acquire the target when a holder is deleted", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx, has)).Should(Succeed())
