@@ -15,6 +15,8 @@ limitations under the License.
 package controllers
 
 import (
+	"time"
+
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -182,6 +184,7 @@ var _ = Describe("Finalizer", func() {
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
+			time.Sleep(time.Second)
 			// defer k8sClient.Delete(ctx(), wants)
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
 
