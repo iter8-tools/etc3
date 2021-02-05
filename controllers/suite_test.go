@@ -124,8 +124,6 @@ var _ = BeforeSuite(func(done Done) {
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).ToNot(BeNil())
 
-	// lg := ctrl.Log.WithName("controllers").WithName("Experiment")
-
 	testTransport := &testHTTP{
 		analysis: &v2alpha1.Analysis{
 			AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
@@ -180,10 +178,8 @@ func isDeployed(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		lg.Info("isDeployed no", "experiment", name, "error", error(err))
 		return false
 	}
-	lg.Info("isDeployed yes", "experiment", name)
 	return true
 }
 
@@ -191,11 +187,9 @@ func hasTarget(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		lg.Info("hasTarget get error")
 		return false
 	}
 
-	lg.Info("hasTarget", "experiment", name, "TargetAcquired", exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired))
 	return exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue()
 }
 
@@ -203,10 +197,9 @@ func completes(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		lg.Info("completes", "experiment", name, "error", error(err))
 		return false
 	}
-	lg.Info("completes", "experiment", name, "ExperimentCompleted", exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted))
+
 	return exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
 }
 
@@ -214,13 +207,11 @@ func completesSuccessfully(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		lg.Info("completesSuccessfully", "experiment", name, "error", error(err))
 		return false
 	}
 	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
 	successful := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsFalse()
 
-	lg.Info("completesSuccessfully", "experiment", name, "ExperimentCompleted", exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted), "ExperimentFailed", exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed))
 	return completed && successful
 }
 
@@ -237,13 +228,9 @@ func hasValue(name string, ns string, check check) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		lg.Info("hasValue", "experiment", name, "error", error(err))
 		return false
 	}
-	if exp.Status.Stage != nil {
-		lg.Info("hasValue", "experiment", name, "stage", *exp.Status.Stage)
-	}
-	lg.Info("hasValue", "experiment", name, "value", check(exp))
+
 	return check(exp)
 }
 
