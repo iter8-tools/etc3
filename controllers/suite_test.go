@@ -37,7 +37,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
@@ -52,7 +51,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
-var lg logr.Logger
+var lg logr.Logger = ctrl.Log.WithName("etc3").WithName("test")
 var recorder record.EventRecorder
 var reconciler *ExperimentReconciler
 
@@ -90,7 +89,8 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	// logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	ctrl.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -124,7 +124,7 @@ var _ = BeforeSuite(func(done Done) {
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).ToNot(BeNil())
 
-	lg := ctrl.Log.WithName("controllers").WithName("Experiment")
+	// lg := ctrl.Log.WithName("controllers").WithName("Experiment")
 
 	testTransport := &testHTTP{
 		analysis: &v2alpha1.Analysis{
@@ -180,10 +180,10 @@ func isDeployed(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		fmt.Printf("isDeployed(%s,%s) not deployed\n", name, ns)
+		lg.Info("isDeployed no", "experiment", name, "error", error(err))
 		return false
 	}
-	fmt.Printf("isDeployed(%s,%s) deployed\n", name, ns)
+	lg.Info("isDeployed yes", "experiment", name)
 	return true
 }
 
@@ -191,11 +191,11 @@ func hasTarget(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		fmt.Printf("hasTarget(%s,%s) error\n", name, ns)
+		lg.Info("hasTarget get error")
 		return false
 	}
 
-	fmt.Printf("hasTarget(%s,%s) %v\b", name, ns, exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).Status)
+	lg.Info("hasTarget", "experiment", name, "TargetAcquired", exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired))
 	return exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue()
 }
 
@@ -203,10 +203,10 @@ func completes(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		fmt.Printf("completes(%s,%s) error\n", name, ns)
+		lg.Info("completes", "experiment", name, "error", error(err))
 		return false
 	}
-	fmt.Printf("completes(%s,%s) %v\b", name, ns, exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).Status)
+	lg.Info("completes", "experiment", name, "ExperimentCompleted", exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted))
 	return exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
 }
 
@@ -214,13 +214,13 @@ func completesSuccessfully(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		fmt.Printf("completesSuccessfully(%s,%s) error\n", name, ns)
+		lg.Info("completesSuccessfully", "experiment", name, "error", error(err))
 		return false
 	}
 	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
 	successful := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsFalse()
 
-	fmt.Printf("completesSuccessfully(%s,%s) %t\b", name, ns, completed && successful)
+	lg.Info("completesSuccessfully", "experiment", name, "ExperimentCompleted", exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted), "ExperimentFailed", exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed))
 	return completed && successful
 }
 
@@ -237,10 +237,10 @@ func hasValue(name string, ns string, check check) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
-		fmt.Printf("hasValue(%s,%s) error\n", name, ns)
+		lg.Info("hasValue", "experiment", name, "error", error(err))
 		return false
 	}
-	fmt.Printf("hasValue(%s,%s) %v\b", name, ns, check(exp))
+	lg.Info("hasValue", "experiment", name, "value", check(exp))
 	return check(exp)
 }
 
