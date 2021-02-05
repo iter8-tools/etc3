@@ -15,8 +15,6 @@ limitations under the License.
 package controllers
 
 import (
-	"time"
-
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -170,7 +168,7 @@ var _ = Describe("Finalizer", func() {
 				WithBaselineVersion("baseline", nil).
 				Build()
 		})
-		FIt("will acquire the target when a holder is deleted", func() {
+		It("will acquire the target when a holder is deleted", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx(), has)).Should(Succeed())
 			// defer k8sClient.Delete(ctx, has)
@@ -184,9 +182,14 @@ var _ = Describe("Finalizer", func() {
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
-			time.Sleep(time.Second)
 			// defer k8sClient.Delete(ctx(), wants)
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool {
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					// status is initialized
+					return exp.Status.InitTime != nil
+				})
+			}).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(wantsName, testNamespace)).Should(BeFalse())
