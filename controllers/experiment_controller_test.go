@@ -27,9 +27,6 @@ import (
 
 var _ = Describe("Experiment Validation", func() {
 	ctx := context.Background()
-	// BeforeEach(func() {
-	// 	k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})
-	// })
 
 	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
 		testName := "test-invalid-duration"
@@ -120,9 +117,6 @@ var _ = Describe("Experiment Validation", func() {
 
 var _ = Describe("Experiment proceeds", func() {
 	ctx := context.Background()
-	// BeforeEach(func() {
-	// 	k8sClient.DeleteAllOf(ctx, &v2alpha1.Experiment{})
-	// })
 
 	Context("Early event trigger", func() {
 		testName := "early-reconcile"
