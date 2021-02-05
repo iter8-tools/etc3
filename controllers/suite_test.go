@@ -240,6 +240,9 @@ func hasValue(name string, ns string, check check) bool {
 		lg.Info("hasValue", "experiment", name, "error", error(err))
 		return false
 	}
+	if exp.Status.Stage != nil {
+		lg.Info("hasValue", "experiment", name, "stage", *exp.Status.Stage)
+	}
 	lg.Info("hasValue", "experiment", name, "value", check(exp))
 	return check(exp)
 }
