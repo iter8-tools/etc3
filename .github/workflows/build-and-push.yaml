@@ -39,6 +39,8 @@ jobs:
     - name: Test
       run: |
         make generate fmt vet manifests
+        cd controllers
+        pwd
         go test
 
   # Compute and upload code coverage
