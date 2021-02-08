@@ -91,6 +91,12 @@ var _ = Describe("Target Acquisition", func() {
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool {
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					// status is initialized
+					return exp.Status.InitTime != nil
+				})
+			}).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(wantsName, testNamespace)).Should(BeFalse())
