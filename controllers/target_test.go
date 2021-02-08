@@ -32,10 +32,10 @@ var _ = Describe("Target Acquisition", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
 	})
 	AfterEach(func() {
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
 	})
 
 	// This is indirectly tested by the test case below; this is an explicit test
@@ -80,6 +80,7 @@ var _ = Describe("Target Acquisition", func() {
 		It("will acquire the target only after a target holder is completed", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx(), has)).Should(Succeed())
+			// defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return hasTarget(hasName, testNamespace) }).Should(BeTrue())
 			// Eventually hasName should be Running
 			Eventually(func() bool {
@@ -90,6 +91,7 @@ var _ = Describe("Target Acquisition", func() {
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
+			// defer k8sClient.Delete(ctx(), has)
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
 			Eventually(func() bool {
 				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
@@ -143,10 +145,10 @@ var _ = Describe("Finalizer", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
 	})
 	AfterEach(func() {
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
 	})
 
 	Context("Experiment wanting to acquire a target", func() {
@@ -175,6 +177,7 @@ var _ = Describe("Finalizer", func() {
 		It("will acquire the target when a holder is deleted", func() {
 			By("Creating an experiment with a unique target name")
 			Expect(k8sClient.Create(ctx(), has)).Should(Succeed())
+			// defer k8sClient.Delete(ctx, has)
 			Eventually(func() bool { return hasTarget(hasName, testNamespace) }).Should(BeTrue())
 			// Eventually hasName should be Running
 			Eventually(func() bool {
@@ -185,6 +188,7 @@ var _ = Describe("Finalizer", func() {
 
 			By("Creating experiment wanting the same target")
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
+			// defer k8sClient.Delete(ctx(), wants)
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
 			Eventually(func() bool {
 				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
