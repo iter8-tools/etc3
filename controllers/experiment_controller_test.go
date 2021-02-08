@@ -39,7 +39,6 @@ var _ = Describe("Experiment Validation", func() {
 				WithDuration(10, 0).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
-			// defer k8sClient.Delete(ctx, experiment)
 		})
 	})
 
@@ -55,7 +54,6 @@ var _ = Describe("Experiment Validation", func() {
 				WithDuration(10, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
-			// defer k8sClient.Delete(ctx, experiment)
 		})
 	})
 
@@ -68,7 +66,6 @@ var _ = Describe("Experiment Validation", func() {
 				WithProvider("prometheus").
 				Build()
 			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
-			// defer k8sClient.Delete(ctx, m)
 			createdMetric := &v2alpha1.Metric{}
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "default"}, createdMetric)
@@ -88,7 +85,6 @@ var _ = Describe("Experiment Validation", func() {
 				WithRequestCount("request-count").
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
-			// defer k8sClient.Delete(ctx, experiment)
 
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
 			createdExperiment := &v2alpha1.Experiment{}
@@ -138,7 +134,6 @@ var _ = Describe("Experiment proceeds", func() {
 				WithCandidateVersion("candidate", nil).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
-			// defer k8sClient.Delete(ctx, experiment)
 
 			By("Changing the interval before the reconcile event triggers")
 			time.Sleep(2 * time.Second)
