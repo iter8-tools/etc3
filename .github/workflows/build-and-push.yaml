@@ -39,8 +39,7 @@ jobs:
     - name: Test
       run: |
         go fmt ./..
-        go vet ./..
-        go test ./.. -coverprofile cover.out
+        go test
 
   # Compute and upload code coverage
   code-coverage:
