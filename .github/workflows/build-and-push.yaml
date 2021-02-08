@@ -41,6 +41,7 @@ jobs:
         make generate
         make fmt
         make vet
+        make manifests
         go test
 
   # Compute and upload code coverage
