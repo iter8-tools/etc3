@@ -191,7 +191,7 @@ var _ = Describe("Finalizer", func() {
 					// status is initialized
 					return exp.Status.InitTime != nil
 				})
-			}).Should(BeTrue())
+			}, 5).Should(BeTrue())
 
 			By("Waiting for the target")
 			Expect(hasTarget(wantsName, testNamespace)).Should(BeFalse())
