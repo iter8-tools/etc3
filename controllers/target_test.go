@@ -32,10 +32,10 @@ var _ = Describe("Target Acquisition", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
 	})
 	AfterEach(func() {
-		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
 	})
 
 	// This is indirectly tested by the test case below; this is an explicit test
@@ -143,10 +143,10 @@ var _ = Describe("Finalizer", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
 	})
 	AfterEach(func() {
-		// Expect(k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})).Should(Succeed())
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
 	})
 
 	Context("Experiment wanting to acquire a target", func() {
