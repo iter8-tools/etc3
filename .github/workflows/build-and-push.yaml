@@ -40,6 +40,7 @@ jobs:
       run: |
         make generate
         make fmt
+        make vet
         go test
 
   # Compute and upload code coverage
