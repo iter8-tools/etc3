@@ -38,10 +38,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Test
       run: |
-        make generate
-        make fmt
-        make vet
-        make manifests
+        make generate fmt vet manifests
         go test
 
   # Compute and upload code coverage
