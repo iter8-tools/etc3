@@ -39,6 +39,7 @@ jobs:
     - name: Test
       run: |
         make generate
+        make fmt
         go test
 
   # Compute and upload code coverage
