@@ -387,7 +387,7 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeFinish); launched {
 		return r.endRequest(ctx, instance)
 	}
-	// no hanndler was launched; we are done
+	// no handler was launched; we are done
 	return r.endExperiment(ctx, instance, "Experiment completed successfully")
 }
 
@@ -438,7 +438,7 @@ func (r *ExperimentReconciler) launchTerminalHandler(ctx context.Context, instan
 			// we did not successfully launch a failure handler
 			return false
 		}
-		// advance stage from Waiting to Initializing
+		// advance stage from Waiting to Finishing
 		// we will ever get called once
 		log.Info("launchTerminalHandler ending after advance to Finishing", "handler", *handler)
 		r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing)
