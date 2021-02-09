@@ -34,9 +34,9 @@ const (
 	TestingPatternConformance TestingPatternType = "Conformance"
 )
 
-// ValidStrategyTypes are legal strategy types iter8 is aware of
+// ValidTestingPatternTypes are legal strategy types iter8 is aware of
 // Should match list in github.com/iter8-tools/etc3/api/v2alpha1 (cf. constants.go)
-var ValidStrategyTypes []TestingPatternType = []TestingPatternType{
+var ValidTestingPatternTypes []TestingPatternType = []TestingPatternType{
 	TestingPatternCanary,
 	TestingPatternAB,
 	TestingPatternABN,
