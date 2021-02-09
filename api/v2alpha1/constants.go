@@ -43,19 +43,19 @@ var ValidTestingPatternTypes []TestingPatternType = []TestingPatternType{
 	TestingPatternConformance,
 }
 
-// AlgorithmType identifies the algorithms that can be used
+// DeploymentPatternType identifies the algorithms that can be used
 // +kubebuilder:validation:Enum=FixedSplit;Progressive;BlueGreen
-type AlgorithmType string
+type DeploymentPatternType string
 
 const (
-	// AlgorithmTypeFixedSplit indicates the weight distribution algorithm is a fixed split
-	AlgorithmTypeFixedSplit AlgorithmType = "FixedSplit"
+	// DeploymentPatternFixedSplit indicates the weight distribution algorithm is a fixed split
+	DeploymentPatternFixedSplit DeploymentPatternType = "FixedSplit"
 
-	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
-	AlgorithmTypeProgressive AlgorithmType = "Progressive"
+	// DeploymentPatternProgressive indicates that the the weight distribution algorithm is progressive
+	DeploymentPatternProgressive DeploymentPatternType = "Progressive"
 
-	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
-	AlgorithmTypeBlueGreen AlgorithmType = "BlueGreen"
+	// DeploymentPatternBlueGreen indicates that the the weight distribution algorithm is progressive
+	DeploymentPatternBlueGreen DeploymentPatternType = "BlueGreen"
 )
 
 // PreferredDirectionType defines the valid values for reward.PreferredDirection
@@ -130,7 +130,7 @@ const (
 	ExperimentStageCompleted ExperimentStageType = "Completed"
 )
 
-// Determine if a stage is after another
+// After Determines if a stage is after another
 func (stage ExperimentStageType) After(otherStage ExperimentStageType) bool {
 	orderedStages := []ExperimentStageType{
 		ExperimentStageWaiting,

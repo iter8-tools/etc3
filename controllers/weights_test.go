@@ -48,7 +48,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithAlgorithm(v2alpha1.AlgorithmTypeFixedSplit).
+			WithDeploymentPattern(v2alpha1.DeploymentPatternFixedSplit).
 			Build()
 		It("should succeed without error", func() {
 			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())

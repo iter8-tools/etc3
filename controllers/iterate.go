@@ -156,7 +156,7 @@ func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instanc
 	log.Info("mustRollbackVersions() called")
 	defer log.Info("mustRollbackVersions() ended")
 
-	deploymentPattern := instance.Spec.GetAlgorithm()
+	deploymentPattern := instance.Spec.GetDeploymentPattern()
 	failedVersions := make([]string, 0)
 	if instance.Spec.Criteria == nil {
 		// there are no criteria

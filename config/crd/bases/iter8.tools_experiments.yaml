@@ -234,6 +234,13 @@ spec:
               strategy:
                 description: Strategy identifies the type of experiment and its properties
                 properties:
+                  deploymentPattern:
+                    description: DeploymentPattern is the deployment pattern
+                    enum:
+                    - FixedSplit
+                    - Progressive
+                    - BlueGreen
+                    type: string
                   handlers:
                     description: Handlers define domain specific behavior and are
                       called at well defined points in the lifecycle of an experiment.
@@ -268,7 +275,7 @@ spec:
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                   testingPattern:
-                    description: TestingPattern is the experiment strategy
+                    description: TestingPattern is the testing pattern
                     enum:
                     - Canary
                     - A/B
@@ -279,15 +286,6 @@ spec:
                     description: Weights modify the behavior of the traffic split
                       algorithm. Defaults depend on the experiment type.
                     properties:
-                      algorithm:
-                        description: Algorithm is the traffic split algorithm Default
-                          will be None for conformance experiments, "fixed_split"
-                          for bluegreen experiments, and "progressive" otherwise
-                        enum:
-                        - FixedSplit
-                        - Progressive
-                        - BlueGreen
-                        type: string
                       maxCandidateWeight:
                         description: MaxCandidateWeight is the maximum percent of
                           traffic that should be sent to the candidate versions during

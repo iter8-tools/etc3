@@ -33,11 +33,8 @@ const (
 	// DefaultMaxCandidateWeightIncrement is the default maxIncrement for traffic update, which is 10
 	DefaultMaxCandidateWeightIncrement int32 = 10
 
-	// DefaultBlueGreenAlgorithm is the default traffic weight recommendation algorithm for bluegreen experiments
-	DefaultBlueGreenAlgorithm AlgorithmType = "FixedSplit"
-
-	// DefaultAlgorithm is the default traffic weight recommendation algorithm for experiments other than bluegreen
-	DefaultAlgorithm AlgorithmType = "Progressive"
+	// DefaultDeploymentPattern is the default traffic weight recommendation algorithm for experiments other than bluegreen
+	DefaultDeploymentPattern DeploymentPatternType = DeploymentPatternProgressive
 
 	// DefaultIntervalSeconds is default interval duration as a string
 	DefaultIntervalSeconds = 20
@@ -267,24 +264,21 @@ func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() bool {
 	return false
 }
 
-// GetAlgorithm returns spec.strategy.weights.algorithm if set
+// GetDeploymentPattern returns spec.strategy.deploymentPattern if set
 // Otherwise it returns the default based on spec.strategy.type
-func (s *ExperimentSpec) GetAlgorithm() AlgorithmType {
-	if s.Strategy.Weights == nil || s.Strategy.Weights.Algorithm == nil {
-		return DefaultAlgorithm
+func (s *ExperimentSpec) GetDeploymentPattern() DeploymentPatternType {
+	if s.Strategy.DeploymentPattern == nil {
+		return DefaultDeploymentPattern
 	}
-	return *s.Strategy.Weights.Algorithm
+	return *s.Strategy.DeploymentPattern
 }
 
 // InitializeAlgorithm initializes spec.strategy.weights.algorithm if not already set
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeAlgorithm() bool {
-	if s.Strategy.Weights == nil {
-		s.Strategy.Weights = &Weights{}
-	}
-	if s.Strategy.Weights.Algorithm == nil {
-		algorithm := s.GetAlgorithm()
-		s.Strategy.Weights.Algorithm = &algorithm
+func (s *ExperimentSpec) InitializeDeploymentPattern() bool {
+	if s.Strategy.DeploymentPattern == nil {
+		deploymentPattern := s.GetDeploymentPattern()
+		s.Strategy.DeploymentPattern = &deploymentPattern
 		return true
 	}
 	return false
@@ -310,7 +304,7 @@ func UniformSplit(numberOfCandidates int, maxCandidateWeight int32) []int32 {
 func (s *ExperimentSpec) InitializeWeights() {
 	s.InitializeMaxCandidateWeight()
 	s.InitializeMaxCandidateWeightIncrement()
-	s.InitializeAlgorithm()
+	s.InitializeDeploymentPattern()
 	// Must wait until versionInfo has been defined by start handler before
 	// initializing weight distribution because need to know the candidates
 	// s.InitializeWeightDistribution()
@@ -422,9 +416,9 @@ func (s *ExperimentSpec) GetReward() *Reward {
 //////////////////////////////////////////////////////////////////////
 
 // GetRollbackOnFailure identifies if the experiment should be rolledback on failure of an objective
-func (o *Objective) GetRollbackOnFailure(deploymentPattern AlgorithmType) bool {
+func (o *Objective) GetRollbackOnFailure(deploymentPattern DeploymentPatternType) bool {
 	if o.RollbackOnFailure == nil {
-		if deploymentPattern == AlgorithmTypeBlueGreen {
+		if deploymentPattern == DeploymentPatternBlueGreen {
 			return true
 		}
 		return false
@@ -442,7 +436,7 @@ func (s *ExperimentSpec) InitializeObjectives() bool {
 
 	change := false
 	for _, o := range s.Criteria.Objectives {
-		if *s.Strategy.Weights.Algorithm == AlgorithmTypeBlueGreen && o.RollbackOnFailure == nil {
+		if s.GetDeploymentPattern() == DeploymentPatternBlueGreen && o.RollbackOnFailure == nil {
 			rollback := true
 			o.RollbackOnFailure = &rollback
 			change = true

@@ -58,12 +58,9 @@ func (b *ExperimentBuilder) WithTestingPattern(testingPattern TestingPatternType
 	return b
 }
 
-// WithAlgorithm ..
-func (b *ExperimentBuilder) WithAlgorithm(algorithm AlgorithmType) *ExperimentBuilder {
-	if nil == b.Spec.Strategy.Weights {
-		b.Spec.Strategy.Weights = &Weights{}
-	}
-	b.Spec.Strategy.Weights.Algorithm = &algorithm
+// WithDeploymentPattern ..
+func (b *ExperimentBuilder) WithDeploymentPattern(deploymentPattern DeploymentPatternType) *ExperimentBuilder {
+	b.Spec.Strategy.DeploymentPattern = &deploymentPattern
 
 	return b
 }

@@ -121,8 +121,12 @@ type VersionDetail struct {
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
 type Strategy struct {
-	// TestingPattern is the experiment strategy
+	// TestingPattern is the testing pattern
 	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
+
+	// DeploymentPattern is the deployment pattern
+	// +optional
+	DeploymentPattern *DeploymentPatternType `json:"deploymentPattern,omitempty" yaml:"deploymentPattern,omitempty"`
 
 	// Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
 	// Specifically at the start (start handler), at the end (finish handler).
@@ -177,13 +181,6 @@ type Weights struct {
 	// +kubebuilder:validation:Maximum:=100
 	// +optional
 	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty" yaml:"maxCandidateWeightIncrement,omitempty"`
-
-	// Algorithm is the traffic split algorithm
-	// Default will be None for conformance experiments,
-	// "fixed_split" for bluegreen experiments, and
-	// "progressive" otherwise
-	// +optional
-	Algorithm *AlgorithmType `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
 
 	// WeightDistribution used only by the fixed_split algorithm.
 	// For bluegreen experiments, it will default to [0, 100]

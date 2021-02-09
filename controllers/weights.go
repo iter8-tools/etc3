@@ -42,8 +42,8 @@ func shouldRedistribute(instance *v2alpha1.Experiment) bool {
 	if experimentType == v2alpha1.TestingPatternConformance {
 		return false
 	}
-	algorithm := instance.Spec.GetAlgorithm()
-	if algorithm == v2alpha1.AlgorithmTypeFixedSplit {
+	algorithm := instance.Spec.GetDeploymentPattern()
+	if algorithm == v2alpha1.DeploymentPatternFixedSplit {
 		return false
 	}
 	return true
@@ -55,7 +55,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha1.Experiment, rest
 	defer log.Info("redistributeWeight ended")
 
 	if !shouldRedistribute(instance) {
-		log.Info("No weight redistribution", "strategy", instance.Spec.Strategy.TestingPattern, "algorithm", instance.Spec.GetAlgorithm())
+		log.Info("No weight redistribution", "strategy", instance.Spec.Strategy.TestingPattern, "algorithm", instance.Spec.GetDeploymentPattern())
 		return nil
 	}
 

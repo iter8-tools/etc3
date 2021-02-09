@@ -107,7 +107,7 @@ var _ = Describe("Experiment Validation", func() {
 			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))
-			Expect(createdExperiment.Spec.GetAlgorithm()).Should(Equal(v2alpha1.DefaultAlgorithm))
+			Expect(createdExperiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha1.DefaultDeploymentPattern))
 			Expect(len(createdExperiment.Spec.Metrics)).Should(Equal(1))
 			Expect(*createdExperiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
 		})
