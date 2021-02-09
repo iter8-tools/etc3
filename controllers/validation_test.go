@@ -87,25 +87,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		})
 	})
 
-	Context("Experiment is an BlueGreen test", func() {
-		bldr := v2alpha1.NewExperiment("bluegreen-test", testNamespace).
-			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternBlueGreen)
-		It("should be valid only when 2 versions are identified", func() {
-			By("returning false when no versions are specified")
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning false when 1 version is identified")
-			bldr = bldr.WithBaselineVersion("baseline", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning true when exactly than 2 versions are identified")
-			bldr = bldr.WithCandidateVersion("candidate-1", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeTrue())
-			By("returning false when more than 2 version are identified")
-			bldr = bldr.WithCandidateVersion("candidate-2", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-		})
-	})
-
 	Context("Experiment is an ABN test", func() {
 		bldr := v2alpha1.NewExperiment("abn-test", testNamespace).
 			WithTarget("target").

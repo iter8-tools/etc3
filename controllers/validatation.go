@@ -54,7 +54,7 @@ func candidatesMatchStrategy(s v2alpha1.ExperimentSpec) bool {
 	switch s.Strategy.TestingPattern {
 	case v2alpha1.TestingPatternConformance:
 		return len(s.VersionInfo.Candidates) == 0
-	case v2alpha1.TestingPatternAB, v2alpha1.TestingPatternCanary, v2alpha1.TestingPatternBlueGreen:
+	case v2alpha1.TestingPatternAB, v2alpha1.TestingPatternCanary:
 		return len(s.VersionInfo.Candidates) == 1
 	case v2alpha1.TestingPatternABN:
 		return len(s.VersionInfo.Candidates) > 0

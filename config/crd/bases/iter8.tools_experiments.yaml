@@ -274,7 +274,6 @@ spec:
                     - A/B
                     - A/B/N
                     - Conformance
-                    - BlueGreen
                     type: string
                   weights:
                     description: Weights modify the behavior of the traffic split
@@ -287,6 +286,7 @@ spec:
                         enum:
                         - FixedSplit
                         - Progressive
+                        - BlueGreen
                         type: string
                       maxCandidateWeight:
                         description: MaxCandidateWeight is the maximum percent of

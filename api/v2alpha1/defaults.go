@@ -271,10 +271,6 @@ func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() bool {
 // Otherwise it returns the default based on spec.strategy.type
 func (s *ExperimentSpec) GetAlgorithm() AlgorithmType {
 	if s.Strategy.Weights == nil || s.Strategy.Weights.Algorithm == nil {
-		switch s.Strategy.TestingPattern {
-		case TestingPatternBlueGreen:
-			return DefaultBlueGreenAlgorithm
-		}
 		return DefaultAlgorithm
 	}
 	return *s.Strategy.Weights.Algorithm
@@ -308,37 +304,6 @@ func UniformSplit(numberOfCandidates int, maxCandidateWeight int32) []int32 {
 		split[i] = weight
 	}
 	return split
-}
-
-// GetWeightDistribution returns spec.strategy.weights.split if set
-// Otherwise it returns the default based on spec.strategy.type
-func (s *ExperimentSpec) GetWeightDistribution() []int32 {
-	if s.Strategy.Weights == nil || s.Strategy.Weights.WeightDistribution == nil {
-		switch s.Strategy.TestingPattern {
-		case TestingPatternBlueGreen:
-			// we expect Algorithm to be AlgorithmTypeFixedSplit
-			return DefaultBlueGreenSplit
-		}
-		switch s.GetAlgorithm() {
-		case AlgorithmTypeFixedSplit:
-			return UniformSplit(s.GetNumberOfCandidates(), s.GetMaxCandidateWeight())
-		}
-		return make([]int32, 0)
-	}
-	return s.Strategy.Weights.WeightDistribution
-}
-
-// InitializeWeightDistribution initializes spec.strategy.weights.split if not already set (and algorithm is "fixed_split")
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeWeightDistribution() bool {
-	if s.Strategy.Weights == nil {
-		s.Strategy.Weights = &Weights{}
-	}
-	if s.Strategy.Weights.WeightDistribution == nil {
-		s.Strategy.Weights.WeightDistribution = s.GetWeightDistribution()
-		return true
-	}
-	return false
 }
 
 // InitializeWeights initializes weights if not already set
@@ -457,9 +422,9 @@ func (s *ExperimentSpec) GetReward() *Reward {
 //////////////////////////////////////////////////////////////////////
 
 // GetRollbackOnFailure identifies if the experiment should be rolledback on failure of an objective
-func (o *Objective) GetRollbackOnFailure(testingPattern TestingPatternType) bool {
+func (o *Objective) GetRollbackOnFailure(deploymentPattern AlgorithmType) bool {
 	if o.RollbackOnFailure == nil {
-		if testingPattern == TestingPatternBlueGreen {
+		if deploymentPattern == AlgorithmTypeBlueGreen {
 			return true
 		}
 		return false
@@ -477,7 +442,7 @@ func (s *ExperimentSpec) InitializeObjectives() bool {
 
 	change := false
 	for _, o := range s.Criteria.Objectives {
-		if s.Strategy.TestingPattern == TestingPatternBlueGreen && o.RollbackOnFailure == nil {
+		if *s.Strategy.Weights.Algorithm == AlgorithmTypeBlueGreen && o.RollbackOnFailure == nil {
 			rollback := true
 			o.RollbackOnFailure = &rollback
 			change = true

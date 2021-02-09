@@ -17,7 +17,7 @@ limitations under the License.
 package v2alpha1
 
 // TestingPatternType identifies the type of experiment type
-// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance;BlueGreen
+// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance
 type TestingPatternType string
 
 const (
@@ -32,9 +32,6 @@ const (
 
 	// TestingPatternConformance indicates an experiment is a conformance experiment
 	TestingPatternConformance TestingPatternType = "Conformance"
-
-	// TestingPatternBlueGreen indicates an experiment is a blue-green experiment
-	TestingPatternBlueGreen TestingPatternType = "BlueGreen"
 )
 
 // ValidStrategyTypes are legal strategy types iter8 is aware of
@@ -44,11 +41,10 @@ var ValidStrategyTypes []TestingPatternType = []TestingPatternType{
 	TestingPatternAB,
 	TestingPatternABN,
 	TestingPatternConformance,
-	TestingPatternBlueGreen,
 }
 
 // AlgorithmType identifies the algorithms that can be used
-// +kubebuilder:validation:Enum=FixedSplit;Progressive
+// +kubebuilder:validation:Enum=FixedSplit;Progressive;BlueGreen
 type AlgorithmType string
 
 const (
@@ -57,6 +53,9 @@ const (
 
 	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
 	AlgorithmTypeProgressive AlgorithmType = "Progressive"
+
+	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
+	AlgorithmTypeBlueGreen AlgorithmType = "BlueGreen"
 )
 
 // PreferredDirectionType defines the valid values for reward.PreferredDirection

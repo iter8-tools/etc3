@@ -116,7 +116,6 @@ var _ = BeforeSuite(func(done Done) {
 		WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithTestingPattern(string(v2alpha1.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithTestingPattern(string(v2alpha1.TestingPatternConformance), map[string]string{"start": "start"}).
-		WithTestingPattern(string(v2alpha1.TestingPatternBlueGreen), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
 		WithRequestCount("request-count").
 		WithEndpoint("http://iter8-analytics:8080").
 		Build()
