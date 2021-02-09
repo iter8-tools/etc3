@@ -368,7 +368,7 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	log.Info("endExperiment called")
 	defer log.Info("endExperiment completed")
 
-	// advance stage from Finalizing to Completed
+	// advance stage from Finishing to Completed
 	// when we do so for the first time, record the completion event and trigger the next experiment
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
 		r.recordExperimentCompleted(ctx, instance, msg)
@@ -385,9 +385,10 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	defer log.Info("finishExperiment completed")
 
 	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeFinish); launched {
+		// a handler was launched so we end request; Reconcile() will be triggered again when it finishes/fails
 		return r.endRequest(ctx, instance)
 	}
-	// no handler was launched; we are done
+	// no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
 	return r.endExperiment(ctx, instance, "Experiment completed successfully")
 }
 
@@ -397,9 +398,10 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	defer log.Info("rollbackExperiment ended")
 
 	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeRollback); launched {
+		// a handler was launched so we end request; Reconcile() will be triggered again when it finishes/fails
 		return r.endRequest(ctx, instance)
 	}
-	// no handler was launched; we are done
+	// no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
 	return r.endExperiment(ctx, instance, "Experiment rolled back")
 }
 
@@ -412,9 +414,10 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 		log.Error(err, err.Error())
 	}
 	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeFailure); launched {
+		// a handler was launched so we end request; Reconcile() will be triggered again when it finishes/fails
 		return r.endRequest(ctx, instance)
 	}
-	// no handler was launched; we are done
+	// no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
 	return r.endExperiment(ctx, instance, "Experiment failed")
 }
 
@@ -438,7 +441,7 @@ func (r *ExperimentReconciler) launchTerminalHandler(ctx context.Context, instan
 			// we did not successfully launch a failure handler
 			return false
 		}
-		// advance stage from Waiting to Finishing
+		// advance stage from Running to Finishing
 		// we will ever get called once
 		log.Info("launchTerminalHandler ending after advance to Finishing", "handler", *handler)
 		r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing)
