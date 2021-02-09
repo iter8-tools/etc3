@@ -235,7 +235,9 @@ spec:
                 description: Strategy identifies the type of experiment and its properties
                 properties:
                   deploymentPattern:
-                    description: DeploymentPattern is the deployment pattern
+                    description: DeploymentPattern is the deployment pattern of an
+                      experiment. It takes effect when the testing pattern is one
+                      of Canary, A/B or A/B/n. It defaults to Progressive.
                     enum:
                     - FixedSplit
                     - Progressive
@@ -275,7 +277,7 @@ spec:
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                   testingPattern:
-                    description: TestingPattern is the testing pattern
+                    description: TestingPattern is the testing pattern of an experiment
                     enum:
                     - Canary
                     - A/B

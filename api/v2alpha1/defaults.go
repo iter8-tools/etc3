@@ -33,7 +33,8 @@ const (
 	// DefaultMaxCandidateWeightIncrement is the default maxIncrement for traffic update, which is 10
 	DefaultMaxCandidateWeightIncrement int32 = 10
 
-	// DefaultDeploymentPattern is the default traffic weight recommendation algorithm for experiments other than bluegreen
+	// DefaultDeploymentPattern is the default deploymebt pattern for experiments
+	// It takes effect when the testing pattern is canary, A/B or A/B/n
 	DefaultDeploymentPattern DeploymentPatternType = DeploymentPatternProgressive
 
 	// DefaultIntervalSeconds is default interval duration as a string
@@ -265,7 +266,6 @@ func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() bool {
 }
 
 // GetDeploymentPattern returns spec.strategy.deploymentPattern if set
-// Otherwise it returns the default based on spec.strategy.type
 func (s *ExperimentSpec) GetDeploymentPattern() DeploymentPatternType {
 	if s.Strategy.DeploymentPattern == nil {
 		return DefaultDeploymentPattern
@@ -273,7 +273,7 @@ func (s *ExperimentSpec) GetDeploymentPattern() DeploymentPatternType {
 	return *s.Strategy.DeploymentPattern
 }
 
-// InitializeAlgorithm initializes spec.strategy.weights.algorithm if not already set
+// InitializeDeploymentPattern initializes spec.strategy.deploymentPattern if not already set
 // Returns true if a change was made, false if not
 func (s *ExperimentSpec) InitializeDeploymentPattern() bool {
 	if s.Strategy.DeploymentPattern == nil {

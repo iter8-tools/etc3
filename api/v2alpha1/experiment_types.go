@@ -121,10 +121,12 @@ type VersionDetail struct {
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
 type Strategy struct {
-	// TestingPattern is the testing pattern
+	// TestingPattern is the testing pattern of an experiment
 	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
 
-	// DeploymentPattern is the deployment pattern
+	// DeploymentPattern is the deployment pattern of an experiment.
+	// It takes effect when the testing pattern is one of Canary, A/B or A/B/n.
+	// It defaults to Progressive.
 	// +optional
 	DeploymentPattern *DeploymentPatternType `json:"deploymentPattern,omitempty" yaml:"deploymentPattern,omitempty"`
 

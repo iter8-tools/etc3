@@ -43,18 +43,18 @@ var ValidTestingPatternTypes []TestingPatternType = []TestingPatternType{
 	TestingPatternConformance,
 }
 
-// DeploymentPatternType identifies the algorithms that can be used
+// DeploymentPatternType identifies the deployment patterns that can be used
 // +kubebuilder:validation:Enum=FixedSplit;Progressive;BlueGreen
 type DeploymentPatternType string
 
 const (
-	// DeploymentPatternFixedSplit indicates the weight distribution algorithm is a fixed split
+	// DeploymentPatternFixedSplit indicates the deployment pattern is fixed split
 	DeploymentPatternFixedSplit DeploymentPatternType = "FixedSplit"
 
-	// DeploymentPatternProgressive indicates that the the weight distribution algorithm is progressive
+	// DeploymentPatternProgressive indicates that the deployment pattern progressive
 	DeploymentPatternProgressive DeploymentPatternType = "Progressive"
 
-	// DeploymentPatternBlueGreen indicates that the the weight distribution algorithm is progressive
+	// DeploymentPatternBlueGreen indicates that the deployment pattern is progressive
 	DeploymentPatternBlueGreen DeploymentPatternType = "BlueGreen"
 )
 
