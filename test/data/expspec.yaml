@@ -1,7 +1,7 @@
 spec:
   target: default/my-model
   strategy:
-    type: Canary
+    testingPattern: Canary
     handlers:
       startTasks:
       - library: kfserving

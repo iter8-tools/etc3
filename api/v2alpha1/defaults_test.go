@@ -29,14 +29,14 @@ var _ = Describe("Handler Initialization", func() {
 	Context("When hanlders are set in an experiment", func() {
 		BeforeEach(func() {
 			experiment = v2alpha1.NewExperiment("test", "default").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "expStart", "finish": "expFinish"}).
 				Build()
 		})
 
 		It("the value of the start handler should match the value in experiment when a configuration is present", func() {
 			cfg = configuration.NewIter8Config().
-				WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
@@ -49,7 +49,7 @@ var _ = Describe("Handler Initialization", func() {
 		})
 		It("the value of GetStartHandler should should be nil when set to none even if a configuration is present", func() {
 			cfg = configuration.NewIter8Config().
-				WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 			none := v2alpha1.NoneHandler
 			experiment.Spec.Strategy.Handlers.Start = &none
@@ -73,15 +73,15 @@ var _ = Describe("Handler Initialization", func() {
 
 	Context("When handlers are not defined in an experiment", func() {
 		experiment := v2alpha1.NewExperiment("test", "default").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			Build()
 
 		It("the value is set by late initialization from the configuration", func() {
 			experiment := v2alpha1.NewExperiment("test", "default").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				Build()
 			cfg := configuration.NewIter8Config().
-				WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 			experiment.Spec.InitializeHandlers(cfg)
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
@@ -91,7 +91,7 @@ var _ = Describe("Handler Initialization", func() {
 
 		It("the value of the start handler shoud match the value im the configuration when it is present", func() {
 			cfg := configuration.NewIter8Config().
-				WithStrategy(string(v2alpha1.StrategyTypeCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 			Expect(experiment.Spec.Strategy.Handlers).Should(BeNil())
 			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgStart"))

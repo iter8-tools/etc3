@@ -44,7 +44,7 @@ var _ = Describe("Target Acquisition", func() {
 		JustBeforeEach(func() {
 			experiment = v2alpha1.NewExperiment("already-has-target", testNamespace).
 				WithTarget("targettest1").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithCondition(v2alpha1.ExperimentConditionTargetAcquired, corev1.ConditionTrue, v2alpha1.ReasonTargetAcquired, "").
 				Build()
 		})
@@ -63,7 +63,7 @@ var _ = Describe("Target Acquisition", func() {
 			hasName = "willget-target"
 			has = v2alpha1.NewExperiment(hasName, testNamespace).
 				WithTarget("unavailable-target").
-				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(3, 2).
 				WithBaselineVersion("baseline", nil).
@@ -71,7 +71,7 @@ var _ = Describe("Target Acquisition", func() {
 			wantsName = "wants-target"
 			wants = v2alpha1.NewExperiment(wantsName, testNamespace).
 				WithTarget("unavailable-target").
-				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(1, 1).
 				WithBaselineVersion("baseline", nil).
@@ -158,7 +158,7 @@ var _ = Describe("Finalizer", func() {
 			hasName = "willget-target-finalizer"
 			has = v2alpha1.NewExperiment(hasName, testNamespace).
 				WithTarget("unavailable-target-finalizer").
-				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(3, 2).
 				WithBaselineVersion("baseline", nil).
@@ -166,7 +166,7 @@ var _ = Describe("Finalizer", func() {
 			wantsName = "wants-target-finalizer"
 			wants = v2alpha1.NewExperiment(wantsName, testNamespace).
 				WithTarget("unavailable-target-finalizer").
-				WithStrategy(v2alpha1.StrategyTypeConformance).
+				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(1, 1).
 				WithBaselineVersion("baseline", nil).

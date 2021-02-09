@@ -16,35 +16,35 @@ limitations under the License.
 
 package v2alpha1
 
-// StrategyType identifies the type of experiment type
+// TestingPatternType identifies the type of experiment type
 // +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance;BlueGreen
-type StrategyType string
+type TestingPatternType string
 
 const (
-	// StrategyTypeCanary indicates an experiment is a canary experiment
-	StrategyTypeCanary StrategyType = "Canary"
+	// TestingPatternCanary indicates an experiment is a canary experiment
+	TestingPatternCanary TestingPatternType = "Canary"
 
-	// StrategyTypeAB indicates an experiment is a A/B experiment
-	StrategyTypeAB StrategyType = "A/B"
+	// TestingPatternAB indicates an experiment is a A/B experiment
+	TestingPatternAB TestingPatternType = "A/B"
 
-	// StrategyTypeABN indicates an experiment is a A/B/n experiment
-	StrategyTypeABN StrategyType = "A/B/N"
+	// TestingPatternABN indicates an experiment is a A/B/n experiment
+	TestingPatternABN TestingPatternType = "A/B/N"
 
-	// StrategyTypeConformance indicates an experiment is a conformance experiment
-	StrategyTypeConformance StrategyType = "Conformance"
+	// TestingPatternConformance indicates an experiment is a conformance experiment
+	TestingPatternConformance TestingPatternType = "Conformance"
 
-	// StrategyTypeBlueGreen indicates an experiment is a blue-green experiment
-	StrategyTypeBlueGreen StrategyType = "BlueGreen"
+	// TestingPatternBlueGreen indicates an experiment is a blue-green experiment
+	TestingPatternBlueGreen TestingPatternType = "BlueGreen"
 )
 
 // ValidStrategyTypes are legal strategy types iter8 is aware of
 // Should match list in github.com/iter8-tools/etc3/api/v2alpha1 (cf. constants.go)
-var ValidStrategyTypes []StrategyType = []StrategyType{
-	StrategyTypeCanary,
-	StrategyTypeAB,
-	StrategyTypeABN,
-	StrategyTypeConformance,
-	StrategyTypeBlueGreen,
+var ValidStrategyTypes []TestingPatternType = []TestingPatternType{
+	TestingPatternCanary,
+	TestingPatternAB,
+	TestingPatternABN,
+	TestingPatternConformance,
+	TestingPatternBlueGreen,
 }
 
 // AlgorithmType identifies the algorithms that can be used

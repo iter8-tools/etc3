@@ -51,9 +51,9 @@ func (b *ExperimentBuilder) WithTarget(target string) *ExperimentBuilder {
 	return b
 }
 
-// WithStrategy ..
-func (b *ExperimentBuilder) WithStrategy(strategy StrategyType) *ExperimentBuilder {
-	b.Spec.Strategy.Type = strategy
+// WithTestingPattern ..
+func (b *ExperimentBuilder) WithTestingPattern(testingPattern TestingPatternType) *ExperimentBuilder {
+	b.Spec.Strategy.TestingPattern = testingPattern
 
 	return b
 }

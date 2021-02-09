@@ -74,9 +74,9 @@ func (s *ExperimentSpec) GetNumberOfBaseline() int {
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
 
-func handlersForStrategy(cfg configuration.Iter8Config, strategy StrategyType) *configuration.Handlers {
+func handlersForStrategy(cfg configuration.Iter8Config, testingPattern TestingPatternType) *configuration.Handlers {
 	for _, t := range cfg.ExperimentTypes {
-		if t.Name == string(strategy) {
+		if t.Name == string(testingPattern) {
 			return &t.Handlers
 		}
 	}
@@ -86,7 +86,7 @@ func handlersForStrategy(cfg configuration.Iter8Config, strategy StrategyType) *
 // GetStartHandler returns the name of the handler to be called when an experiment starts
 func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Start == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Start == "" {
 			return nil
 		}
@@ -117,7 +117,7 @@ func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) b
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
 func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Finish == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Finish == "" {
 			return nil
 		}
@@ -148,7 +148,7 @@ func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) 
 // GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
 func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Rollback == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Rollback == "" {
 			return nil
 		}
@@ -180,7 +180,7 @@ func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config
 // GetFailureHandler returns the handler to be called if there is a failure during experiment execution
 func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Failure == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Failure == "" {
 			return nil
 		}
@@ -271,8 +271,8 @@ func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() bool {
 // Otherwise it returns the default based on spec.strategy.type
 func (s *ExperimentSpec) GetAlgorithm() AlgorithmType {
 	if s.Strategy.Weights == nil || s.Strategy.Weights.Algorithm == nil {
-		switch s.Strategy.Type {
-		case StrategyTypeBlueGreen:
+		switch s.Strategy.TestingPattern {
+		case TestingPatternBlueGreen:
 			return DefaultBlueGreenAlgorithm
 		}
 		return DefaultAlgorithm
@@ -314,8 +314,8 @@ func UniformSplit(numberOfCandidates int, maxCandidateWeight int32) []int32 {
 // Otherwise it returns the default based on spec.strategy.type
 func (s *ExperimentSpec) GetWeightDistribution() []int32 {
 	if s.Strategy.Weights == nil || s.Strategy.Weights.WeightDistribution == nil {
-		switch s.Strategy.Type {
-		case StrategyTypeBlueGreen:
+		switch s.Strategy.TestingPattern {
+		case TestingPatternBlueGreen:
 			// we expect Algorithm to be AlgorithmTypeFixedSplit
 			return DefaultBlueGreenSplit
 		}
@@ -457,9 +457,9 @@ func (s *ExperimentSpec) GetReward() *Reward {
 //////////////////////////////////////////////////////////////////////
 
 // GetRollbackOnFailure identifies if the experiment should be rolledback on failure of an objective
-func (o *Objective) GetRollbackOnFailure(strategy StrategyType) bool {
+func (o *Objective) GetRollbackOnFailure(testingPattern TestingPatternType) bool {
 	if o.RollbackOnFailure == nil {
-		if strategy == StrategyTypeBlueGreen {
+		if testingPattern == TestingPatternBlueGreen {
 			return true
 		}
 		return false
@@ -477,7 +477,7 @@ func (s *ExperimentSpec) InitializeObjectives() bool {
 
 	change := false
 	for _, o := range s.Criteria.Objectives {
-		if s.Strategy.Type == StrategyTypeBlueGreen && o.RollbackOnFailure == nil {
+		if s.Strategy.TestingPattern == TestingPatternBlueGreen && o.RollbackOnFailure == nil {
 			rollback := true
 			o.RollbackOnFailure = &rollback
 			change = true

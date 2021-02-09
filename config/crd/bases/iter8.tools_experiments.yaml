@@ -17,7 +17,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.strategy.type
+    - jsonPath: .spec.strategy.testingPattern
       name: type
       type: string
     - jsonPath: .spec.target
@@ -267,8 +267,8 @@ spec:
                         type: string
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
-                  type:
-                    description: Type is the experiment strategy
+                  testingPattern:
+                    description: TestingPattern is the experiment strategy
                     enum:
                     - Canary
                     - A/B
@@ -315,7 +315,7 @@ spec:
                         type: array
                     type: object
                 required:
-                - type
+                - testingPattern
                 type: object
               target:
                 description: Target is used to enable concurrent experimentation Two

@@ -34,7 +34,7 @@ var _ = Describe("Experiment Validation", func() {
 		It("Should fail to create experiment", func() {
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 0).
 				Build()
@@ -49,7 +49,7 @@ var _ = Describe("Experiment Validation", func() {
 			ctx := context.Background()
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 1).
 				Build()
@@ -80,7 +80,7 @@ var _ = Describe("Experiment Validation", func() {
 			testNamespace := "default"
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
 				Build()
@@ -127,7 +127,7 @@ var _ = Describe("Experiment proceeds", func() {
 			modifiedInterval := int32(10)
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("early-reconcile-targets").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(initialInterval, expectedIterations).
 				WithBaselineVersion("baseline", nil).

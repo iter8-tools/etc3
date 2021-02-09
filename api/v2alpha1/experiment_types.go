@@ -27,7 +27,7 @@ import (
 // +kubebuilder:object:root=true
 // +groupName=iter8.tools
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.type"
+// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.testingPattern"
 // +kubebuilder:printcolumn:name="target",type="string",JSONPath=".spec.target"
 // +kubebuilder:printcolumn:name="stage",type="string",JSONPath=".status.stage"
 // +kubebuilder:printcolumn:name="completed iterations",type="string",JSONPath=".status.completedIterations"
@@ -121,8 +121,8 @@ type VersionDetail struct {
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
 type Strategy struct {
-	// Type is the experiment strategy
-	Type StrategyType `json:"type" yaml:"type"`
+	// TestingPattern is the experiment strategy
+	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
 
 	// Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
 	// Specifically at the start (start handler), at the end (finish handler).

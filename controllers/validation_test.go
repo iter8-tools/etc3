@@ -36,7 +36,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 	Context("Experiment is a Conformance test", func() {
 		bldr := v2alpha1.NewExperiment("conformance-test", testNamespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeConformance)
+			WithTestingPattern(v2alpha1.TestingPatternConformance)
 		It("should be valid only when 1 version is identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -52,7 +52,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 	Context("Experiment is an AB test", func() {
 		bldr := v2alpha1.NewExperiment("ab-test", testNamespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeAB)
+			WithTestingPattern(v2alpha1.TestingPatternAB)
 		It("should be valid only when 2 versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -71,7 +71,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 	Context("Experiment is an Canary test", func() {
 		bldr := v2alpha1.NewExperiment("canary-test", testNamespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary)
+			WithTestingPattern(v2alpha1.TestingPatternCanary)
 		It("should be valid only when 2 versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -90,7 +90,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 	Context("Experiment is an BlueGreen test", func() {
 		bldr := v2alpha1.NewExperiment("bluegreen-test", testNamespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeBlueGreen)
+			WithTestingPattern(v2alpha1.TestingPatternBlueGreen)
 		It("should be valid only when 2 versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -109,7 +109,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 	Context("Experiment is an ABN test", func() {
 		bldr := v2alpha1.NewExperiment("abn-test", testNamespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeABN)
+			WithTestingPattern(v2alpha1.TestingPatternABN)
 		It("should be valid only when more than 2 or more versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
