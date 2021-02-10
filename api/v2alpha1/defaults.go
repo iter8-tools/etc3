@@ -40,8 +40,12 @@ const (
 	// DefaultIntervalSeconds is default interval duration as a string
 	DefaultIntervalSeconds = 20
 
-	// DefaultIterationsPerLoop is the default number of iterations, which is 15
+	// DefaultIterationsPerLoop is the default number of iterations, 15
 	DefaultIterationsPerLoop int32 = 15
+
+	// DefaultMaxLoops is the default maximum number of loops, 1
+	// reserved for future use
+	DefaultMaxLoops int32 = 1
 )
 
 // DefaultBlueGreenSplit is the default split to be used for bluegreen experiment
@@ -342,12 +346,20 @@ func (s *ExperimentSpec) InitializeInterval() bool {
 	return false
 }
 
-// GetIterationsPerLoop returns the specified(or default) iterations per loop
+// GetIterationsPerLoop returns the specified (or default) iterations
 func (s *ExperimentSpec) GetIterationsPerLoop() int32 {
 	if s.Duration == nil || s.Duration.IterationsPerLoop == nil {
 		return DefaultIterationsPerLoop
 	}
 	return *s.Duration.IterationsPerLoop
+}
+
+// GetMaxLoops returns specified (or default) max mumber of loops
+func (s *ExperimentSpec) GetMaxLoops() int32 {
+	if s.Duration == nil || s.Duration.MaxLoops == nil {
+		return DefaultMaxLoops
+	}
+	return *s.Duration.MaxLoops
 }
 
 // InitializeIterationsPerLoop sets duration.iterationsPerLoop to the default if not already set

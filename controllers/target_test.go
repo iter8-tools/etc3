@@ -160,7 +160,7 @@ var _ = Describe("Finalizer", func() {
 				WithTarget("unavailable-target-finalizer").
 				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(3, 2).
+				WithDuration(4, 4).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			wantsName = "wants-target-finalizer"

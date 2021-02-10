@@ -259,11 +259,18 @@ type Duration struct {
 	// +optional
 	IntervalSeconds *int32 `json:"intervalSeconds,omitempty" yaml:"intervalSeconds,omitempty"`
 
-	// MaxIterations is the maximum number of iterations
+	// IterationsPerLoop is the maximum number of iterations
 	// Default is 15
 	// +kubebuilder:validation:Minimum:=1
 	// +optional
 	IterationsPerLoop *int32 `json:"iterationsPerLoop,omitempty" yaml:"iterationsPerLoop,omitempty"`
+
+	// MaxLoops is the maximum number of loops
+	// Default is 1
+	// Reserved for future use
+	// +kubebuilder:validation:Minimum:=1
+	// +optional
+	MaxLoops *int32 `json:"maxLoops,omitempty" yaml:"maxLoops,omitempty"`
 }
 
 // ExperimentStatus defines the observed state of Experiment

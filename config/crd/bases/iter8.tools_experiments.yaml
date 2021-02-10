@@ -143,8 +143,14 @@ spec:
                     minimum: 1
                     type: integer
                   iterationsPerLoop:
-                    description: MaxIterations is the maximum number of iterations
+                    description: IterationsPerLoop is the maximum number of iterations
                       Default is 15
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  maxLoops:
+                    description: MaxLoops is the maximum number of loops Default is
+                      1 Reserved for future use
                     format: int32
                     minimum: 1
                     type: integer
