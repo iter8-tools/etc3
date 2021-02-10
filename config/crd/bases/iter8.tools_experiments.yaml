@@ -303,16 +303,6 @@ spec:
                         maximum: 100
                         minimum: 0
                         type: integer
-                      weightDistribution:
-                        description: WeightDistribution used only by the fixed_split
-                          algorithm. For bluegreen experiments, it will default to
-                          [0, 100] Otherwise, it will default to a uniform split among
-                          baseline and candidates. Will be ignored by all other algorithms
-                          (warning if possible!)
-                        items:
-                          format: int32
-                          type: integer
-                        type: array
                     type: object
                 required:
                 - testingPattern
@@ -332,12 +322,24 @@ spec:
                       name:
                         description: Name is a name for the version
                         type: string
-                      tags:
-                        additionalProperties:
-                          type: string
-                        description: Tags is map of tags that can be used for metrics
-                          queries
-                        type: object
+                      variables:
+                        description: Variables is a list of variables that can be
+                          used by handlers and in metrics queries
+                        items:
+                          description: Variable a name/value pair that can be used
+                            by handlers and in metrics queries
+                          properties:
+                            name:
+                              description: Name is the name of the variable
+                              type: string
+                            value:
+                              description: Value is the value of the variable
+                              type: string
+                          required:
+                          - name
+                          - value
+                          type: object
+                        type: array
                       weightObjRef:
                         description: WeightObjRef is a reference to another kubernetes
                           object
@@ -388,12 +390,24 @@ spec:
                         name:
                           description: Name is a name for the version
                           type: string
-                        tags:
-                          additionalProperties:
-                            type: string
-                          description: Tags is map of tags that can be used for metrics
-                            queries
-                          type: object
+                        variables:
+                          description: Variables is a list of variables that can be
+                            used by handlers and in metrics queries
+                          items:
+                            description: Variable a name/value pair that can be used
+                              by handlers and in metrics queries
+                            properties:
+                              name:
+                                description: Name is the name of the variable
+                                type: string
+                              value:
+                                description: Value is the value of the variable
+                                type: string
+                            required:
+                            - name
+                            - value
+                            type: object
+                          type: array
                         weightObjRef:
                           description: WeightObjRef is a reference to another kubernetes
                             object

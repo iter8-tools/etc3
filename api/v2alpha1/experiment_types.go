@@ -109,13 +109,22 @@ type VersionDetail struct {
 	// Name is a name for the version
 	Name string `json:"name" yaml:"name"`
 
-	// Tags is map of tags that can be used for metrics queries
+	// Variables is a list of variables that can be used by handlers and in metrics queries
 	// +optional
-	Tags *map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Variables []Variable `json:"variables,omitempty" yaml:"variables,omitempty"`
 
 	// WeightObjRef is a reference to another kubernetes object
 	// +optional
 	WeightObjRef *corev1.ObjectReference `json:"weightObjRef,omitempty" yaml:"weightObjRef,omitempty"`
+}
+
+// Variable a name/value pair that can be used by handlers and in metrics queries
+type Variable struct {
+	// Name is the name of the variable
+	Name string `json:"name" yaml:"name"`
+
+	// Value is the value of the variable
+	Value string `json:"value" yaml:"value"`
 }
 
 // Strategy identifies the type of experiment and its properties
@@ -183,13 +192,6 @@ type Weights struct {
 	// +kubebuilder:validation:Maximum:=100
 	// +optional
 	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty" yaml:"maxCandidateWeightIncrement,omitempty"`
-
-	// WeightDistribution used only by the fixed_split algorithm.
-	// For bluegreen experiments, it will default to [0, 100]
-	// Otherwise, it will default to a uniform split among baseline and candidates.
-	// Will be ignored by all other algorithms (warning if possible!)
-	// + optional
-	WeightDistribution []int32 `json:"weightDistribution,omitempty" yaml:"weightDistribution,omitempty"`
 }
 
 // Criteria is list of criteria to be evaluated throughout the experiment
