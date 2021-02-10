@@ -33,7 +33,7 @@ const (
 	// DefaultMaxCandidateWeightIncrement is the default maxIncrement for traffic update, which is 10
 	DefaultMaxCandidateWeightIncrement int32 = 10
 
-	// DefaultDeploymentPattern is the default deploymebt pattern for experiments
+	// DefaultDeploymentPattern is the default deployment pattern for experiments
 	// It takes effect when the testing pattern is canary, A/B or A/B/n
 	DefaultDeploymentPattern DeploymentPatternType = DeploymentPatternProgressive
 

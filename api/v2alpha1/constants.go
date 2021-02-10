@@ -54,7 +54,7 @@ const (
 	// DeploymentPatternProgressive indicates that the deployment pattern progressive
 	DeploymentPatternProgressive DeploymentPatternType = "Progressive"
 
-	// DeploymentPatternBlueGreen indicates that the deployment pattern is progressive
+	// DeploymentPatternBlueGreen indicates that the deployment pattern is blue-green
 	DeploymentPatternBlueGreen DeploymentPatternType = "BlueGreen"
 )
 
