@@ -17,11 +17,14 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.strategy.type
+    - jsonPath: .spec.strategy.testingPattern
       name: type
       type: string
     - jsonPath: .spec.target
       name: target
+      type: string
+    - jsonPath: .status.stage
+      name: stage
       type: string
     - jsonPath: .status.completedIterations
       name: completed iterations
@@ -243,6 +246,15 @@ spec:
               strategy:
                 description: Strategy identifies the type of experiment and its properties
                 properties:
+                  deploymentPattern:
+                    description: DeploymentPattern is the deployment pattern of an
+                      experiment. It takes effect when the testing pattern is one
+                      of Canary, A/B or A/B/n. It defaults to Progressive.
+                    enum:
+                    - FixedSplit
+                    - Progressive
+                    - BlueGreen
+                    type: string
                   handlers:
                     description: Handlers define domain specific behavior and are
                       called at well defined points in the lifecycle of an experiment.
@@ -276,27 +288,18 @@ spec:
                         type: string
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
-                  type:
-                    description: Type is the experiment strategy
+                  testingPattern:
+                    description: TestingPattern is the testing pattern of an experiment
                     enum:
                     - Canary
                     - A/B
                     - A/B/N
-                    - Performance
-                    - BlueGreen
+                    - Conformance
                     type: string
                   weights:
                     description: Weights modify the behavior of the traffic split
                       algorithm. Defaults depend on the experiment type.
                     properties:
-                      algorithm:
-                        description: Algorithm is the traffic split algorithm Default
-                          will be None for performance experiments, "fixed_split"
-                          for bluegreen experiments, and "progressive" otherwise
-                        enum:
-                        - FixedSplit
-                        - Progressive
-                        type: string
                       maxCandidateWeight:
                         description: MaxCandidateWeight is the maximum percent of
                           traffic that should be sent to the candidate versions during
@@ -312,20 +315,11 @@ spec:
                         maximum: 100
                         minimum: 0
                         type: integer
-                      weightDistribution:
-                        description: WeightDistribution used only by the fixed_split
-                          algorithm. For bluegreen experiments, it will default to
-                          [0, 100] Otherwise, it will default to a uniform split among
-                          baseline and candidates. Will be ignored by all other algorithms
-                          (warning if possible!)
-                        items:
-                          format: int32
-                          type: integer
-                        type: array
                     type: object
                 required:
-                - type
+                - testingPattern
                 type: object
+                x-kubernetes-preserve-unknown-fields: true
               target:
                 description: Target is used to enable concurrent experimentation Two
                   experiments cannot be running concurrently for the same target.
@@ -341,12 +335,24 @@ spec:
                       name:
                         description: Name is a name for the version
                         type: string
-                      tags:
-                        additionalProperties:
-                          type: string
-                        description: Tags is map of tags that can be used for metrics
-                          queries
-                        type: object
+                      variables:
+                        description: Variables is a list of variables that can be
+                          used by handlers and in metrics queries
+                        items:
+                          description: Variable a name/value pair that can be used
+                            by handlers and in metrics queries
+                          properties:
+                            name:
+                              description: Name is the name of the variable
+                              type: string
+                            value:
+                              description: Value is the value of the variable
+                              type: string
+                          required:
+                          - name
+                          - value
+                          type: object
+                        type: array
                       weightObjRef:
                         description: WeightObjRef is a reference to another kubernetes
                           object
@@ -388,6 +394,7 @@ spec:
                     required:
                     - name
                     type: object
+                    x-kubernetes-preserve-unknown-fields: true
                   candidates:
                     description: Candidates is list candidate versions
                     items:
@@ -396,12 +403,24 @@ spec:
                         name:
                           description: Name is a name for the version
                           type: string
-                        tags:
-                          additionalProperties:
-                            type: string
-                          description: Tags is map of tags that can be used for metrics
-                            queries
-                          type: object
+                        variables:
+                          description: Variables is a list of variables that can be
+                            used by handlers and in metrics queries
+                          items:
+                            description: Variable a name/value pair that can be used
+                              by handlers and in metrics queries
+                            properties:
+                              name:
+                                description: Name is the name of the variable
+                                type: string
+                              value:
+                                description: Value is the value of the variable
+                                type: string
+                            required:
+                            - name
+                            - value
+                            type: object
+                          type: array
                         weightObjRef:
                           description: WeightObjRef is a reference to another kubernetes
                             object
@@ -444,6 +463,7 @@ spec:
                       required:
                       - name
                       type: object
+                      x-kubernetes-preserve-unknown-fields: true
                     type: array
                 required:
                 - baseline
@@ -668,8 +688,8 @@ spec:
                     type:
                       description: Type of the condition
                       enum:
-                      - ExperimentCompleted
-                      - ExperimentFailed
+                      - Completed
+                      - Failed
                       - TargetAcquired
                       type: string
                   required:
@@ -717,6 +737,16 @@ spec:
                   baseline after the experiment completes. Will be set to the winner
                   (status.analysis[].data.winner) or to the current baseline in the
                   case of a rollback.
+                type: string
+              stage:
+                description: Stage indicates where the experiment is in its process
+                  of execution
+                enum:
+                - Waiting
+                - Initializing
+                - Running
+                - Finishing
+                - Completed
                 type: string
               startTime:
                 description: StartTime is the time when the experiment starts (after

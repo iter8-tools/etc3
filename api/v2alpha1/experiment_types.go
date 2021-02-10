@@ -27,8 +27,9 @@ import (
 // +kubebuilder:object:root=true
 // +groupName=iter8.tools
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.type"
+// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.testingPattern"
 // +kubebuilder:printcolumn:name="target",type="string",JSONPath=".spec.target"
+// +kubebuilder:printcolumn:name="stage",type="string",JSONPath=".status.stage"
 // +kubebuilder:printcolumn:name="completed iterations",type="string",JSONPath=".status.completedIterations"
 // +kubebuilder:printcolumn:name="message",type="string",JSONPath=".status.message"
 type Experiment struct {
@@ -102,25 +103,42 @@ type VersionInfo struct {
 }
 
 // VersionDetail is detail about a single version
+// +kubebuilder:validation:XPreserveUnknownFields
 type VersionDetail struct {
 
 	// Name is a name for the version
 	Name string `json:"name" yaml:"name"`
 
-	// Tags is map of tags that can be used for metrics queries
+	// Variables is a list of variables that can be used by handlers and in metrics queries
 	// +optional
-	Tags *map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Variables []Variable `json:"variables,omitempty" yaml:"variables,omitempty"`
 
 	// WeightObjRef is a reference to another kubernetes object
 	// +optional
 	WeightObjRef *corev1.ObjectReference `json:"weightObjRef,omitempty" yaml:"weightObjRef,omitempty"`
 }
 
+// Variable a name/value pair that can be used by handlers and in metrics queries
+type Variable struct {
+	// Name is the name of the variable
+	Name string `json:"name" yaml:"name"`
+
+	// Value is the value of the variable
+	Value string `json:"value" yaml:"value"`
+}
+
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
+// +kubebuilder:validation:XPreserveUnknownFields
 type Strategy struct {
-	// Type is the experiment strategy
-	Type StrategyType `json:"type" yaml:"type"`
+	// TestingPattern is the testing pattern of an experiment
+	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
+
+	// DeploymentPattern is the deployment pattern of an experiment.
+	// It takes effect when the testing pattern is one of Canary, A/B or A/B/n.
+	// It defaults to Progressive.
+	// +optional
+	DeploymentPattern *DeploymentPatternType `json:"deploymentPattern,omitempty" yaml:"deploymentPattern,omitempty"`
 
 	// Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
 	// Specifically at the start (start handler), at the end (finish handler).
@@ -175,20 +193,6 @@ type Weights struct {
 	// +kubebuilder:validation:Maximum:=100
 	// +optional
 	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty" yaml:"maxCandidateWeightIncrement,omitempty"`
-
-	// Algorithm is the traffic split algorithm
-	// Default will be None for performance experiments,
-	// "fixed_split" for bluegreen experiments, and
-	// "progressive" otherwise
-	// +optional
-	Algorithm *AlgorithmType `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
-
-	// WeightDistribution used only by the fixed_split algorithm.
-	// For bluegreen experiments, it will default to [0, 100]
-	// Otherwise, it will default to a uniform split among baseline and candidates.
-	// Will be ignored by all other algorithms (warning if possible!)
-	// + optional
-	WeightDistribution []int32 `json:"weightDistribution,omitempty" yaml:"weightDistribution,omitempty"`
 }
 
 // Criteria is list of criteria to be evaluated throughout the experiment
@@ -285,6 +289,10 @@ type ExperimentStatus struct {
 	// LastUpdateTime is the last time iteration has been updated
 	// +optional
 	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty" yaml:"lastUpdateTime,omitempty"`
+
+	// Stage indicates where the experiment is in its process of execution
+	// +optional
+	Stage *ExperimentStageType `json:"stage,omitempty" yaml:"stage,omitempty"`
 
 	// CurrentIteration is the current iteration number.
 	// It is undefined until the experiment starts.

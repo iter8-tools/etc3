@@ -142,9 +142,9 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// If experiment already completed, stop
 	if instance.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue() {
 		log.Info("Experiment already completed.")
-		return r.endExperiment(ctx, instance)
+		return r.endRequest(ctx, instance)
 	}
-	log.Info("Experiment active")
+	log.Info("Experiment is active")
 
 	// Check if we are in the process of terminating an experiment and take appropriate action:
 	// If a terminal handler (finish, failure, or rollback) is running, just quit (wait until done)
@@ -156,11 +156,11 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		case HandlerStatusRunning:
 			return r.endRequest(ctx, instance)
 		case HandlerStatusComplete:
-			return r.endExperiment(ctx, instance)
+			return r.endExperiment(ctx, instance, "Experiment completed successfully")
 		case HandlerStatusFailed:
 			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
 			// we don't call failExperiment here because we are already ending; we just end
-			return r.endExperiment(ctx, instance)
+			return r.endExperiment(ctx, instance, "Experiment failed")
 		default: // case HandlerStatusNoHandler, HandlerStatusNotLaunched
 			// do nothing
 		}
@@ -197,6 +197,13 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return r.endRequest(ctx, instance)
 	}
 
+	// advance stage from Waiting to Initializing
+	// when we advance for the first time, we exit to force update; will be retriggered
+	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageInitializing); ok {
+		log.Info("Reconcile ending after advance to Initializing")
+		return r.endRequest(ctx, instance)
+	}
+
 	// RUN START HANDLER
 	// Note: since we haven't already checked it may already have been started
 	handler := r.GetHandler(instance, HandlerTypeStart)
@@ -218,6 +225,13 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		// do nothing; can proceed
 	}
 	log.Info("Start Handling Complete")
+
+	// advance stage from Initializing to Running
+	// when we advance for the first time, we exit to force update; will be retriggered
+	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageRunning); ok {
+		log.Info("Reconcile ending after advance to Running")
+		return r.endRequest(ctx, instance)
+	}
 
 	// VERSION VALIDATION (versionInfo should be created by start handler)
 	// See IsVersionInfoValid() for list of validations done
@@ -315,6 +329,22 @@ func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance 
 	return r.ReadMetrics(ctx, instance)
 }
 
+// Helper functions for maintaining stages
+func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alpha1.Experiment, to v2alpha1.ExperimentStageType) bool {
+	log := util.Logger(ctx)
+	log.Info("advanceStage called", "current stage", *instance.Status.Stage, "to", to)
+	defer log.Info("advanceStage completed")
+
+	stage := *instance.Status.Stage
+	if to.After(stage) {
+		stage = to
+		instance.Status.Stage = &stage
+		log.Info("advanceStage advanced", "to", to)
+		return true
+	}
+	return false
+}
+
 // Helper functions for TERMINATION
 
 // endRequest writes any changes (if needed) in preparation for ending processing of this reconcile request
@@ -333,12 +363,19 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha
 }
 
 // endExperiment is called to mark an experiment as completed and triggers next experiment object
-func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
+func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2alpha1.Experiment, msg string) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("endExperiment called")
 	defer log.Info("endExperiment completed")
 
-	r.triggerNextExperiment(ctx, instance)
+	// advance stage from Finishing to Completed
+	// when we do so for the first time, record the completion event and trigger the next experiment
+	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
+		r.recordExperimentCompleted(ctx, instance, msg)
+		r.updateStatus(ctx, instance)
+		r.triggerNextExperiment(ctx, instance)
+	}
+
 	return r.endRequest(ctx, instance)
 }
 
@@ -347,11 +384,12 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	log.Info("finishExperiment called")
 	defer log.Info("finishExperiment completed")
 
-	if err := r.launchTerminalHandler(ctx, instance, HandlerTypeFinish); err != nil {
-		log.Error(err, err.Error())
+	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeFinish); launched {
+		// a handler was launched so we end request; Reconcile() will be triggered again when it finishes/fails
+		return r.endRequest(ctx, instance)
 	}
-	r.recordExperimentCompleted(ctx, instance, "Experiment completed successfully")
-	return r.endExperiment(ctx, instance)
+	// no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
+	return r.endExperiment(ctx, instance, "Experiment completed successfully")
 }
 
 func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
@@ -359,11 +397,12 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	log.Info("rollbackExperiment called")
 	defer log.Info("rollbackExperiment ended")
 
-	if err := r.launchTerminalHandler(ctx, instance, HandlerTypeRollback); err != nil {
-		log.Error(err, err.Error())
+	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeRollback); launched {
+		// a handler was launched so we end request; Reconcile() will be triggered again when it finishes/fails
+		return r.endRequest(ctx, instance)
 	}
-	r.recordExperimentCompleted(ctx, instance, "Experiment rolled back")
-	return r.endExperiment(ctx, instance)
+	// no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
+	return r.endExperiment(ctx, instance, "Experiment rolled back")
 }
 
 func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2alpha1.Experiment, err error) (ctrl.Result, error) {
@@ -374,17 +413,18 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 	if err != nil {
 		log.Error(err, err.Error())
 	}
-	if err := r.launchTerminalHandler(ctx, instance, HandlerTypeFailure); err != nil {
-		log.Error(err, err.Error())
+	if launched := r.launchTerminalHandler(ctx, instance, HandlerTypeFailure); launched {
+		// a handler was launched so we end request; Reconcile() will be triggered again when it finishes/fails
+		return r.endRequest(ctx, instance)
 	}
-	r.recordExperimentCompleted(ctx, instance, "Experiment failed")
-	return r.endExperiment(ctx, instance)
+	// no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
+	return r.endExperiment(ctx, instance, "Experiment failed")
 }
 
 // launchTerminalHandler calls the specified terminal handler (finish, rollback or fail) and ends the request
 // Checking on completion of any terminal handlers takes place earlier, so can just launch
 // If no handler exists, we end the experiment instead
-func (r *ExperimentReconciler) launchTerminalHandler(ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType) error {
+func (r *ExperimentReconciler) launchTerminalHandler(ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType) bool {
 	log := util.Logger(ctx)
 	log.Info("terminate called", "handlerType", handlerType)
 	defer log.Info("terminate completed", "handlerType", handlerType)
@@ -398,12 +438,19 @@ func (r *ExperimentReconciler) launchTerminalHandler(ctx context.Context, instan
 				// can't call failExperiment if we are already in failExperiment
 				return r.launchTerminalHandler(ctx, instance, HandlerTypeFailure)
 			}
-			return nil
+			// we did not successfully launch a failure handler
+			return false
 		}
+		// advance stage from Running to Finishing
+		// we will ever get called once
+		log.Info("launchTerminalHandler ending after advance to Finishing", "handler", *handler)
+		r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing)
+
 		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonTerminalHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
-		return nil
+		return true
 	}
-	return nil
+	// there was no handler, so none launched
+	return false
 }
 
 func validUpdateErr(err error) bool {
@@ -442,7 +489,7 @@ func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance 
 	for _, handlerType := range []HandlerType{HandlerTypeStart, HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback} {
 		handler := r.GetHandler(instance, handlerType)
 		if handler != nil {
-			log.Info("finalizeExperiment deleting job for handler", handler)
+			log.Info("finalizeExperiment deleting job", "handler", handler)
 			if err := r.deleteHandlerJob(ctx, instance, handler); err != nil {
 				return err
 			}
@@ -452,6 +499,10 @@ func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance 
 	//     2. Trigger any waiting experiments
 	// endExperiment() triggers any waiting experiment
 	log.Info("finalizeExperiment triggering next experiment")
+	// to avoid a possible race condition, we mark the experiment completed
+	// and update its status before triggering the next experiment
+	r.recordExperimentCompleted(ctx, instance, "Experiment deleted")
+	r.updateStatus(ctx, instance)
 	r.triggerNextExperiment(ctx, instance)
 
 	return nil

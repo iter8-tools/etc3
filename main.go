@@ -143,13 +143,13 @@ func validateConfig(cfg configuration.Iter8Config) error {
 	// validate EnvironmentTypes
 	for _, expType := range cfg.ExperimentTypes {
 		ok := false
-		for _, validValue := range v2alpha1.ValidStrategyTypes {
+		for _, validValue := range v2alpha1.ValidTestingPatternTypes {
 			if expType.Name == string(validValue) {
 				ok = true
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid experiment type: %s, valid types are: %v", expType.Name, v2alpha1.ValidStrategyTypes)
+			return fmt.Errorf("Invalid experiment type: %s, valid types are: %v", expType.Name, v2alpha1.ValidTestingPatternTypes)
 		}
 	}
 	return nil

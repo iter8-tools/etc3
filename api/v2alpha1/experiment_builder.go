@@ -51,19 +51,16 @@ func (b *ExperimentBuilder) WithTarget(target string) *ExperimentBuilder {
 	return b
 }
 
-// WithStrategy ..
-func (b *ExperimentBuilder) WithStrategy(strategy StrategyType) *ExperimentBuilder {
-	b.Spec.Strategy.Type = strategy
+// WithTestingPattern ..
+func (b *ExperimentBuilder) WithTestingPattern(testingPattern TestingPatternType) *ExperimentBuilder {
+	b.Spec.Strategy.TestingPattern = testingPattern
 
 	return b
 }
 
-// WithAlgorithm ..
-func (b *ExperimentBuilder) WithAlgorithm(algorithm AlgorithmType) *ExperimentBuilder {
-	if nil == b.Spec.Strategy.Weights {
-		b.Spec.Strategy.Weights = &Weights{}
-	}
-	b.Spec.Strategy.Weights.Algorithm = &algorithm
+// WithDeploymentPattern ..
+func (b *ExperimentBuilder) WithDeploymentPattern(deploymentPattern DeploymentPatternType) *ExperimentBuilder {
+	b.Spec.Strategy.DeploymentPattern = &deploymentPattern
 
 	return b
 }

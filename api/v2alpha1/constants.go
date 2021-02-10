@@ -16,47 +16,46 @@ limitations under the License.
 
 package v2alpha1
 
-// StrategyType identifies the type of experiment type
-// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Performance;BlueGreen
-type StrategyType string
+// TestingPatternType identifies the type of experiment type
+// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance
+type TestingPatternType string
 
 const (
-	// StrategyTypeCanary indicates an experiment is a canary experiment
-	StrategyTypeCanary StrategyType = "Canary"
+	// TestingPatternCanary indicates an experiment is a canary experiment
+	TestingPatternCanary TestingPatternType = "Canary"
 
-	// StrategyTypeAB indicates an experiment is a A/B experiment
-	StrategyTypeAB StrategyType = "A/B"
+	// TestingPatternAB indicates an experiment is a A/B experiment
+	TestingPatternAB TestingPatternType = "A/B"
 
-	// StrategyTypeABN indicates an experiment is a A/B/n experiment
-	StrategyTypeABN StrategyType = "A/B/N"
+	// TestingPatternABN indicates an experiment is a A/B/n experiment
+	TestingPatternABN TestingPatternType = "A/B/N"
 
-	// StrategyTypePerformance indicates an experiment is a performance experiment
-	StrategyTypePerformance StrategyType = "Performance"
-
-	// StrategyTypeBlueGreen indicates an experiment is a blue-green experiment
-	StrategyTypeBlueGreen StrategyType = "BlueGreen"
+	// TestingPatternConformance indicates an experiment is a conformance experiment
+	TestingPatternConformance TestingPatternType = "Conformance"
 )
 
-// ValidStrategyTypes are legal strategy types iter8 is aware of
+// ValidTestingPatternTypes are legal strategy types iter8 is aware of
 // Should match list in github.com/iter8-tools/etc3/api/v2alpha1 (cf. constants.go)
-var ValidStrategyTypes []StrategyType = []StrategyType{
-	StrategyTypeCanary,
-	StrategyTypeAB,
-	StrategyTypeABN,
-	StrategyTypePerformance,
-	StrategyTypeBlueGreen,
+var ValidTestingPatternTypes []TestingPatternType = []TestingPatternType{
+	TestingPatternCanary,
+	TestingPatternAB,
+	TestingPatternABN,
+	TestingPatternConformance,
 }
 
-// AlgorithmType identifies the algorithms that can be used
-// +kubebuilder:validation:Enum=FixedSplit;Progressive
-type AlgorithmType string
+// DeploymentPatternType identifies the deployment patterns that can be used
+// +kubebuilder:validation:Enum=FixedSplit;Progressive;BlueGreen
+type DeploymentPatternType string
 
 const (
-	// AlgorithmTypeFixedSplit indicates the weight distribution algorithm is a fixed split
-	AlgorithmTypeFixedSplit AlgorithmType = "FixedSplit"
+	// DeploymentPatternFixedSplit indicates the deployment pattern is fixed split
+	DeploymentPatternFixedSplit DeploymentPatternType = "FixedSplit"
 
-	// AlgorithmTypeProgressive indicates that the the weight distribution algorithm is progressive
-	AlgorithmTypeProgressive AlgorithmType = "Progressive"
+	// DeploymentPatternProgressive indicates that the deployment pattern progressive
+	DeploymentPatternProgressive DeploymentPatternType = "Progressive"
+
+	// DeploymentPatternBlueGreen indicates that the deployment pattern is blue-green
+	DeploymentPatternBlueGreen DeploymentPatternType = "BlueGreen"
 )
 
 // PreferredDirectionType defines the valid values for reward.PreferredDirection
@@ -72,17 +71,17 @@ const (
 )
 
 // ExperimentConditionType limits conditions can be set by controller
-// +kubebuilder:validation:Enum:=ExperimentCompleted;ExperimentFailed;TargetAcquired
+// +kubebuilder:validation:Enum:=Completed;Failed;TargetAcquired
 type ExperimentConditionType string
 
 const (
 	// ExperimentConditionExperimentCompleted has status True when the experiment is completed
 	// Unknown initially, set to False during initialization
-	ExperimentConditionExperimentCompleted ExperimentConditionType = "ExperimentCompleted"
+	ExperimentConditionExperimentCompleted ExperimentConditionType = "Completed"
 
 	// ExperimentConditionExperimentFailed has status True when the experiment has failed
 	// False until failure occurs
-	ExperimentConditionExperimentFailed ExperimentConditionType = "ExperimentFailed"
+	ExperimentConditionExperimentFailed ExperimentConditionType = "Failed"
 
 	// ExperimentConditionTargetAcquired has status True when an experiment has a lock on the target
 	// False until can lock the target
@@ -106,3 +105,49 @@ const (
 	ReasonWeightRedistributionFailed = "WeightRedistributionFailed"
 	ReasonInvalidExperiment          = "InvalidExperiment"
 )
+
+// ExperimentStageType identifies valid stages of an experiment
+// +kubebuilder:validation:Enum:=Waiting;Initializing;Running;Finishing;Completed
+type ExperimentStageType string
+
+const (
+	// ExperimentStageWaiting indicates the experiment is not yet scheduled to run because it
+	// does not yet have exclusive experiment access to the target
+	ExperimentStageWaiting ExperimentStageType = "Waiting"
+
+	// ExperimentStageInitializing indicates an experiment has acquired access to the target
+	// and a start handler, if  any, is running
+	ExperimentStageInitializing ExperimentStageType = "Initializing"
+
+	// ExperimentStageRunning indicates an experiment is running
+	ExperimentStageRunning ExperimentStageType = "Running"
+
+	// ExperimentStageFinishing indicates an experiment has completed its iterations and is
+	// running any termination handler (either success or  failure)
+	ExperimentStageFinishing ExperimentStageType = "Finishing"
+
+	// ExperimentStageCompleted indicates an experiment has completed
+	ExperimentStageCompleted ExperimentStageType = "Completed"
+)
+
+// After Determines if a stage is after another
+func (stage ExperimentStageType) After(otherStage ExperimentStageType) bool {
+	orderedStages := []ExperimentStageType{
+		ExperimentStageWaiting,
+		ExperimentStageInitializing,
+		ExperimentStageRunning,
+		ExperimentStageFinishing,
+		ExperimentStageCompleted,
+	}
+
+	return stageIndex(stage, orderedStages) > stageIndex(otherStage, orderedStages)
+}
+
+func stageIndex(value ExperimentStageType, stages []ExperimentStageType) int {
+	for pos, val := range stages {
+		if val == value {
+			return pos
+		}
+	}
+	return -1
+}

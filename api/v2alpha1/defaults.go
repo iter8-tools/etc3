@@ -33,11 +33,9 @@ const (
 	// DefaultMaxCandidateWeightIncrement is the default maxIncrement for traffic update, which is 10
 	DefaultMaxCandidateWeightIncrement int32 = 10
 
-	// DefaultBlueGreenAlgorithm is the default traffic weight recommendation algorithm for bluegreen experiments
-	DefaultBlueGreenAlgorithm AlgorithmType = "FixedSplit"
-
-	// DefaultAlgorithm is the default traffic weight recommendation algorithm for experiments other than bluegreen
-	DefaultAlgorithm AlgorithmType = "Progressive"
+	// DefaultDeploymentPattern is the default deployment pattern for experiments
+	// It takes effect when the testing pattern is canary, A/B or A/B/n
+	DefaultDeploymentPattern DeploymentPatternType = DeploymentPatternProgressive
 
 	// DefaultIntervalSeconds is default interval duration as a string
 	DefaultIntervalSeconds = 20
@@ -74,9 +72,9 @@ func (s *ExperimentSpec) GetNumberOfBaseline() int {
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
 
-func handlersForStrategy(cfg configuration.Iter8Config, strategy StrategyType) *configuration.Handlers {
+func handlersForStrategy(cfg configuration.Iter8Config, testingPattern TestingPatternType) *configuration.Handlers {
 	for _, t := range cfg.ExperimentTypes {
-		if t.Name == string(strategy) {
+		if t.Name == string(testingPattern) {
 			return &t.Handlers
 		}
 	}
@@ -86,7 +84,7 @@ func handlersForStrategy(cfg configuration.Iter8Config, strategy StrategyType) *
 // GetStartHandler returns the name of the handler to be called when an experiment starts
 func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Start == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Start == "" {
 			return nil
 		}
@@ -117,7 +115,7 @@ func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) b
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
 func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Finish == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Finish == "" {
 			return nil
 		}
@@ -148,7 +146,7 @@ func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) 
 // GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
 func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Rollback == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Rollback == "" {
 			return nil
 		}
@@ -180,7 +178,7 @@ func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config
 // GetFailureHandler returns the handler to be called if there is a failure during experiment execution
 func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *string {
 	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Failure == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.Type)
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
 		if handlers == nil || handlers.Failure == "" {
 			return nil
 		}
@@ -267,28 +265,20 @@ func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() bool {
 	return false
 }
 
-// GetAlgorithm returns spec.strategy.weights.algorithm if set
-// Otherwise it returns the default based on spec.strategy.type
-func (s *ExperimentSpec) GetAlgorithm() AlgorithmType {
-	if s.Strategy.Weights == nil || s.Strategy.Weights.Algorithm == nil {
-		switch s.Strategy.Type {
-		case StrategyTypeBlueGreen:
-			return DefaultBlueGreenAlgorithm
-		}
-		return DefaultAlgorithm
+// GetDeploymentPattern returns spec.strategy.deploymentPattern if set
+func (s *ExperimentSpec) GetDeploymentPattern() DeploymentPatternType {
+	if s.Strategy.DeploymentPattern == nil {
+		return DefaultDeploymentPattern
 	}
-	return *s.Strategy.Weights.Algorithm
+	return *s.Strategy.DeploymentPattern
 }
 
-// InitializeAlgorithm initializes spec.strategy.weights.algorithm if not already set
+// InitializeDeploymentPattern initializes spec.strategy.deploymentPattern if not already set
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeAlgorithm() bool {
-	if s.Strategy.Weights == nil {
-		s.Strategy.Weights = &Weights{}
-	}
-	if s.Strategy.Weights.Algorithm == nil {
-		algorithm := s.GetAlgorithm()
-		s.Strategy.Weights.Algorithm = &algorithm
+func (s *ExperimentSpec) InitializeDeploymentPattern() bool {
+	if s.Strategy.DeploymentPattern == nil {
+		deploymentPattern := s.GetDeploymentPattern()
+		s.Strategy.DeploymentPattern = &deploymentPattern
 		return true
 	}
 	return false
@@ -310,42 +300,11 @@ func UniformSplit(numberOfCandidates int, maxCandidateWeight int32) []int32 {
 	return split
 }
 
-// GetWeightDistribution returns spec.strategy.weights.split if set
-// Otherwise it returns the default based on spec.strategy.type
-func (s *ExperimentSpec) GetWeightDistribution() []int32 {
-	if s.Strategy.Weights == nil || s.Strategy.Weights.WeightDistribution == nil {
-		switch s.Strategy.Type {
-		case StrategyTypeBlueGreen:
-			// we expect Algorithm to be AlgorithmTypeFixedSplit
-			return DefaultBlueGreenSplit
-		}
-		switch s.GetAlgorithm() {
-		case AlgorithmTypeFixedSplit:
-			return UniformSplit(s.GetNumberOfCandidates(), s.GetMaxCandidateWeight())
-		}
-		return make([]int32, 0)
-	}
-	return s.Strategy.Weights.WeightDistribution
-}
-
-// InitializeWeightDistribution initializes spec.strategy.weights.split if not already set (and algorithm is "fixed_split")
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeWeightDistribution() bool {
-	if s.Strategy.Weights == nil {
-		s.Strategy.Weights = &Weights{}
-	}
-	if s.Strategy.Weights.WeightDistribution == nil {
-		s.Strategy.Weights.WeightDistribution = s.GetWeightDistribution()
-		return true
-	}
-	return false
-}
-
 // InitializeWeights initializes weights if not already set
 func (s *ExperimentSpec) InitializeWeights() {
 	s.InitializeMaxCandidateWeight()
 	s.InitializeMaxCandidateWeightIncrement()
-	s.InitializeAlgorithm()
+	s.InitializeDeploymentPattern()
 	// Must wait until versionInfo has been defined by start handler before
 	// initializing weight distribution because need to know the candidates
 	// s.InitializeWeightDistribution()
@@ -457,9 +416,9 @@ func (s *ExperimentSpec) GetReward() *Reward {
 //////////////////////////////////////////////////////////////////////
 
 // GetRollbackOnFailure identifies if the experiment should be rolledback on failure of an objective
-func (o *Objective) GetRollbackOnFailure(strategy StrategyType) bool {
+func (o *Objective) GetRollbackOnFailure(deploymentPattern DeploymentPatternType) bool {
 	if o.RollbackOnFailure == nil {
-		if strategy == StrategyTypeBlueGreen {
+		if deploymentPattern == DeploymentPatternBlueGreen {
 			return true
 		}
 		return false
@@ -477,7 +436,7 @@ func (s *ExperimentSpec) InitializeObjectives() bool {
 
 	change := false
 	for _, o := range s.Criteria.Objectives {
-		if s.Strategy.Type == StrategyTypeBlueGreen && o.RollbackOnFailure == nil {
+		if s.GetDeploymentPattern() == DeploymentPatternBlueGreen && o.RollbackOnFailure == nil {
 			rollback := true
 			o.RollbackOnFailure = &rollback
 			change = true

@@ -34,10 +34,10 @@ var _ = Describe("Weight Patching", func() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 
-	Context("When experimentType is Performance", func() {
+	Context("When experimentType is Conformance", func() {
 		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypePerformance).
+			WithTestingPattern(v2alpha1.TestingPatternConformance).
 			Build()
 		It("should succeed without error", func() {
 			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())
@@ -47,8 +47,8 @@ var _ = Describe("Weight Patching", func() {
 	Context("When algorithm is FixedSplit", func() {
 		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
-			WithAlgorithm(v2alpha1.AlgorithmTypeFixedSplit).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithDeploymentPattern(v2alpha1.DeploymentPatternFixedSplit).
 			Build()
 		It("should succeed without error", func() {
 			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())
@@ -58,7 +58,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When no versionInfo", func() {
 		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			Build()
 		It("Should fail with error", func() {
 			err := redistributeWeight(ctx, experiment, restCfg)
@@ -69,7 +69,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When WeightObjRef is not set", func() {
 		experiment := v2alpha1.NewExperiment("noWeightObRef", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", nil).
 			Build()
@@ -84,7 +84,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When WeightObjRef set but no FieldPath", func() {
 		experiment := v2alpha1.NewExperiment("noFieldPath", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -104,7 +104,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When full WeightObjRef set but no weight recommendation", func() {
 		experiment := v2alpha1.NewExperiment("noWeightRecommendation", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -125,7 +125,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When full WeightObjRef and weight recommendation matches current value", func() {
 		experiment := v2alpha1.NewExperiment("recommendationIsCurrent", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -147,7 +147,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When full WeightObjRef and weight recommendation does not match the current value", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -169,7 +169,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When multiple versions require updates to the same object", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -209,7 +209,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When multiple versions require updates to different objects", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
-			WithStrategy(v2alpha1.StrategyTypeCanary).
+			WithTestingPattern(v2alpha1.TestingPatternCanary).
 			WithDuration(10, 0).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",

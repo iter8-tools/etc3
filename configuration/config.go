@@ -87,9 +87,9 @@ func NewIter8Config() Iter8ConfigBuilder {
 	return (Iter8ConfigBuilder)(cfg)
 }
 
-// WithStrategy ..
-func (b Iter8ConfigBuilder) WithStrategy(strategy string, handlers map[string]string) Iter8ConfigBuilder {
-	s := ExperimentType{Name: strategy}
+// WithTestingPattern ..
+func (b Iter8ConfigBuilder) WithTestingPattern(testingPattern string, handlers map[string]string) Iter8ConfigBuilder {
+	s := ExperimentType{Name: testingPattern}
 	for key, value := range handlers {
 		hdlr := value
 		switch strings.ToLower(key) {

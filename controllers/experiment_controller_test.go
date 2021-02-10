@@ -25,24 +25,23 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Experiment validation", func() {
+var _ = Describe("Experiment Validation", func() {
+	ctx := context.Background()
+
 	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
 		testName := "test-invalid-duration"
 		testNamespace := "default"
 		It("Should fail to create experiment", func() {
-			ctx := context.Background()
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 0).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
 		})
 	})
-})
 
-var _ = Describe("Experiment validation", func() {
 	Context("When creating an experiment with a valid spec.duration.maxIteration", func() {
 		testName := "test-valid-duration"
 		testNamespace := "default"
@@ -50,21 +49,17 @@ var _ = Describe("Experiment validation", func() {
 			ctx := context.Background()
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 		})
 	})
-})
 
-var _ = Describe("Late Initialization", func() {
-	var ctx context.Context
 	Context("When creating a valid new Experiment", func() {
 		It("Should successfully complete late initialization", func() {
 			By("Providing a request-count metric")
-			ctx = context.Background()
 			m := v2alpha1.NewMetric("request-count", "default").
 				WithType(v2alpha1.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
@@ -85,7 +80,7 @@ var _ = Describe("Late Initialization", func() {
 			testNamespace := "default"
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
 				Build()
@@ -112,7 +107,7 @@ var _ = Describe("Late Initialization", func() {
 			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))
-			Expect(createdExperiment.Spec.GetAlgorithm()).Should(Equal(v2alpha1.DefaultAlgorithm))
+			Expect(createdExperiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha1.DefaultDeploymentPattern))
 			Expect(len(createdExperiment.Spec.Metrics)).Should(Equal(1))
 			Expect(*createdExperiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
 		})
@@ -120,8 +115,9 @@ var _ = Describe("Late Initialization", func() {
 })
 
 var _ = Describe("Experiment proceeds", func() {
+	ctx := context.Background()
+
 	Context("Early event trigger", func() {
-		ctx := context.Background()
 		testName := "early-reconcile"
 		testNamespace := "default"
 		It("Experiment should complete", func() {
@@ -131,7 +127,7 @@ var _ = Describe("Experiment proceeds", func() {
 			modifiedInterval := int32(10)
 			experiment := v2alpha1.NewExperiment(testName, testNamespace).
 				WithTarget("early-reconcile-targets").
-				WithStrategy(v2alpha1.StrategyTypeCanary).
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(initialInterval, expectedIterations).
 				WithBaselineVersion("baseline", nil).
