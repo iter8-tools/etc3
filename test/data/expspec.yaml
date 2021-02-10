@@ -1,6 +1,10 @@
 spec:
   target: default/my-model
   strategy:
+    actions:
+      action:
+        - library: library
+          task: task
     testingPattern: Canary
     handlers:
       startTasks:

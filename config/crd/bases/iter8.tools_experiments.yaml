@@ -307,6 +307,7 @@ spec:
                 required:
                 - testingPattern
                 type: object
+                x-kubernetes-preserve-unknown-fields: true
               target:
                 description: Target is used to enable concurrent experimentation Two
                   experiments cannot be running concurrently for the same target.

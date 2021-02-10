@@ -129,6 +129,7 @@ type Variable struct {
 
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
+// +kubebuilder:validation:XPreserveUnknownFields
 type Strategy struct {
 	// TestingPattern is the testing pattern of an experiment
 	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
