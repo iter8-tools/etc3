@@ -263,7 +263,7 @@ type Duration struct {
 	// Default is 15
 	// +kubebuilder:validation:Minimum:=1
 	// +optional
-	MaxIterations *int32 `json:"maxIterations,omitempty" yaml:"maxIterations,omitempty"`
+	IterationsPerLoop *int32 `json:"iterationsPerLoop,omitempty" yaml:"iterationsPerLoop,omitempty"`
 }
 
 // ExperimentStatus defines the observed state of Experiment

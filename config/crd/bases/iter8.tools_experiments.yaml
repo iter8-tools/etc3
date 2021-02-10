@@ -142,7 +142,7 @@ spec:
                     format: int32
                     minimum: 1
                     type: integer
-                  maxIterations:
+                  iterationsPerLoop:
                     description: MaxIterations is the maximum number of iterations
                       Default is 15
                     format: int32

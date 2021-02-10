@@ -103,7 +103,7 @@ var _ = Describe("Experiment Validation", func() {
 			Expect(createdExperiment.Status.CompletedIterations).ShouldNot(BeNil())
 			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(3))
 			By("Inspecting spec")
-			Expect(createdExperiment.Spec.GetMaxIterations()).Should(Equal(v2alpha1.DefaultMaxIterations))
+			Expect(createdExperiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha1.DefaultIterationsPerLoop))
 			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
 			Expect(createdExperiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))

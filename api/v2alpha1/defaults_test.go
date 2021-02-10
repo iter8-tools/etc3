@@ -62,7 +62,7 @@ var _ = Describe("Initialization", func() {
 				WithEndpoint("http://iter8-analytics:8080").
 				Build()
 			experiment.Spec.InitializeSpec(c)
-			Expect(experiment.Spec.GetMaxIterations()).Should(Equal(v2alpha1.DefaultMaxIterations))
+			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha1.DefaultIterationsPerLoop))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
 			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
 			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))

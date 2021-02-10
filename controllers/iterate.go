@@ -32,7 +32,7 @@ import (
 
 func moreIterationsNeeded(instance *v2alpha1.Experiment) bool {
 	// Are there more iterations to execute
-	return *instance.Status.CompletedIterations < instance.Spec.GetMaxIterations()
+	return *instance.Status.CompletedIterations < instance.Spec.GetIterationsPerLoop()
 }
 
 func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx context.Context, instance *v2alpha1.Experiment) bool {

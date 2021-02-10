@@ -40,8 +40,8 @@ const (
 	// DefaultIntervalSeconds is default interval duration as a string
 	DefaultIntervalSeconds = 20
 
-	// DefaultMaxIterations is the default number of iterations, which is 15
-	DefaultMaxIterations int32 = 15
+	// DefaultIterationsPerLoop is the default number of iterations, which is 15
+	DefaultIterationsPerLoop int32 = 15
 )
 
 // DefaultBlueGreenSplit is the default split to be used for bluegreen experiment
@@ -342,23 +342,23 @@ func (s *ExperimentSpec) InitializeInterval() bool {
 	return false
 }
 
-// GetMaxIterations returns specified(or default) max of iterations
-func (s *ExperimentSpec) GetMaxIterations() int32 {
-	if s.Duration == nil || s.Duration.MaxIterations == nil {
-		return DefaultMaxIterations
+// GetIterationsPerLoop returns the specified(or default) iterations per loop
+func (s *ExperimentSpec) GetIterationsPerLoop() int32 {
+	if s.Duration == nil || s.Duration.IterationsPerLoop == nil {
+		return DefaultIterationsPerLoop
 	}
-	return *s.Duration.MaxIterations
+	return *s.Duration.IterationsPerLoop
 }
 
-// InitializeMaxIterations sets duration.maxIterations if not already set using the default value
+// InitializeIterationsPerLoop sets duration.iterationsPerLoop to the default if not already set
 // Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeMaxIterations() bool {
+func (s *ExperimentSpec) InitializeIterationsPerLoop() bool {
 	if s.Duration == nil {
 		s.Duration = &Duration{}
 	}
-	if s.Duration.MaxIterations == nil {
-		iterations := s.GetMaxIterations()
-		s.Duration.MaxIterations = &iterations
+	if s.Duration.IterationsPerLoop == nil {
+		iterations := s.GetIterationsPerLoop()
+		s.Duration.IterationsPerLoop = &iterations
 		return true
 	}
 	return false
@@ -367,7 +367,7 @@ func (s *ExperimentSpec) InitializeMaxIterations() bool {
 // InitializeDuration initializes spec.durations if not already set
 func (s *ExperimentSpec) InitializeDuration() {
 	s.InitializeInterval()
-	s.InitializeMaxIterations()
+	s.InitializeIterationsPerLoop()
 }
 
 //////////////////////////////////////////////////////////////////////

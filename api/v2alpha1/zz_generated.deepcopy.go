@@ -235,8 +235,8 @@ func (in *Duration) DeepCopyInto(out *Duration) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.MaxIterations != nil {
-		in, out := &in.MaxIterations, &out.MaxIterations
+	if in.IterationsPerLoop != nil {
+		in, out := &in.IterationsPerLoop, &out.IterationsPerLoop
 		*out = new(int32)
 		**out = **in
 	}
