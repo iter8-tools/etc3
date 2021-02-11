@@ -102,7 +102,7 @@ func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string 
 
 // InitializeStartHandler iinitializes the start handler (if not already set) to the
 // default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) bool {
+func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -110,10 +110,8 @@ func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) b
 		handler := s.GetStartHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Start = handler
-			return true
 		}
 	}
-	return false
 }
 
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
@@ -133,7 +131,7 @@ func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string
 
 // InitializeFinishHandler iinitializes the finish handler (if not already set) to the
 // default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) bool {
+func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -141,10 +139,8 @@ func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) 
 		handler := s.GetFinishHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Finish = handler
-			return true
 		}
 	}
-	return false
 }
 
 // GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
@@ -164,8 +160,7 @@ func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *stri
 
 // InitializeRollbackHandler initializes the rollback handler (if not already set) to the
 // default rollback handler defined by the iter8 config.
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config) bool {
+func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config) {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -173,10 +168,8 @@ func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config
 		handler := s.GetRollbackHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Rollback = handler
-			return true
 		}
 	}
-	return false
 }
 
 // GetFailureHandler returns the handler to be called if there is a failure during experiment execution
@@ -196,8 +189,7 @@ func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *strin
 }
 
 // InitializeFailureHandler initializes the finish handler (if not already set) to the default handler
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config) bool {
+func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config) {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
@@ -205,10 +197,8 @@ func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config)
 		handler := s.GetFailureHandler(cfg)
 		if handler != nil {
 			s.Strategy.Handlers.Failure = handler
-			return true
 		}
 	}
-	return false
 }
 
 // InitializeHandlers initialize handlers if not already set
@@ -233,17 +223,14 @@ func (s *ExperimentSpec) GetMaxCandidateWeight() int32 {
 }
 
 // InitializeMaxCandidateWeight initializes spec.strategy.weights.maxCandiateWeight if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeMaxCandidateWeight() bool {
+func (s *ExperimentSpec) InitializeMaxCandidateWeight() {
 	if s.Strategy.Weights == nil {
 		s.Strategy.Weights = &Weights{}
 	}
 	if s.Strategy.Weights.MaxCandidateWeight == nil {
 		weight := s.GetMaxCandidateWeight()
 		s.Strategy.Weights.MaxCandidateWeight = &weight
-		return true
 	}
-	return false
 }
 
 // GetMaxCandidateWeightIncrement return spec.strategy.weights.maxCandidateWeightIncrement if set
@@ -256,17 +243,14 @@ func (s *ExperimentSpec) GetMaxCandidateWeightIncrement() int32 {
 }
 
 // InitializeMaxCandidateWeightIncrement initializes spec.strategy.weights.maxCandidateWeightIncrement if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() bool {
+func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() {
 	if s.Strategy.Weights == nil {
 		s.Strategy.Weights = &Weights{}
 	}
 	if s.Strategy.Weights.MaxCandidateWeightIncrement == nil {
 		increment := s.GetMaxCandidateWeightIncrement()
 		s.Strategy.Weights.MaxCandidateWeightIncrement = &increment
-		return true
 	}
-	return false
 }
 
 // GetDeploymentPattern returns spec.strategy.deploymentPattern if set
@@ -278,14 +262,11 @@ func (s *ExperimentSpec) GetDeploymentPattern() DeploymentPatternType {
 }
 
 // InitializeDeploymentPattern initializes spec.strategy.deploymentPattern if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeDeploymentPattern() bool {
+func (s *ExperimentSpec) InitializeDeploymentPattern() {
 	if s.Strategy.DeploymentPattern == nil {
 		deploymentPattern := s.GetDeploymentPattern()
 		s.Strategy.DeploymentPattern = &deploymentPattern
-		return true
 	}
-	return false
 }
 
 // UniformSplit returns the default (uniform) split for non-bluegreen experiments
@@ -333,17 +314,14 @@ func (s *ExperimentSpec) GetIntervalAsDuration() time.Duration {
 }
 
 // InitializeInterval sets duration.interval if not already set using the default value
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeInterval() bool {
+func (s *ExperimentSpec) InitializeInterval() {
 	if s.Duration == nil {
 		s.Duration = &Duration{}
 	}
 	if s.Duration.IntervalSeconds == nil {
 		interval := int32(DefaultIntervalSeconds)
 		s.Duration.IntervalSeconds = &interval
-		return true
 	}
-	return false
 }
 
 // GetIterationsPerLoop returns the specified (or default) iterations
@@ -363,23 +341,32 @@ func (s *ExperimentSpec) GetMaxLoops() int32 {
 }
 
 // InitializeIterationsPerLoop sets duration.iterationsPerLoop to the default if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeIterationsPerLoop() bool {
+func (s *ExperimentSpec) InitializeIterationsPerLoop() {
 	if s.Duration == nil {
 		s.Duration = &Duration{}
 	}
 	if s.Duration.IterationsPerLoop == nil {
 		iterations := s.GetIterationsPerLoop()
 		s.Duration.IterationsPerLoop = &iterations
-		return true
 	}
-	return false
+}
+
+// InitializeMaxLoops sets duration.iterationsPerLoop to the default if not already set
+func (s *ExperimentSpec) InitializeMaxLoops() {
+	if s.Duration == nil {
+		s.Duration = &Duration{}
+	}
+	if s.Duration.MaxLoops == nil {
+		loops := s.GetMaxLoops()
+		s.Duration.MaxLoops = &loops
+	}
 }
 
 // InitializeDuration initializes spec.durations if not already set
 func (s *ExperimentSpec) InitializeDuration() {
 	s.InitializeInterval()
 	s.InitializeIterationsPerLoop()
+	s.InitializeMaxLoops()
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -402,16 +389,13 @@ func (s *ExperimentSpec) GetRequestCount(cfg configuration.Iter8Config) *string 
 }
 
 // InitializeRequestCount sets the request count metric to the default value if not already set
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeRequestCount(cfg configuration.Iter8Config) bool {
+func (s *ExperimentSpec) InitializeRequestCount(cfg configuration.Iter8Config) {
 	if s.Criteria == nil {
-		return false
+		return
 	}
 	if s.Criteria.RequestCount == nil {
 		s.Criteria.RequestCount = s.GetRequestCount(cfg)
-		return true
 	}
-	return false
 }
 
 // GetReward returns the reward metric, if any
@@ -440,21 +424,17 @@ func (o *Objective) GetRollbackOnFailure(deploymentPattern DeploymentPatternType
 
 // InitializeObjectives initializes the rollbackOnFailure field of all objectives if
 // the strategy type is "bluegreen"
-// Returns true if a change was made, false if not
-func (s *ExperimentSpec) InitializeObjectives() bool {
+func (s *ExperimentSpec) InitializeObjectives() {
 	if s.Criteria == nil {
-		return false
+		return
 	}
 
-	change := false
 	for _, o := range s.Criteria.Objectives {
 		if s.GetDeploymentPattern() == DeploymentPatternBlueGreen && o.RollbackOnFailure == nil {
 			rollback := true
 			o.RollbackOnFailure = &rollback
-			change = true
 		}
 	}
-	return change
 }
 
 // InitializeCriteria initializes any criteria details not already set

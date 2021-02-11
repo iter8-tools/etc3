@@ -65,7 +65,7 @@ var _ = Describe("Target Acquisition", func() {
 				WithTarget("unavailable-target").
 				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(3, 2).
+				WithDuration(3, 2, 1).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			wantsName = "wants-target"
@@ -73,7 +73,7 @@ var _ = Describe("Target Acquisition", func() {
 				WithTarget("unavailable-target").
 				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(1, 1).
+				WithDuration(1, 1, 1).
 				WithBaselineVersion("baseline", nil).
 				Build()
 		})
@@ -160,7 +160,7 @@ var _ = Describe("Finalizer", func() {
 				WithTarget("unavailable-target-finalizer").
 				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(4, 4).
+				WithDuration(4, 4, 1).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			wantsName = "wants-target-finalizer"
@@ -168,7 +168,7 @@ var _ = Describe("Finalizer", func() {
 				WithTarget("unavailable-target-finalizer").
 				WithTestingPattern(v2alpha1.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(1, 1).
+				WithDuration(1, 1, 1).
 				WithBaselineVersion("baseline", nil).
 				Build()
 		})

@@ -70,7 +70,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("noWeightObRef", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", nil).
 			Build()
 		It("Should not add a patch", func() {
@@ -85,7 +85,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("noFieldPath", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
@@ -105,7 +105,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("noWeightRecommendation", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
@@ -126,7 +126,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("recommendationIsCurrent", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
@@ -148,7 +148,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
@@ -170,7 +170,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
@@ -210,7 +210,7 @@ var _ = Describe("Weight Patching", func() {
 		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
 			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDuration(10, 0).
+			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",

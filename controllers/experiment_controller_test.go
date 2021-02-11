@@ -36,7 +36,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithTarget("target").
 				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(10, 0).
+				WithDuration(10, 0, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
 		})
@@ -51,7 +51,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithTarget("target").
 				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(10, 1).
+				WithDuration(10, 1, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 		})
@@ -129,7 +129,7 @@ var _ = Describe("Experiment proceeds", func() {
 				WithTarget("early-reconcile-targets").
 				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
-				WithDuration(initialInterval, expectedIterations).
+				WithDuration(initialInterval, expectedIterations, 1).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate", nil).
 				Build()

@@ -63,6 +63,7 @@ var _ = Describe("Initialization", func() {
 				Build()
 			experiment.Spec.InitializeSpec(c)
 			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha1.DefaultIterationsPerLoop))
+			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(v2alpha1.DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
 			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
 			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))
@@ -172,7 +173,7 @@ var _ = Describe("Generated Code", func() {
 				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithDeploymentPattern(v2alpha1.DeploymentPatternFixedSplit).
 				WithHandlers(map[string]string{"start": "st", "finish": "fin", "failure": "fail", "rollback": "back"}).
-				WithDuration(3, 2).
+				WithDuration(3, 2, 1).
 				WithRequestCount("request-count").
 				WithBaselineVersion("baseline", &corev1.ObjectReference{
 					Kind:       "kind",
