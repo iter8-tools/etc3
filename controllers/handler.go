@@ -41,15 +41,31 @@ type HandlerType string
 const (
 	// ServiceAccountForHandlers is the service account name to use for jobs
 	ServiceAccountForHandlers string = "iter8-handlers"
-	// HandlerTypeStart start handler
+	// HandlerTypeStart is the type of a start handler
 	HandlerTypeStart HandlerType = "Start"
-	// HandlerTypeFinish finish handler
+	// HandlerTypeFinish is the type of a finish handler
 	HandlerTypeFinish HandlerType = "Finish"
-	// HandlerTypeRollback rollback handler
+	// HandlerTypeRollback is the type of a rollback handler
 	HandlerTypeRollback HandlerType = "Rollback"
-	// HandlerTypeFailure failure handler
+	// HandlerTypeFailure is the type of a failure handler
 	HandlerTypeFailure HandlerType = "Failure"
+	// HandlerTypeLoop is the type of a loop handler
+	HandlerTypeLoop HandlerType = "Loop"
 )
+
+var allHandlerTypes []HandlerType = []HandlerType{
+	HandlerTypeStart,
+	HandlerTypeFinish,
+	HandlerTypeRollback,
+	HandlerTypeFailure,
+	HandlerTypeLoop,
+}
+
+var terminalHandlerTypes []HandlerType = []HandlerType{
+	HandlerTypeFinish,
+	HandlerTypeRollback,
+	HandlerTypeFailure,
+}
 
 // GetHandler returns handler of a given type
 func (r *ExperimentReconciler) GetHandler(instance *v2alpha1.Experiment, t HandlerType) *string {

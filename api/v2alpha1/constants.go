@@ -91,15 +91,14 @@ const (
 // A set of reason setting the experiment condition status
 const (
 	ReasonExperimentInitialized      = "ExperimentInitialized"
-	ReasonStartHandlerLaunched       = "StartHandlerLaunched"
-	ReasonStartHandlerCompleted      = "StartHandlerCompleted"
 	ReasonTargetAcquired             = "TargetAcquired"
 	ReasonIterationCompleted         = "IterationUpdate"
-	ReasonTerminalHandlerLaunched    = "TerminalHandlerLaunched"
 	ReasonExperimentCompleted        = "ExperimentCompleted"
 	ReasonAnalyticsServiceError      = "AnalyticsServiceError"
 	ReasonMetricUnavailable          = "MetricUnavailable"
 	ReasonMetricsUnreadable          = "MetricsUnreadable"
+	ReasonHandlerLaunched            = "HandlerLaunched"
+	ReasonHandlerCompleted           = "HandlerCompleted"
 	ReasonHandlerFailed              = "HandlerFailed"
 	ReasonLaunchHandlerFailed        = "LaunchHandlerFailed"
 	ReasonWeightRedistributionFailed = "WeightRedistributionFailed"
