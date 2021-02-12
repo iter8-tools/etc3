@@ -199,8 +199,8 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// We get here many times, but we want to execute the start handler only once.
 	// Use a prerequisite checker to check that it has never been launched before.
 	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
-		map[string]launchModifier{launchModifierPrerequisiteCheck: func() bool {
-			return HandlerStatusNotLaunched == r.GetHandlerStatus(ctx, instance, r.GetHandler(instance, HandlerTypeStart))
+		handlerLaunchModifier{prerequisiteCheck: func() bool {
+			return HandlerStatusNotLaunched == r.GetHandlerStatus(ctx, instance, r.GetHandler(instance, HandlerTypeStart), nil)
 		}}); stop {
 		return result, err
 	}
@@ -364,13 +364,12 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	log.Info("finishExperiment called")
 	defer log.Info("finishExperiment completed")
 
-	if stop, result, err := r.launchHandlerWrapper(
-		ctx, instance, HandlerTypeFailure,
-		map[string]launchModifier{launchModifierOnSuccessfulLaunch: func() bool {
-			return r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing)
-		}}); stop {
+	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
+		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
+	); stop {
 		return result, err
 	}
+
 	return r.endExperiment(ctx, instance, "Experiment completed successfully")
 }
 
@@ -379,14 +378,12 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	log.Info("rollbackExperiment called")
 	defer log.Info("rollbackExperiment ended")
 
-	if stop, result, err := r.launchHandlerWrapper(
-		ctx, instance, HandlerTypeFailure,
-		map[string]launchModifier{launchModifierOnSuccessfulLaunch: func() bool {
-			return r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing)
-		}}); stop {
+	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
+		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
+	); stop {
 		return result, err
 	}
-	// // no handler was launched; we don't expect Reconcile() to be triggered again so we take final actions
+
 	return r.endExperiment(ctx, instance, "Experiment rolled back")
 }
 
@@ -399,13 +396,12 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 		log.Error(err, err.Error())
 	}
 
-	if stop, result, err := r.launchHandlerWrapper(
-		ctx, instance, HandlerTypeFailure,
-		map[string]launchModifier{launchModifierOnSuccessfulLaunch: func() bool {
-			return r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing)
-		}}); stop {
+	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
+		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
+	); stop {
 		return result, err
 	}
+
 	return r.endExperiment(ctx, instance, "Experiment failed")
 }
 
@@ -441,15 +437,23 @@ func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance 
 	//     1. Delete any handler jobs
 	//     2. Trigger any waiting experiments
 
-	//     1. Delete any handler jobs
+	//     1. Delete any handler jobs (we ignore any errors; we're ending)
 	for _, handlerType := range []HandlerType{HandlerTypeStart, HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback} {
 		handler := r.GetHandler(instance, handlerType)
-		if handler != nil {
-			log.Info("finalizeExperiment deleting job", "handler", handler)
-			if err := r.deleteHandlerJob(ctx, instance, handler); err != nil {
-				return err
-			}
+		if handler == nil {
+			continue
 		}
+
+		if handlerType == HandlerTypeLoop {
+			for loop := 1; loop <= int(instance.Spec.GetMaxLoops()); loop++ {
+				log.Info("finalizeExperiment deleting job", "handler", handler, "loop", loop)
+				r.deleteHandlerJob(ctx, instance, handler, &loop)
+			}
+		} else {
+			log.Info("finalizeExperiment deleting job", "handler", handler)
+			r.deleteHandlerJob(ctx, instance, handler, nil)
+		}
+		log.Info("finalizeExperiment deleting job", "handler", handler)
 	}
 
 	//     2. Trigger any waiting experiments
@@ -472,57 +476,80 @@ func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance
 	handlerTypes []HandlerType) (bool, ctrl.Result, error) {
 
 	log := util.Logger(ctx)
-	log.Info("checkHandler called")
-	defer log.Info("checkHandler completed")
+	log.Info("checkHandlersStatus called", "handlerTypes", handlerTypes)
+	defer log.Info("checkHandlersStatus completed")
 
 	dummyResult := ctrl.Result{}
 	stop := true
 
 	for _, handlerType := range handlerTypes {
 		handler := r.GetHandler(instance, handlerType)
-		switch r.GetHandlerStatus(ctx, instance, handler) {
-		case HandlerStatusRunning:
-			// exit; keep waiting for handler to complete
-			result, err := r.endRequest(ctx, instance)
-			return stop, result, err
-		case HandlerStatusComplete:
-			switch handlerType {
-			case HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback:
-				// terminal handler completed; we end the experiment
-				result, err := r.endExperiment(ctx, instance, "Experiment Completed")
-				return stop, result, err
-			default: // HandlerTypeStart, HandlerTypeLoop
-				// otherwise, we continue processing
-				return !stop, dummyResult, nil
+		if handlerType == HandlerTypeLoop {
+			for l := 1; l <= int(instance.Spec.GetMaxLoops()); l++ {
+				if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, &l); stop {
+					return stop, result, err
+				}
 			}
-		case HandlerStatusFailed:
-			switch handlerType {
-			case HandlerTypeFailure:
-				// a failure handler failed; don't call it again; just stop
-				result, err := r.endExperiment(ctx, instance, "Failure handler failed")
-				return stop, result, err
-			default:
-				// default is to fail experiment processing
-				r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
-				result, err := r.failExperiment(ctx, instance, nil)
+		} else {
+			if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, nil); stop {
 				return stop, result, err
 			}
-		default: // HandlerStatusNotLaunched, HandlerStatusNoHandler:
-			return !stop, dummyResult, nil
 		}
 	}
 
 	return !stop, dummyResult, nil
 }
 
-// type onlaunchModifier func(context.Context, *v2alpha1.Experiment, *string)
-// type launchModifier modifies
-type launchModifier func() bool
+func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance *v2alpha1.Experiment,
+	handlerType HandlerType, handler *string, handlerInstance *int) (bool, ctrl.Result, error) {
 
-const (
-	launchModifierPrerequisiteCheck  = "prerequisiteCheck"
-	launchModifierOnSuccessfulLaunch = "onSuccessfulLaunch"
-)
+	log := util.Logger(ctx)
+	log.Info("checkHandlerStatus called", "handlerType", handlerType, "handler", handler)
+	defer log.Info("checkHandlerStatus completed")
+
+	dummyResult := ctrl.Result{}
+	stop := true
+
+	switch r.GetHandlerStatus(ctx, instance, handler, handlerInstance) {
+	case HandlerStatusRunning:
+		// exit; keep waiting for handler to complete
+		result, err := r.endRequest(ctx, instance)
+		return stop, result, err
+	case HandlerStatusComplete:
+		switch handlerType {
+		case HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback:
+			// terminal handler completed; we end the experiment
+			result, err := r.endExperiment(ctx, instance, "Experiment Completed")
+			return stop, result, err
+		default: // HandlerTypeStart, HandlerTypeLoop
+			// otherwise, we continue processing
+			return !stop, dummyResult, nil
+		}
+	case HandlerStatusFailed:
+		switch handlerType {
+		case HandlerTypeFailure:
+			// a failure handler failed; don't call it again; just stop
+			result, err := r.endExperiment(ctx, instance, "Failure handler failed")
+			return stop, result, err
+		default:
+			// default is to fail experiment processing
+			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
+			result, err := r.failExperiment(ctx, instance, nil)
+			return stop, result, err
+		}
+	default: // HandlerStatusNotLaunched, HandlerStatusNoHandler:
+		return !stop, dummyResult, nil
+	}
+
+}
+
+type handlerLaunchPrerequisiteChecker func() bool
+type handlerLaunchOnSuccess func()
+type handlerLaunchModifier struct {
+	prerequisiteCheck  handlerLaunchPrerequisiteChecker
+	loop               *int
+	onSuccessfulLaunch handlerLaunchOnSuccess
+}
 
 // launchHandlerWrapper wraps launchHandler with the following additional behavior:
 // Determine if a handler actually exists
@@ -537,10 +564,8 @@ const (
 // If a handler was launched the caller should wait for completion
 // If an error occurred, failExperiment was called and the caller should stop
 func (r *ExperimentReconciler) launchHandlerWrapper(
-	ctx context.Context,
-	instance *v2alpha1.Experiment,
-	handlerType HandlerType,
-	modifiers map[string]launchModifier) (bool, ctrl.Result, error) {
+	ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType,
+	modifier handlerLaunchModifier) (bool, ctrl.Result, error) {
 
 	log := util.Logger(ctx)
 	log.Info("launchHandlerWrapper called", "handlerType", handlerType)
@@ -557,14 +582,16 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	}
 
 	// verify any prerequisites; if not met, don't launch
-	if checkFn, ok := modifiers[launchModifierPrerequisiteCheck]; ok {
-		if !checkFn() {
-			log.Info("launchHandlerWrapper prerequisite check rejected launch", "handlerType", handlerType)
-			return !stop, dummyResult, nil
-		}
+	if modifier.prerequisiteCheck != nil &&
+		!modifier.prerequisiteCheck() {
+		// if checkFn, ok := modifiers[launchModifierPrerequisiteCheck]; ok {
+		// 	if !checkFn() {
+		log.Info("launchHandlerWrapper prerequisite check rejected launch", "handlerType", handlerType)
+		return !stop, dummyResult, nil
+		// }
 	}
 
-	if err := r.LaunchHandler(ctx, instance, *handler); err != nil {
+	if err := r.LaunchHandler(ctx, instance, *handler, modifier.loop); err != nil {
 		if handlerType == HandlerTypeFailure {
 			// An error occurred trying to launch a failure handler
 			// Don't try to launch it again
@@ -572,12 +599,14 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 			return stop, result, err
 		}
 		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
-		return r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure, map[string]launchModifier{})
+		return r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
+			handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }})
+		//map[string]launchModifier{})
 	}
 
 	// successfully launched the handler; run any modifier
-	if successfulLaunchModifier, ok := modifiers[launchModifierOnSuccessfulLaunch]; ok {
-		successfulLaunchModifier()
+	if modifier.onSuccessfulLaunch != nil {
+		modifier.onSuccessfulLaunch()
 	}
 
 	// record launch
@@ -586,5 +615,4 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	// tell caller to stop (to wait for handler to complete)
 	result, err := r.endRequest(ctx, instance)
 	return stop, result, err
-
 }

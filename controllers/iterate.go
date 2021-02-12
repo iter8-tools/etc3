@@ -37,9 +37,9 @@ func moreIterationsNeeded(instance *v2alpha1.Experiment) bool {
 
 // determine if a loop is completed by determing if the number of iterations executed
 // is a multiple of duration.iterationsPerLoop
-func completedLoop(instance *v2alpha1.Experiment) (int32, bool) {
+func completedLoop(instance *v2alpha1.Experiment) (int, bool) {
 	if 0 == instance.Status.GetCompletedIterations()%instance.Spec.GetIterationsPerLoop() {
-		return (instance.Status.GetCompletedIterations() / instance.Spec.GetIterationsPerLoop()), true
+		return int(instance.Status.GetCompletedIterations() / instance.Spec.GetIterationsPerLoop()), true
 	}
 	return -1, false
 }
@@ -132,7 +132,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonIterationCompleted, "Completed Loop %d", loop)
 
 		if quit, result, err := r.launchHandlerWrapper(
-			ctx, instance, HandlerTypeLoop, map[string]launchModifier{}); quit {
+			ctx, instance, HandlerTypeLoop, handlerLaunchModifier{loop: &loop}); quit {
 			return result, err
 		}
 	}
