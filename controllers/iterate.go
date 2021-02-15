@@ -116,14 +116,13 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)
+	r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
 
 	// if there are no more iterations to execute, finishExperiment
 	// otherwise, just endRequest (and requeue for later)
 	if !moreIterationsNeeded(instance) {
 		return r.finishExperiment(ctx, instance)
 	}
-
-	r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
 
 	// if we are at the end of a loop (we've executed Duration.IterationsPerLoop iterations)
 	// then call a loop handler if one is defined.

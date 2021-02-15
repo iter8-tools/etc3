@@ -16,35 +16,77 @@ package controllers
 
 import (
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
+// Test that we start the appropriate handlers at the appropriate times.
+// Test deleteHandlerJob at the end as well
 var _ = Describe("Start Handler", func() {
 	var (
-		testNamespace string
+		namespace string
 	)
 	BeforeEach(func() {
-		testNamespace = "default"
+		namespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
-	})
-	AfterEach(func() {
 		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
 	})
 
 	Context("When an experiment with a start handler runs", func() {
 		Specify("the start handler is run", func() {
 			By("Defining an experiment with a start handler")
+			name, target := "has-start-handler", "has-start-handler"
+			handler := "test-handler"
+			iterations, loops := int32(2), int32(1)
+			experiment := v2alpha1.NewExperiment(name, namespace).
+				WithTarget(target).
+				WithTestingPattern(v2alpha1.TestingPatternConformance).
+				WithHandlers(map[string]string{"start": handler}).
+				WithDuration(1, iterations, loops).
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+
 			By("Checking that the start handler jobs are created")
+			Eventually(func() bool {
+				handlerJob := &batchv1.Job{}
+				jbNm := jobName(experiment, handler, nil)
+				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
+				return err == nil
+			}).Should(BeTrue())
 		})
 	})
 	Context("When an experiment with a finish handler finishes", func() {
 		Specify("the finish handler is run", func() {
 			By("Defining an experiment with a finsih handler")
 			// for simplicity, no start handler
+			name, target := "has-finish-handler", "has-finish-handler"
+			handler := "test-handler"
+			iterations, loops := int32(2), int32(1)
+			experiment := v2alpha1.NewExperiment(name, namespace).
+				WithTarget(target).
+				WithTestingPattern(v2alpha1.TestingPatternConformance).
+				WithHandlers(map[string]string{"start": "none", "finish": handler}).
+				WithDuration(1, iterations, loops).
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the finish handler jobs are created")
+			Eventually(func() bool {
+				handlerJob := &batchv1.Job{}
+				jbNm := jobName(experiment, handler, nil)
+				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
+				return err == nil
+			}, 5).Should(BeTrue())
+			By("Checking that the experiment has executed all iterations")
+			Eventually(func() bool {
+				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.GetCompletedIterations() == iterations*loops
+				})
+			}).Should(BeTrue())
 		})
 	})
 	Context("When an experiment with a failure handler fails", func() {
@@ -55,20 +97,34 @@ var _ = Describe("Start Handler", func() {
 		})
 	})
 	Context("When an experiment with a loop handler passes loop boundry", func() {
-		var testName string = "has-loop-handler"
-		It("the loop handler is started", func() {
+		Specify("the loop handler is started", func() {
 			By("Defining an experiment with a loop handler")
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
-				WithTarget("unavailable-target-finalizer").
+			name, target := "has-loop-handler", "has-loop-handler"
+			handler := "test-handler"
+			iterations, loops := int32(1), int32(2)
+			testLoop := 1
+			experiment := v2alpha1.NewExperiment(name, namespace).
+				WithTarget(target).
 				WithTestingPattern(v2alpha1.TestingPatternConformance).
-				WithHandlers(map[string]string{"start": "none", "loop": "none"}).
-				WithDuration(2, 2, 2).
+				WithHandlers(map[string]string{"start": "none", "loop": handler}).
+				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()
-				// for simplicity, no start handler
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the loop handler jobs are created")
-			By("Checkong that no loop handler jobs are created for the last loop")
+			Eventually(func() bool {
+				handlerJob := &batchv1.Job{}
+				jbNm := jobName(experiment, handler, &testLoop)
+				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
+				return err == nil
+			}, 5).Should(BeTrue())
+
+			By("Check that delete handler jobs works")
+			// Successful case
+			Expect(reconciler.deleteHandlerJob(ctx(), experiment, &handler, &testLoop)).Should(Succeed())
+			// Also a successful case (not found jobs are ignored)
+			notAHandler := "notahandler"
+			Expect(reconciler.deleteHandlerJob(ctx(), experiment, &notAHandler, nil)).Should(Succeed())
 		})
 	})
 

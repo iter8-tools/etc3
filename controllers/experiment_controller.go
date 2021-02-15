@@ -364,7 +364,7 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	log.Info("finishExperiment called")
 	defer log.Info("finishExperiment completed")
 
-	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
+	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFinish,
 		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
 	); stop {
 		return result, err
@@ -378,7 +378,7 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	log.Info("rollbackExperiment called")
 	defer log.Info("rollbackExperiment ended")
 
-	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
+	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeRollback,
 		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
 	); stop {
 		return result, err
@@ -396,7 +396,7 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 		log.Error(err, err.Error())
 	}
 
-	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeStart,
+	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
 		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
 	); stop {
 		return result, err

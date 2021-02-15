@@ -76,8 +76,10 @@ func (r *ExperimentReconciler) GetHandler(instance *v2alpha1.Experiment, t Handl
 		return instance.Spec.GetFinishHandler(r.Iter8Config)
 	case HandlerTypeRollback:
 		return instance.Spec.GetRollbackHandler(r.Iter8Config)
-	default: // case HandlerTypeFailure:
+	case HandlerTypeFailure:
 		return instance.Spec.GetFailureHandler(r.Iter8Config)
+	default: // case HandlerTypeLoop:
+		return instance.Spec.GetLoopHandler(r.Iter8Config)
 	}
 }
 
@@ -110,7 +112,6 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	if err := readJobSpec(handlerJobYaml, &job); err != nil {
 		return err
 	}
-	log.Info("launchHandler", "initial Job", job)
 
 	// update job spec:
 	//   - assign a name unique for this experiment, handler type
@@ -144,7 +145,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	// Perhaps no owner is necessary. Or perhaps the iter8-controller Deployment
 	// // assign owner to job (so job is automatically deleted when experiment is deleted)
 	// controllerutil.SetControllerReference(instance, &job, r.Scheme)
-	// log.Info("LaunchHandler job", "job", job)
+	log.Info("LaunchHandler job", "job", job)
 
 	// launch job
 	if err := r.Create(ctx, &job); err != nil {

@@ -118,6 +118,8 @@ var _ = BeforeSuite(func(done Done) {
 		WithTestingPattern(string(v2alpha1.TestingPatternConformance), map[string]string{"start": "start"}).
 		WithRequestCount("request-count").
 		WithEndpoint("http://iter8-analytics:8080").
+		WithHandlersDir("../test/handlers").
+		WithNamespace("default").
 		Build()
 
 	k8sClient = k8sManager.GetClient()
