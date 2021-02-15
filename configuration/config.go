@@ -46,6 +46,7 @@ type Handlers struct {
 	Rollback string `yaml:"rollback"`
 	Finish   string `yaml:"finish"`
 	Failure  string `yaml:"failure"`
+	Loop     string `yaml:"loop"`
 }
 
 // Analytics captures details of analytics endpoint(s)
@@ -101,6 +102,8 @@ func (b Iter8ConfigBuilder) WithTestingPattern(testingPattern string, handlers m
 			s.Handlers.Failure = hdlr
 		case "rollback":
 			s.Handlers.Rollback = hdlr
+		case "loop":
+			s.Handlers.Loop = hdlr
 		default:
 		}
 	}

@@ -109,6 +109,8 @@ func (b *ExperimentBuilder) WithHandlers(handlers map[string]string) *Experiment
 			b.Spec.Strategy.Handlers.Failure = &hdlr
 		case "rollback":
 			b.Spec.Strategy.Handlers.Rollback = &hdlr
+		case "loop":
+			b.Spec.Strategy.Handlers.Loop = &hdlr
 		default:
 		}
 	}

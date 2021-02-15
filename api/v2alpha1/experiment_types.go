@@ -177,6 +177,10 @@ type Handlers struct {
 	// Failure handler should implement any domain specific actions that should take place when an experiment fails.
 	// +optional
 	Failure *string `json:"failure,omitempty" yaml:"failure,omitempty"`
+
+	// Loop handler should implement any domain specific actions that should take place when an experiment reaches  a loop boundary.
+	// +optional
+	Loop *string `json:"loop,omitempty" yaml:"loop,omitempty"`
 }
 
 // Weights modify the behavior of the traffic split algorithm.

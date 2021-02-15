@@ -279,6 +279,11 @@ spec:
                           for a winning version. In the future, this function might
                           be migrated into the controller itself.
                         type: string
+                      loop:
+                        description: Loop handler should implement any domain specific
+                          actions that should take place when an experiment reaches  a
+                          loop boundary.
+                        type: string
                       rollback:
                         description: Rollback handler should implement any domain
                           specific actions that should take place when an objective

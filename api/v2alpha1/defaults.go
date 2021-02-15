@@ -201,12 +201,42 @@ func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config)
 	}
 }
 
+// GetLoopHandler returns the handler to be called at the end of each loop (except the last)
+func (s *ExperimentSpec) GetLoopHandler(cfg configuration.Iter8Config) *string {
+	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Loop == nil {
+		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
+		if handlers == nil || handlers.Loop == "" {
+			return nil
+		}
+		return &handlers.Loop
+
+	}
+	if *s.Strategy.Handlers.Loop == NoneHandler {
+		return nil
+	}
+	return s.Strategy.Handlers.Loop
+}
+
+// InitializeLoopHandler initializes the loop handler (if not already set) to the default handler
+func (s *ExperimentSpec) InitializeLoopHandler(cfg configuration.Iter8Config) {
+	if s.Strategy.Handlers == nil {
+		s.Strategy.Handlers = &Handlers{}
+	}
+	if s.Strategy.Handlers.Loop == nil {
+		handler := s.GetLoopHandler(cfg)
+		if handler != nil {
+			s.Strategy.Handlers.Loop = handler
+		}
+	}
+}
+
 // InitializeHandlers initialize handlers if not already set
 func (s *ExperimentSpec) InitializeHandlers(cfg configuration.Iter8Config) {
 	s.InitializeStartHandler(cfg)
 	s.InitializeFinishHandler(cfg)
 	s.InitializeRollbackHandler(cfg)
 	s.InitializeFailureHandler(cfg)
+	s.InitializeLoopHandler(cfg)
 }
 
 //////////////////////////////////////////////////////////////////////
