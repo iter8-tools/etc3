@@ -210,18 +210,12 @@ var _ = Describe("Finalizer", func() {
 
 			By("Allowing the second to acquire the target and proceed")
 			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }).Should(BeTrue())
-			// wantsName should be Running
-			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
-				})
-			}, 10).Should(BeTrue())
-			Eventually(func() bool { return completes(wantsName, testNamespace) }).Should(BeTrue())
+			// wantsName should be run and complete
 			Eventually(func() bool {
 				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
 					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
 				})
-			}, 3).Should(BeTrue())
+			}, 10).Should(BeTrue())
 		})
 	})
 
