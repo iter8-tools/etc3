@@ -25,7 +25,7 @@ import (
 
 // Test that we start the appropriate handlers at the appropriate times.
 // Test deleteHandlerJob at the end as well
-var _ = Describe("Start Handler", func() {
+var _ = Describe("Handlers Run", func() {
 	var (
 		namespace string
 	)
@@ -56,7 +56,7 @@ var _ = Describe("Start Handler", func() {
 				jbNm := jobName(experiment, handler, nil)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
 				return err == nil
-			}).Should(BeTrue())
+			}, 3).Should(BeTrue())
 		})
 	})
 	Context("When an experiment with a finish handler finishes", func() {
@@ -80,7 +80,7 @@ var _ = Describe("Start Handler", func() {
 				jbNm := jobName(experiment, handler, nil)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
 				return err == nil
-			}, 5).Should(BeTrue())
+			}, 10).Should(BeTrue())
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
@@ -117,7 +117,7 @@ var _ = Describe("Start Handler", func() {
 				jbNm := jobName(experiment, handler, &testLoop)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
 				return err == nil
-			}, 5).Should(BeTrue())
+			}, 10).Should(BeTrue())
 
 			By("Check that delete handler jobs works")
 			// Successful case
