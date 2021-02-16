@@ -8,8 +8,8 @@ spec:
       serviceAccountName: iter8-handlers
       containers:
       - name: iter8-start
-        image: iter8/handler:latest
-        command: ["/handler", "run", "-a", "start"]
+        image: iter8/handler:0.1.3-pre
+        command: ["handler", "run", "-a", "start"]
         env:
         - name: EXPERIMENT_NAMESPACE
           value: EXPERIMENT_NAMESPACE_VALUE
