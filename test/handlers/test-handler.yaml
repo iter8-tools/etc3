@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: start
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: ik-start
+        image: kalantar/test-handler:20200119-0944
+        command: ["/handler", "test"]
+        env:
+        - name: EXPERIMENT_NAMESPACE
+          value: EXPERIMENT_NAMESPACE_VALUE
+        - name: EXPERIMENT_NAME
+          value: EXPERIMENT_NAME_VALUE
+      restartPolicy: Never
+  backoffLimit: 4
+  activeDeadlineSeconds: 300
