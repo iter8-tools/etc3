@@ -14,7 +14,7 @@ require (
 	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.20.0
-	k8s.io/apiextensions-apiserver v0.19.2 // indirect
+	k8s.io/apiextensions-apiserver v0.20.0
 	k8s.io/apimachinery v0.20.0
 	k8s.io/client-go v0.20.0
 	k8s.io/kubectl v0.20.0

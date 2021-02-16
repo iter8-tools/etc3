@@ -252,6 +252,38 @@ spec:
               strategy:
                 description: Strategy identifies the type of experiment and its properties
                 properties:
+                  actions:
+                    additionalProperties:
+                      description: Action is a slice of task specifications.
+                      items:
+                        description: TaskSpec contains the specification of a task.
+                        properties:
+                          library:
+                            description: Library where this task is defined. Examples
+                              include 'common', 'knative', etc.
+                            type: string
+                          task:
+                            description: Task unique identifies the task to be executed
+                              with the library. Examples include 'init-experiment',
+                              'exec', etc.
+                            type: string
+                          with:
+                            additionalProperties:
+                              x-kubernetes-preserve-unknown-fields: true
+                            description: With holds inputs to this task. Different
+                              task require different types of inputs. Hence, this
+                              data is held as json.RawMessage to be decoded by individual
+                              task libraries.
+                            type: object
+                        required:
+                        - library
+                        - task
+                        type: object
+                      type: array
+                    description: Actions define the collections of tasks that are
+                      executed by handlers. Specifically, start and finish actions
+                      are invoked by start and finish handlers respectively.
+                    type: object
                   deploymentPattern:
                     description: DeploymentPattern is the deployment pattern of an
                       experiment. It takes effect when the testing pattern is one
@@ -293,7 +325,6 @@ spec:
                           resource.
                         type: string
                     type: object
-                    x-kubernetes-preserve-unknown-fields: true
                   testingPattern:
                     description: TestingPattern is the testing pattern of an experiment
                     enum:
@@ -325,7 +356,6 @@ spec:
                 required:
                 - testingPattern
                 type: object
-                x-kubernetes-preserve-unknown-fields: true
               target:
                 description: Target is used to enable concurrent experimentation Two
                   experiments cannot be running concurrently for the same target.
@@ -400,7 +430,6 @@ spec:
                     required:
                     - name
                     type: object
-                    x-kubernetes-preserve-unknown-fields: true
                   candidates:
                     description: Candidates is list candidate versions
                     items:
@@ -469,7 +498,6 @@ spec:
                       required:
                       - name
                       type: object
-                      x-kubernetes-preserve-unknown-fields: true
                     type: array
                 required:
                 - baseline
