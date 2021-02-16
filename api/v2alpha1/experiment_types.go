@@ -18,6 +18,7 @@ package v2alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -103,7 +104,6 @@ type VersionInfo struct {
 }
 
 // VersionDetail is detail about a single version
-// +kubebuilder:validation:XPreserveUnknownFields
 type VersionDetail struct {
 
 	// Name is a name for the version
@@ -129,7 +129,6 @@ type Variable struct {
 
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
-// +kubebuilder:validation:XPreserveUnknownFields
 type Strategy struct {
 	// TestingPattern is the testing pattern of an experiment
 	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
@@ -144,13 +143,37 @@ type Strategy struct {
 	// Specifically at the start (start handler), at the end (finish handler).
 	// A special handler can be specified to handle error cases.
 	// +optional
-	// +kubebuilder:validation:XPreserveUnknownFields
 	Handlers *Handlers `json:"handlers,omitempty" yaml:"handlers,omitempty"`
+
+	// Actions define the collections of tasks that are executed by handlers.
+	// Specifically, start and finish actions are invoked by start and finish handlers respectively.
+	// +optional
+	Actions ActionMap `json:"actions,omitempty" yaml:"actions,omitempty"`
 
 	// Weights modify the behavior of the traffic split algorithm.
 	// Defaults depend on the experiment type.
 	// +optional
 	Weights *Weights `json:"weights,omitempty" yaml:"weights,omitempty"`
+}
+
+// ActionMap type for containing a collection of actions.
+type ActionMap map[string]Action
+
+// Action is a slice of task specifications.
+type Action []TaskSpec
+
+// TaskSpec contains the specification of a task.
+type TaskSpec struct {
+	// Library where this task is defined.
+	// Examples include 'common', 'knative', etc.
+	Library string `json:"library" yaml:"library"`
+	// Task unique identifies the task to be executed with the library.
+	// Examples include 'init-experiment', 'exec', etc.
+	Task string `json:"task" yaml:"task"`
+	// With holds inputs to this task.
+	// Different task require different types of inputs. Hence, this data is held as json.RawMessage to be decoded by individual task libraries.
+	// +optional
+	With map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
 }
 
 // Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
