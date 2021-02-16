@@ -16,6 +16,7 @@ package v2alpha1_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -30,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Experiment with unknown fields", func() {
+var _ = Describe("Experiment with actions", func() {
 	ctx := context.Background()
 
 	type testcase struct {
@@ -42,41 +43,28 @@ var _ = Describe("Experiment with unknown fields", func() {
 	testcases := []testcase{
 		{
 			file:      "expspec.yaml",
-			feature:   "with handlers containing unknown fields",
-			fieldPath: []string{"spec", "strategy", "handlers", "startTask"},
-		},
-		{
-			file:      "expspec.yaml",
-			feature:   "with baseline containing unknown fields",
-			fieldPath: []string{"spec", "versionInfo", "baseline", "revision"},
+			feature:   "with strategy containing actions",
+			fieldPath: []string{"spec", "strategy", "actions", "start"},
 		},
 	}
 
 	for _, tc := range testcases {
 		Context(tc.feature, func() {
-			us := &unstructured.Unstructured{}
-			us.Object = map[string]interface{}{
-				"metadata": map[string]interface{}{
-					"name":      "exp",
-					"namespace": "default",
-				},
-				"spec": map[string]interface{}{},
-			}
-
-			It("should deal with unknown handler fields", func() {
+			It("should deal with actions with tasks with inputs", func() {
 				By("reading experiment")
-				s := map[string]interface{}{}
+				s := v2alpha1.Experiment{}
 				Expect(readExperimentFromFile(util.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
-				us.Object["spec"] = s["spec"]
+
+				testMap := make(map[string]interface{})
+				withBytes, err := json.Marshal(s.Spec.Strategy.Actions["finish"][0].With)
+				Expect(err).ToNot(HaveOccurred())
+				err = json.Unmarshal(withBytes, &testMap)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(testMap["args"]).To(Equal([]interface{}{"apply", "-k", "https://github.com/my-org/my-repo/path/to/overlays/{{ Status.RecommendedBaseline }}"}))
+				Expect(testMap["cmd"]).To(Equal("kubectl"))
 
 				By("creating the experiment")
-				us.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v2alpha1.GroupVersion.Group,
-					Version: v2alpha1.GroupVersion.Version,
-					Kind:    "Experiment",
-				})
-				log.Log.Info("unstructured object", "us", us)
-				Expect(k8sClient.Create(ctx, us)).Should(Succeed())
+				Expect(k8sClient.Create(ctx, &s)).Should(Succeed())
 
 				By("fetching the experiment with unknown fields")
 				exp2 := &unstructured.Unstructured{}
@@ -94,20 +82,20 @@ var _ = Describe("Experiment with unknown fields", func() {
 				Expect(err).To(BeNil())
 
 				By("deleting the experiment")
-				Expect(k8sClient.Delete(ctx, us)).Should(Succeed())
+				Expect(k8sClient.Delete(ctx, &s)).Should(Succeed())
 			})
 		})
 	}
 
 })
 
-func readExperimentFromFile(templateFile string, m *map[string]interface{}) error {
+func readExperimentFromFile(templateFile string, exp *v2alpha1.Experiment) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err
 	}
 
-	if err := yaml.Unmarshal(yamlFile, m); err == nil {
+	if err := yaml.Unmarshal(yamlFile, exp); err == nil {
 		return err
 	}
 
