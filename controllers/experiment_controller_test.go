@@ -19,7 +19,6 @@ import (
 	"time"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
-	"github.com/iter8-tools/etc3/configuration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
@@ -87,29 +86,14 @@ var _ = Describe("Experiment Validation", func() {
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
-			createdExperiment := &v2alpha1.Experiment{}
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)
-				if err != nil {
-					return false
-				}
-				return createdExperiment.Spec.Duration != nil
-				// return true
+				return hasValue(testName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.InitTime != nil &&
+						exp.Status.LastUpdateTime != nil &&
+						exp.Status.CompletedIterations != nil &&
+						len(exp.Status.Conditions) == 3
+				})
 			}).Should(BeTrue())
-			//
-			By("Inspecting status")
-			Expect(createdExperiment.Status.InitTime).ShouldNot(BeNil())
-			Expect(createdExperiment.Status.LastUpdateTime).ShouldNot(BeNil())
-			Expect(createdExperiment.Status.CompletedIterations).ShouldNot(BeNil())
-			Expect(len(createdExperiment.Status.Conditions)).Should(Equal(3))
-			By("Inspecting spec")
-			Expect(createdExperiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha1.DefaultIterationsPerLoop))
-			Expect(createdExperiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
-			Expect(createdExperiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
-			Expect(createdExperiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))
-			Expect(createdExperiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha1.DefaultDeploymentPattern))
-			Expect(len(createdExperiment.Spec.Metrics)).Should(Equal(1))
-			Expect(*createdExperiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
 		})
 	})
 })

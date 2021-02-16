@@ -157,17 +157,8 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	// LATE INITIALIZATION of instance.Spec
 	// TODO move to mutating webhook
-	originalSpec := instance.Spec.DeepCopy()
 	if ok := r.LateInitialization(ctx, instance); !ok {
 		return r.failExperiment(ctx, instance, nil)
-	}
-
-	if !reflect.DeepEqual(originalSpec, &instance.Spec) {
-		if err := r.Update(ctx, instance); err != nil && !validUpdateErr(err) {
-			log.Error(err, "Failed to update Spec after late initialization.")
-		}
-		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonExperimentInitialized, "Late initialization complete")
-		return r.endRequest(ctx, instance)
 	}
 	log.Info("Late initialization completed")
 
