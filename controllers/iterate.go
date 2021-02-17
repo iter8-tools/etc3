@@ -111,6 +111,8 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 		return r.failExperiment(ctx, instance, err)
 	}
 
+	updateObservedWeights(ctx, instance, r.RestConfig)
+
 	// update status.recommendedBaseline if a new winner identified
 	instance.Status.SetRecommendedBaseline(instance.Spec.VersionInfo.Baseline.Name)
 

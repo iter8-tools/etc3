@@ -21,7 +21,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
+	"reflect"
+	"strings"
 
+	"github.com/PaesslerAG/jsonpath"
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
@@ -239,4 +243,97 @@ func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []
 	}
 
 	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{})
+}
+
+func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg *rest.Config) (*int32, error) {
+	log := util.Logger(ctx)
+	this := "observeWeight"
+	log.Info(this+" called", "objRef", objRef)
+	defer log.Info(this + " ended")
+
+	dr, err := getDynamicResourceInterface(restCfg, objRef)
+	if err != nil {
+		log.Error(err, "Unable to get dynamic resource interface")
+		return nil, err
+	}
+
+	// read object from cluster using unstructured client
+	obj, err := dr.Get(ctx, objRef.Name, metav1.GetOptions{})
+	if err != nil {
+		log.Error(err, "Unable to read object in cluster", "name", objRef.Name)
+		return nil, err
+	}
+	log.Info(this, "referenced object", obj)
+
+	// convert unstructured object to JSON object
+	resultJSON, err := obj.MarshalJSON()
+	if err != nil {
+		log.Error(err, "Unable to convert resource to JSON object")
+		return nil, err
+	}
+	log.Info(this, "as JSON", resultJSON)
+
+	// convert JSON object to Go map
+	resultObj := make(map[string]interface{})
+	err = json.Unmarshal(resultJSON, &resultObj)
+	if err != nil {
+		log.Error(err, "Unable to parse JSON object")
+		return nil, err
+	}
+	log.Info(this, "Go object", resultObj)
+
+	// convert fieldPath to jsonpath notation; see: https://pkg.go.dev/github.com/PaesslerAG/jsonpath
+	path := strings.ReplaceAll(objRef.FieldPath, "/", ".")
+	if len(path) == 0 {
+		return nil, errors.New("Field path must be of non-zero length")
+	}
+	prefix := "$"
+	if path[0] != '.' {
+		prefix = prefix + "."
+	}
+	path = prefix + path
+	log.Info(this, "path", path)
+
+	// read the value refereced by FieldPath (path)
+	value, err := jsonpath.Get(path, resultObj)
+	if err != nil {
+		log.Error(err, "Unable to read value", "objRef", objRef.FieldPath, "path", path)
+		return nil, err
+	}
+	log.Info(this, "value", value)
+
+	// We expect an integer; convert
+	fValue, ok := value.(float64)
+	if !ok {
+		err := errors.New("Observed field is not of expected type")
+		log.Error(err, "path to non-integer value", "ref", objRef, "path", path, "weight", value, "type", reflect.TypeOf(value))
+		return nil, errors.New("Weight is not an integer value")
+	}
+	int32Value := int32(math.Round(fValue))
+
+	return &int32Value, nil
+}
+
+func updateObservedWeights(ctx context.Context, instance *v2alpha1.Experiment, restCfg *rest.Config) {
+	observedWeights := make([]v2alpha1.WeightData, 0)
+	b := instance.Spec.VersionInfo.Baseline
+	if b.WeightObjRef != nil {
+		w, err := observeWeight(ctx, b.WeightObjRef, restCfg)
+		// if an error occurs, we ignore it (was logged in observeWeight())
+		// it just means that no weight was observed for this version
+		if err != nil {
+			observedWeights = append(observedWeights, v2alpha1.WeightData{Name: b.Name, Value: *w})
+		}
+	}
+	for _, c := range instance.Spec.VersionInfo.Candidates {
+		if c.WeightObjRef != nil {
+			w, err := observeWeight(ctx, c.WeightObjRef, restCfg)
+			// if an error occurs, we ignore it (was logged in observeWeight())
+			// it just means that no weight was observed for this version
+			if err != nil {
+				observedWeights = append(observedWeights, v2alpha1.WeightData{Name: c.Name, Value: *w})
+			}
+		}
+	}
+	instance.Status.CurrentWeightDistribution = observedWeights
 }

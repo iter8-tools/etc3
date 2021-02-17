@@ -27,6 +27,66 @@ import (
 	"github.com/iter8-tools/etc3/util"
 )
 
+var _ = Describe("Reading Weights", func() {
+	var namespace string
+	BeforeEach(func() {
+		namespace = "default"
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+	})
+	Context("When try to read field from object", func() {
+		name := "read"
+		var experiment *v2alpha1.Experiment
+		var objRef *corev1.ObjectReference
+		JustBeforeEach(func() {
+			experiment = v2alpha1.NewExperiment(name, namespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithDuration(10, 5, 3).
+				Build()
+			objRef = &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha1",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+			}
+		})
+		It("A FieldPath returns a valid value", func() {
+			objRef.FieldPath = "/spec/duration/maxLoops"
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			value, _ := observeWeight(ctx(), objRef, cfg)
+			Expect(*value).To(Equal(int32(3)))
+		})
+		It("No FieldPath returns an error", func() {
+			experiment.Name = "no-fieldpath"
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			_, err := observeWeight(ctx(), objRef, cfg)
+			Expect(err).To(HaveOccurred())
+		})
+		It("Invalid FieldPath returns an error", func() {
+			experiment.Name = "invalid-fieldpath"
+			objRef.FieldPath = "/invalid/path"
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			_, err := observeWeight(ctx(), objRef, cfg)
+			Expect(err).To(HaveOccurred())
+		})
+		It("Valid path to non int returns an error", func() {
+			experiment.Name = "non-int-fieldpath"
+			objRef.FieldPath = "/spec/target"
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			_, err := observeWeight(ctx(), objRef, cfg)
+			Expect(err).To(HaveOccurred())
+		})
+		It("Reference to invalid object returns an error", func() {
+			experiment.Name = "invalid-ref"
+			objRef.Name = "no-such-object"
+			objRef.FieldPath = "/spec/duration/maxLoops"
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			_, err := observeWeight(ctx(), objRef, cfg)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
+
 var _ = Describe("Weight Patching", func() {
 	restCfg, _ := config.GetConfig()
 	namespace := "default"
