@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -154,6 +155,10 @@ func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *corev1.Obj
 		candidate.WeightObjRef = objRef
 	}
 
+	if b.Spec.VersionInfo == nil {
+		b.Spec.VersionInfo = &VersionInfo{}
+	}
+
 	for _, c := range b.Spec.VersionInfo.Candidates {
 		if c.Name == name {
 			// overwrite
@@ -217,5 +222,52 @@ func (b *ExperimentBuilder) WithRecommendedWeight(name string, weight int32) *Ex
 // WithCondition ..
 func (b *ExperimentBuilder) WithCondition(condition ExperimentConditionType, status corev1.ConditionStatus, reason string, messageFormat string, messageA ...interface{}) *ExperimentBuilder {
 	b.Status.MarkCondition(condition, status, reason, messageFormat, messageA...)
+	return b
+}
+
+// WithAction ..
+func (b *ExperimentBuilder) WithAction(key string, tasks []TaskSpec) *ExperimentBuilder {
+	if b.Spec.Strategy.Actions == nil {
+		b.Spec.Strategy.Actions = make(ActionMap)
+	}
+	b.Spec.Strategy.Actions[key] = tasks
+	return b
+}
+
+// WithReward ..
+func (b *ExperimentBuilder) WithReward(metric Metric, preferredDirection PreferredDirectionType) *ExperimentBuilder {
+	if b.Spec.Criteria == nil {
+		b.Spec.Criteria = &Criteria{}
+	}
+	name := metric.Namespace + "/" + metric.Name
+	b.Spec.Criteria.Reward = &Reward{
+		Metric:             name,
+		PreferredDirection: preferredDirection,
+	}
+	return b
+}
+
+// WithIndicator ..
+func (b *ExperimentBuilder) WithIndicator(metric Metric) *ExperimentBuilder {
+	if b.Spec.Criteria == nil {
+		b.Spec.Criteria = &Criteria{}
+	}
+	name := metric.Namespace + "/" + metric.Name
+	b.Spec.Criteria.Indicators = append(b.Spec.Criteria.Indicators, name)
+	return b
+}
+
+// WithObjective ..
+func (b *ExperimentBuilder) WithObjective(metric Metric, upper *resource.Quantity, lower *resource.Quantity, rollback bool) *ExperimentBuilder {
+	if b.Spec.Criteria == nil {
+		b.Spec.Criteria = &Criteria{}
+	}
+	name := metric.Namespace + "/" + metric.Name
+	b.Spec.Criteria.Objectives = append(b.Spec.Criteria.Objectives, Objective{
+		Metric:            name,
+		UpperLimit:        upper,
+		LowerLimit:        lower,
+		RollbackOnFailure: &rollback,
+	})
 	return b
 }

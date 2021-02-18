@@ -299,22 +299,6 @@ func (s *ExperimentSpec) InitializeDeploymentPattern() {
 	}
 }
 
-// UniformSplit returns the default (uniform) split for non-bluegreen experiments
-func UniformSplit(numberOfCandidates int, maxCandidateWeight int32) []int32 {
-	numCandidates := int32(numberOfCandidates)
-	split := make([]int32, numberOfCandidates+1)
-	if len(split) == 0 {
-		return split
-	}
-	weight := maxCandidateWeight / numCandidates
-	// candidate will get any "extra" caused by rounding
-	split[0] = 100 - numCandidates*weight
-	for i := 1; i <= int(numberOfCandidates); i++ {
-		split[i] = weight
-	}
-	return split
-}
-
 // InitializeWeights initializes weights if not already set
 func (s *ExperimentSpec) InitializeWeights() {
 	s.InitializeMaxCandidateWeight()

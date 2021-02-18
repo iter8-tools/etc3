@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -165,16 +165,89 @@ var _ = Describe("Handler Initialization", func() {
 	})
 })
 
+var _ = Describe("VersionInfo", func() {
+	Context("When count versions", func() {
+		builder := v2alpha1.NewExperiment("test", "default").WithTarget("target")
+		It("should count correctly", func() {
+			experiment := builder.DeepCopy().Build()
+			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
+			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(0))
+
+			experiment = builder.DeepCopy().
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
+			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(0))
+
+			experiment = builder.DeepCopy().
+				WithCandidateVersion("candidate", nil).
+				Build()
+				//			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
+			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(1))
+
+			experiment = builder.DeepCopy().
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate", nil).
+				Build()
+			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
+			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(1))
+
+			experiment = builder.DeepCopy().
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate", nil).
+				WithCandidateVersion("c", nil).
+				Build()
+			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
+			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(2))
+		})
+	})
+})
+
+var _ = Describe("Criteria", func() {
+	Context("Criteria", func() {
+		builder := v2alpha1.NewExperiment("test", "default").WithTarget("target")
+		It("", func() {
+			experiment := builder.DeepCopy().Build()
+			Expect(experiment.Spec.GetReward()).Should(BeNil())
+
+			experiment = builder.DeepCopy().
+				WithReward(*v2alpha1.NewMetric("metric", "default").Build(), v2alpha1.PreferredDirectionHigher).
+				Build()
+			Expect(experiment.Spec.GetReward()).ShouldNot(BeNil())
+		})
+	})
+})
+
 var _ = Describe("Generated Code", func() {
-	Context("When copy object", func() {
-		It("the copy should be the same", func() {
-			experiment := v2alpha1.NewExperiment("test", "default").
+	Context("When a Metric object is copied", func() {
+		Specify("the copy should be the same as the original", func() {
+			metricBuilder := v2alpha1.NewMetric("reward", "default").
+				WithDescription("reward metric").
+				WithParams(map[string]string{"query": "query"}).
+				WithProvider("prometheus").
+				WithType(v2alpha1.CounterMetricType).
+				WithUnits("ms").
+				WithSampleSize("sample", "default")
+			metric := metricBuilder.Build()
+			metricList := *&v2alpha1.MetricList{
+				Items: []v2alpha1.Metric{*metric},
+			}
+
+			Expect(reflect.DeepEqual(metricBuilder, metricBuilder.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(metric, metric.DeepCopyObject())).Should(BeTrue())
+			Expect(len(metricList.Items)).Should(Equal(len(metricList.DeepCopy().Items)))
+		})
+	})
+
+	Context("When an Experiment object is copied", func() {
+		Specify("the copy should be the same as the original", func() {
+			experimentBuilder := v2alpha1.NewExperiment("test", "default").
 				WithTarget("copy").
 				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithDeploymentPattern(v2alpha1.DeploymentPatternFixedSplit).
-				WithHandlers(map[string]string{"start": "st", "finish": "fin", "failure": "fail", "rollback": "back"}).
+				WithHandlers(map[string]string{"start": "st", "finish": "fin", "failure": "fail", "rollback": "back", "loop": "lo"}).
 				WithDuration(3, 2, 1).
-				WithRequestCount("request-count").
+				WithBaselineVersion("baseline", nil).
 				WithBaselineVersion("baseline", &corev1.ObjectReference{
 					Kind:       "kind",
 					Namespace:  "namespace",
@@ -182,11 +255,17 @@ var _ = Describe("Generated Code", func() {
 					APIVersion: "apiVersion",
 					FieldPath:  "path",
 				}).
-				WithCandidateVersion("candidate", nil).
+				WithCandidateVersion("candidate", nil).WithCandidateVersion("candidate", nil).
 				WithCurrentWeight("baseline", 25).WithCurrentWeight("candidate", 75).
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
+				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
 				WithCondition(v2alpha1.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha1.ReasonHandlerFailed, "foo %s", "bar").
-				Build()
+				WithAction("start", []v2alpha1.TaskSpec{{Library: "library", Task: "task"}}).
+				WithRequestCount("request-count").
+				WithReward(*v2alpha1.NewMetric("reward", "default").Build(), v2alpha1.PreferredDirectionHigher).
+				WithIndicator(*v2alpha1.NewMetric("indicator", "default").Build()).
+				WithObjective(*v2alpha1.NewMetric("reward", "default").Build(), nil, nil, false)
+			experiment := experimentBuilder.Build()
 			now := metav1.Now()
 			message := "message"
 			winner := "winner"
@@ -236,16 +315,13 @@ var _ = Describe("Generated Code", func() {
 					},
 				},
 			}
+			experimentList := *&v2alpha1.ExperimentList{
+				Items: []v2alpha1.Experiment{*experiment},
+			}
+
+			Expect(reflect.DeepEqual(experimentBuilder, experimentBuilder.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment, experiment.DeepCopyObject())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment, experiment.DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.WinnerAssessment, experiment.Status.Analysis.WinnerAssessment.DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Status.Analysis.WinnerAssessment.Data, experiment.Status.Analysis.WinnerAssessment.Data.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments, experiment.Status.Analysis.VersionAssessments.DeepCopy())).Should(BeTrue())
-			//Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments.Data, experiment.Status.Analysis.VersionAssessments.Data.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.Weights, experiment.Status.Analysis.Weights.DeepCopy())).Should(BeTrue())
-			//Expect(reflect.DeepEqual(experiment.Status.Analysis.Weights.Data, experiment.Status.Analysis.Weights.Data.DeepCopy())).Should(BeTrue())
+			Expect(len(experimentList.Items)).Should(Equal(len(experimentList.DeepCopy().Items)))
 		})
 	})
 })
