@@ -129,12 +129,8 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if err := r.Status().Update(ctx, instance); err != nil {
 			log.Error(err, "Failed to update Status after initialization.")
 		}
-		// r.recordExperimentInitialized(ctx, instance, "Experiment status initialized")
 		r.recordExperimentProgress(ctx, instance,
 			v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
-		// r.recordEvent(ctx, instance,
-		// 	v2alpha1.ExperimentConditionExperimentCompleted, v1.ConditionFalse,
-		// 	v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
 		return r.endRequest(ctx, instance)
 	}
 	log.Info("Status initialized")
@@ -180,7 +176,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// advance stage from Waiting to Initializing
 	// when we advance for the first time, we exit to force update; will be retriggered
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageInitializing); ok {
-		log.Info("Reconcile ending after advance to Initializing")
+		log.Info("Update stage advance to: Initializing")
 		return r.endRequest(ctx, instance)
 	}
 
@@ -200,7 +196,8 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// advance stage from Initializing to Running
 	// when we advance for the first time, we exit to force update; will be retriggered
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageRunning); ok {
-		log.Info("Reconcile ending after advance to Running")
+		log.Info("Updating stage advance to: Running")
+		updateObservedWeights(ctx, instance, r.RestConfig)
 		return r.endRequest(ctx, instance)
 	}
 
@@ -342,6 +339,8 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	// advance stage from Finishing to Completed
 	// when we do so for the first time, record the completion event and trigger the next experiment
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
+		log.Info("Updating stage advance to: Completed")
+		updateObservedWeights(ctx, instance, r.RestConfig)
 		r.recordExperimentCompleted(ctx, instance, msg)
 		r.updateStatus(ctx, instance)
 		r.triggerNextExperiment(ctx, instance)
@@ -592,7 +591,6 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
 		return r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
 			handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }})
-		//map[string]launchModifier{})
 	}
 
 	// successfully launched the handler; run any modifier

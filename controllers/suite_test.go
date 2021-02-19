@@ -26,7 +26,9 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -119,11 +121,16 @@ var _ = BeforeSuite(func(done Done) {
 		WithRequestCount("request-count").
 		WithEndpoint("http://iter8-analytics:8080").
 		WithHandlersDir("../test/handlers").
-		WithNamespace("default").
+		WithNamespace("iter8").
 		Build()
 
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).ToNot(BeNil())
+
+	// Create iter8 namespace for use by some tests
+	Expect(k8sClient.Create(ctx(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
+	})).Should(Succeed())
 
 	testTransport := &testHTTP{
 		analysis: &v2alpha1.Analysis{

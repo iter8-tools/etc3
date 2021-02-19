@@ -54,7 +54,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
-				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
+				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				return err == nil
 			}, 3).Should(BeTrue())
 		})
@@ -78,7 +78,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
-				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
+				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				return err == nil
 			}, 10).Should(BeTrue())
 			By("Checking that the experiment has executed all iterations")
@@ -115,7 +115,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, &testLoop)
-				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: namespace}, handlerJob)
+				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				return err == nil
 			}, 10).Should(BeTrue())
 

@@ -59,20 +59,51 @@ var _ = Describe("Experiment Validation", func() {
 	Context("When creating a valid new Experiment", func() {
 		It("Should successfully complete late initialization", func() {
 			By("Providing a request-count metric")
-			m := v2alpha1.NewMetric("request-count", "default").
+			m := v2alpha1.NewMetric("request-count", "iter8").
 				WithType(v2alpha1.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
+			// ns := &corev1.Namespace{
+			// 	ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
+			// }
+			// Expect(k8sClient.Create(ctx, ns)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
-			createdMetric := &v2alpha1.Metric{}
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "default"}, createdMetric)
-				if err != nil {
-					return false
-				}
-				return true
-			}).Should(BeTrue())
+			// createdMetric := &v2alpha1.Metric{}
+			// Eventually(func() bool {
+			// 	err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "iter8"}, createdMetric)
+			// 	if err != nil {
+			// 		return false
+			// 	}
+			// 	return true
+			// }).Should(BeTrue())
+			By("creating a reward metric")
+			reward := v2alpha1.NewMetric("reward", "default").
+				WithType(v2alpha1.CounterMetricType).
+				WithParams(map[string]string{"param": "value"}).
+				WithProvider("prometheus").
+				Build()
+			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
+			By("creating an indicator")
+			indicator := v2alpha1.NewMetric("indicataor", "default").
+				WithType(v2alpha1.CounterMetricType).
+				WithParams(map[string]string{"param": "value"}).
+				WithProvider("prometheus").
+				Build()
+			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
+			By("creating an objective")
+			objective := v2alpha1.NewMetric("objective", "default").
+				WithType(v2alpha1.CounterMetricType).
+				WithParams(map[string]string{"param": "value"}).
+				WithProvider("prometheus").
+				Build()
+			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
+			By("creating an objective that is not in the cluster")
+			fake := v2alpha1.NewMetric("fake", "default").
+				WithType(v2alpha1.CounterMetricType).
+				WithParams(map[string]string{"param": "value"}).
+				WithProvider("prometheus").
+				Build()
 
 			By("Creating a new Experiment")
 			testName := "late-initialization"
@@ -82,6 +113,10 @@ var _ = Describe("Experiment Validation", func() {
 				WithTestingPattern(v2alpha1.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
+				WithReward(*reward, v2alpha1.PreferredDirectionHigher).
+				WithIndicator(*indicator).
+				WithObjective(*objective, nil, nil, false).
+				WithObjective(*fake, nil, nil, true).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 

@@ -85,6 +85,36 @@ var _ = Describe("Reading Weights", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
+	Context("When create an experiment", func() {
+		name := "observe-weights"
+		It("should read the weights", func() {
+			objRef := &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha1",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+				FieldPath:  "/spec/duration/maxLoops",
+			}
+			experiment := v2alpha1.NewExperiment(name, namespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithDuration(10, 5, 3).
+				WithBaselineVersion("baseline", objRef).
+				WithCandidateVersion("candidate", objRef).
+				Build()
+
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			Eventually(func() bool {
+				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+					return exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
+						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
+						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
+						exp.Status.CurrentWeightDistribution[1].Value == 3
+				})
+			})
+		})
+	})
 })
 
 var _ = Describe("Weight Patching", func() {

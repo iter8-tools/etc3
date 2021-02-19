@@ -315,6 +315,11 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 }
 
 func updateObservedWeights(ctx context.Context, instance *v2alpha1.Experiment, restCfg *rest.Config) {
+	// cannot proceed if no version info
+	if instance.Spec.VersionInfo == nil {
+		return
+	}
+
 	observedWeights := make([]v2alpha1.WeightData, 0)
 	b := instance.Spec.VersionInfo.Baseline
 	if b.WeightObjRef != nil {
