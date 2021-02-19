@@ -1,10 +1,14 @@
 package util
 
 import (
+	"context"
 	"io/ioutil"
+	"reflect"
 	"testing"
 
+	"github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/stretchr/testify/assert"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func TestCompletePath(t *testing.T) {
@@ -18,4 +22,24 @@ func TestCompletePath(t *testing.T) {
 func ExampleCompletePath() {
 	filePath := CompletePath("../test/data", "expwithextrafields.yaml")
 	_, _ = ioutil.ReadFile(filePath)
+}
+
+func TestContext(t *testing.T) {
+	ctx := context.Background()
+
+	lg := ctrl.Log.WithName("etc3").WithName("util").WithName("test")
+	ctx = context.WithValue(ctx, LoggerKey, lg)
+
+	iterations := int32(5)
+	recommendation := "winner"
+	message := "message"
+	status := v2alpha1.ExperimentStatus{
+		CompletedIterations: &iterations,
+		RecommendedBaseline: &recommendation,
+		Message:             &message,
+	}
+	ctx = context.WithValue(ctx, OriginalStatusKey, &status)
+
+	assert.Equal(t, lg, Logger(ctx))
+	assert.True(t, reflect.DeepEqual(OriginalStatus(ctx), &status))
 }
