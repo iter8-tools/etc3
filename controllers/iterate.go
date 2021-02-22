@@ -111,6 +111,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 		return r.failExperiment(ctx, instance, err)
 	}
 
+	// after weights have been redistributed, update Status.CurrentWeightDistribution
 	updateObservedWeights(ctx, instance, r.RestConfig)
 
 	// update status.recommendedBaseline if a new winner identified
