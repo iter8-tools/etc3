@@ -64,19 +64,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
-			// ns := &corev1.Namespace{
-			// 	ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
-			// }
-			// Expect(k8sClient.Create(ctx, ns)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
-			// createdMetric := &v2alpha1.Metric{}
-			// Eventually(func() bool {
-			// 	err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "iter8"}, createdMetric)
-			// 	if err != nil {
-			// 		return false
-			// 	}
-			// 	return true
-			// }).Should(BeTrue())
 			By("creating a reward metric")
 			reward := v2alpha1.NewMetric("reward", "default").
 				WithType(v2alpha1.CounterMetricType).

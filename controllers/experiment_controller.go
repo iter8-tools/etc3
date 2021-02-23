@@ -39,6 +39,7 @@ import (
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // experiment.controller.go - implements reconcile loop
@@ -94,34 +95,10 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	log.Info("Reconcile", "instance", instance)
 	ctx = context.WithValue(ctx, util.OriginalStatusKey, instance.Status.DeepCopy())
 
-	// Add FINALIZER if not present; run finalizer if deleting experiment
-	if instance.ObjectMeta.DeletionTimestamp.IsZero() {
-		// The experiment is not being deleted, so if it doesn't have a finalizer we add one
-		// and return; update will retrigger reconcile
-		if !containsString(instance.ObjectMeta.Finalizers, iter8FinalizerName) {
-			instance.ObjectMeta.Finalizers = append(instance.ObjectMeta.Finalizers, iter8FinalizerName)
-			if err := r.Update(ctx, instance); err != nil {
-				return ctrl.Result{}, err
-			}
-		}
-	} else {
-		// the experiment is being deleted, look for a finalizer and run it
-		if containsString(instance.ObjectMeta.Finalizers, iter8FinalizerName) {
-			if err := r.finalizeExperiment(ctx, instance); err != nil {
-				// if failed, return error so can retry
-				return ctrl.Result{}, err
-			}
-
-			instance.ObjectMeta.Finalizers = removeString(instance.ObjectMeta.Finalizers, iter8FinalizerName)
-			if err := r.Update(ctx, instance); err != nil {
-				return ctrl.Result{}, err
-			}
-			// on success, remove finalizer so that deletion can proceed
-			return ctrl.Result{}, nil
-		}
-		// is being deleted and there was no finalizer; just exit
-		return ctrl.Result{}, nil
-	}
+	// check that there aren't any orphaned handler jobs
+	// or experiments stuck waiting to acquire a target
+	r.cleanupDeletedExperiments(ctx, instance)
+	r.triggerWaitingExperiments(ctx, instance)
 
 	// If instance has never been seen before, initialize status object
 	if instance.Status.InitTime == nil {
@@ -347,7 +324,7 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 		updateObservedWeights(ctx, instance, r.RestConfig)
 		r.recordExperimentCompleted(ctx, instance, msg)
 		r.updateStatus(ctx, instance)
-		r.triggerNextExperiment(ctx, instance)
+		r.triggerNextExperiment(ctx, instance.Spec.Target, instance)
 	}
 
 	return r.endRequest(ctx, instance)
@@ -419,46 +396,6 @@ func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alp
 			return err
 		}
 	}
-	return nil
-}
-
-func (r *ExperimentReconciler) finalizeExperiment(ctx context.Context, instance *v2alpha1.Experiment) error {
-	log := util.Logger(ctx)
-	log.Info("finalizeExperiment called")
-	defer log.Info("finalizeExperiment completed")
-
-	// The experiment finalizer does the following:
-	//     1. Delete any handler jobs
-	//     2. Trigger any waiting experiments
-
-	//     1. Delete any handler jobs (we ignore any errors; we're ending)
-	for _, handlerType := range []HandlerType{HandlerTypeStart, HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback} {
-		handler := r.GetHandler(instance, handlerType)
-		if handler == nil {
-			continue
-		}
-
-		if handlerType == HandlerTypeLoop {
-			for loop := 1; loop <= int(instance.Spec.GetMaxLoops()); loop++ {
-				log.Info("finalizeExperiment deleting job", "handler", handler, "loop", loop)
-				r.deleteHandlerJob(ctx, instance, handler, &loop)
-			}
-		} else {
-			log.Info("finalizeExperiment deleting job", "handler", handler)
-			r.deleteHandlerJob(ctx, instance, handler, nil)
-		}
-		log.Info("finalizeExperiment deleting job", "handler", handler)
-	}
-
-	//     2. Trigger any waiting experiments
-	// endExperiment() triggers any waiting experiment
-	log.Info("finalizeExperiment triggering next experiment")
-	// to avoid a possible race condition, we mark the experiment completed
-	// and update its status before triggering the next experiment
-	r.recordExperimentCompleted(ctx, instance, "Experiment deleted")
-	r.updateStatus(ctx, instance)
-	r.triggerNextExperiment(ctx, instance)
-
 	return nil
 }
 
@@ -612,4 +549,82 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	// tell caller to stop (to wait for handler to complete)
 	result, err := r.endRequest(ctx, instance)
 	return stop, result, err
+}
+
+func (r *ExperimentReconciler) cleanupDeletedExperiments(ctx context.Context, instance *v2alpha1.Experiment) {
+	log := util.Logger(ctx)
+	log.Info("cleanupDeletedExperiments called")
+	defer log.Info("cleanupDeletedExperiments completed")
+
+	// Identify any experiments that have been deleted
+	// Delete any remaining jobs associated with them
+
+	// to identify experiments get list of jobs and map to experiments via labels
+	experiments := r.identifyDeletedExperiments(ctx, r.identifyExperimentsFromHandlers(ctx))
+	for key, jobs := range experiments {
+		for _, job := range jobs {
+			log.Info("Deleting handler job", "experiment", key, "jobNamespace", job.ObjectMeta.Namespace, "jobName", job.ObjectMeta.Name)
+			r.Delete(ctx, &job, client.PropagationPolicy(metav1.DeletePropagationBackground))
+		}
+	}
+}
+
+func (r *ExperimentReconciler) identifyExperimentsFromHandlers(ctx context.Context) map[string][]batchv1.Job {
+	log := util.Logger(ctx)
+	log.Info("identifyExperimentsFromHandlers called")
+	defer log.Info("identifyExperimentsFromHandlers completed")
+
+	experimentToJobs := map[string][]batchv1.Job{}
+
+	jobs := &batchv1.JobList{}
+	if err := r.List(ctx, jobs); err != nil {
+		log.Error(err, "activeContendersForTarget Unable to list experiments")
+		return experimentToJobs
+	}
+	for _, job := range jobs.Items {
+		nm, ok := job.ObjectMeta.GetLabels()[LabelExperimentName]
+		if !ok {
+			// no label LabelExperimentName; ignore
+			continue
+		}
+		ns, ok := job.ObjectMeta.GetLabels()[LabelExperimentNamespace]
+		if !ok {
+			// no label LabelExperimentNamespace; ignore
+			continue
+		}
+		key := ns + "/" + nm
+		log.Info("identifyExperimentsFromHandlers", "key", key)
+		if experimentToJobs[key] == nil {
+			experimentToJobs[key] = []batchv1.Job{}
+		}
+		experimentToJobs[key] = append(experimentToJobs[key], job)
+	}
+
+	return experimentToJobs
+}
+
+func (r *ExperimentReconciler) identifyDeletedExperiments(ctx context.Context, experimentToJobs map[string][]batchv1.Job) map[string][]batchv1.Job {
+	log := util.Logger(ctx)
+	log.Info("identifyDeletedExperiments called")
+	defer log.Info("identifyDeletedExperiments completed")
+
+	deletedExperimentToJobs := map[string][]batchv1.Job{}
+
+	for key, value := range experimentToJobs {
+		splitKey := strings.Split(key, "/")
+		experiment := v2alpha1.Experiment{}
+		err := r.Get(ctx, types.NamespacedName{Name: splitKey[1], Namespace: splitKey[0]}, &experiment)
+		if err == nil {
+			// we found the experiment, it is not deleted
+			continue
+		}
+		if !errors.IsNotFound(err) {
+			// some other error; ignore
+			continue
+		}
+		// the experiment is not present
+		log.Info("identifyDeletedExperiments", "key", key)
+		deletedExperimentToJobs[key] = value
+	}
+	return deletedExperimentToJobs
 }
