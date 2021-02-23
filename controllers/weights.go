@@ -247,9 +247,8 @@ func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []
 
 func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg *rest.Config) (*int32, error) {
 	log := util.Logger(ctx)
-	this := "observeWeight"
-	log.Info(this+" called", "objRef", objRef)
-	defer log.Info(this + " ended")
+	log.Info("observeWeight called", "objRef", objRef)
+	defer log.Info("observeWeight ended")
 
 	dr, err := getDynamicResourceInterface(restCfg, objRef)
 	if err != nil {
@@ -263,7 +262,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 		log.Error(err, "Unable to read object in cluster", "name", objRef.Name)
 		return nil, err
 	}
-	log.Info(this, "referenced object", obj)
+	log.Info("observeWeight", "referenced object", obj)
 
 	// convert unstructured object to JSON object
 	resultJSON, err := obj.MarshalJSON()
@@ -271,7 +270,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 		log.Error(err, "Unable to convert resource to JSON object")
 		return nil, err
 	}
-	log.Info(this, "as JSON", resultJSON)
+	log.Info("observeWeight", "as JSON", resultJSON)
 
 	// convert JSON object to Go map
 	resultObj := make(map[string]interface{})
@@ -280,7 +279,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 		log.Error(err, "Unable to parse JSON object")
 		return nil, err
 	}
-	log.Info(this, "Go object", resultObj)
+	log.Info("observeWeight", "Go object", resultObj)
 
 	// convert fieldPath to jsonpath notation; see: https://pkg.go.dev/github.com/PaesslerAG/jsonpath
 	path := strings.ReplaceAll(objRef.FieldPath, "/", ".")
@@ -292,7 +291,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 		prefix = prefix + "."
 	}
 	path = prefix + path
-	log.Info(this, "path", path)
+	log.Info("observeWeight", "path", path)
 
 	// read the value refereced by FieldPath (path)
 	value, err := jsonpath.Get(path, resultObj)
@@ -300,7 +299,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 		log.Error(err, "Unable to read value", "objRef", objRef.FieldPath, "path", path)
 		return nil, err
 	}
-	log.Info(this, "value", value)
+	log.Info("observeWeight", "value", value)
 
 	// We expect an integer; convert
 	fValue, ok := value.(float64)
@@ -315,12 +314,20 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 }
 
 func updateObservedWeights(ctx context.Context, instance *v2alpha1.Experiment, restCfg *rest.Config) {
+	log := util.Logger(ctx)
+	log.Info("updateObservedWeights called")
+	defer log.Info("updateObservedWeights  ended")
+
 	// cannot proceed if no version info
 	if instance.Spec.VersionInfo == nil {
 		return
 	}
 
 	observedWeights := make([]v2alpha1.WeightData, 0)
+	missing := []string{}
+	total := int32(0)
+
+	// baseline
 	b := instance.Spec.VersionInfo.Baseline
 	if b.WeightObjRef != nil {
 		w, err := observeWeight(ctx, b.WeightObjRef, restCfg)
@@ -328,8 +335,13 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha1.Experiment, r
 		// it just means that no weight was observed for this version
 		if err != nil {
 			observedWeights = append(observedWeights, v2alpha1.WeightData{Name: b.Name, Value: *w})
+			total += *w
+		} else if missing == nil {
+			missing = append(missing, b.Name)
 		}
 	}
+
+	// candidates
 	for _, c := range instance.Spec.VersionInfo.Candidates {
 		if c.WeightObjRef != nil {
 			w, err := observeWeight(ctx, c.WeightObjRef, restCfg)
@@ -337,8 +349,22 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha1.Experiment, r
 			// it just means that no weight was observed for this version
 			if err != nil {
 				observedWeights = append(observedWeights, v2alpha1.WeightData{Name: c.Name, Value: *w})
+				total += *w
+			} else if missing == nil {
+				missing = append(missing, c.Name)
 			}
 		}
 	}
+
+	// if there was one missing we can compute it; otherwise we'll leave gaps in the observed weights
+	if len(missing) == 1 {
+		log.Info("Computing weight", "missing", missing[0])
+		w := int32(100) - total
+		observedWeights = append(observedWeights, v2alpha1.WeightData{Name: missing[0], Value: w})
+	} else if len(missing) > 1 {
+		log.Info("Multiple weights could not be read from cluster", "missing", missing)
+	}
+
+	// assign list of observed weights
 	instance.Status.CurrentWeightDistribution = observedWeights
 }
