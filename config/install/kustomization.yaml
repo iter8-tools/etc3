@@ -1,7 +1,6 @@
 namePrefix: iter8-
 namespace: iter8-system
 resources:
-- handlers
 - ../crd
 - ../rbac-iter8
 - ../manager
