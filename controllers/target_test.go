@@ -206,10 +206,10 @@ var _ = Describe("Finalizer", func() {
 			exp := &v2alpha1.Experiment{}
 			Expect(k8sClient.Get(ctx(), types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())
 			Expect(k8sClient.Delete(ctx(), exp, client.PropagationPolicy(metav1.DeletePropagationBackground))).Should(Succeed())
-			Eventually(func() bool { return isDeleted(hasName, testNamespace) }, 5).Should(BeTrue())
+			Eventually(func() bool { return isDeleted(hasName, testNamespace) }, 10).Should(BeTrue())
 
 			By("Allowing the second to acquire the target and proceed")
-			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }, 5).Should(BeTrue())
+			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }).Should(BeTrue())
 			// wantsName should be run and complete
 			Eventually(func() bool {
 				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {

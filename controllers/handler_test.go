@@ -112,17 +112,19 @@ var _ = Describe("Handlers Run", func() {
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the loop handler jobs are created")
-			handlerJob := &batchv1.Job{}
-			jbNm := jobName(experiment, handler, &testLoop)
 			Eventually(func() bool {
+				handlerJob := &batchv1.Job{}
+				jbNm := jobName(experiment, handler, &testLoop)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				return err == nil
 			}, 10).Should(BeTrue())
 
 			By("Check that delete handler jobs works")
 			// Successful case
-			Expect(k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)).Should(Succeed())
-			Expect(reconciler.deleteHandlerJob(ctx(), *handlerJob)).Should(Succeed())
+			Expect(reconciler.deleteHandlerJob(ctx(), experiment, &handler, &testLoop)).Should(Succeed())
+			// Also a successful case (not found jobs are ignored)
+			notAHandler := "notahandler"
+			Expect(reconciler.deleteHandlerJob(ctx(), experiment, &notAHandler, nil)).Should(Succeed())
 		})
 	})
 

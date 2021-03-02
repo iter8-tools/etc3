@@ -352,28 +352,19 @@ func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v
 	return HandlerStatusRunning
 }
 
-// func (r *ExperimentReconciler) deleteHandlerJob(ctx context.Context, instance *v2alpha1.Experiment, handler *string, handlerInstance *int) error {
-// 	log := util.Logger(ctx)
-// 	log.Info("deleteHandlerJob called", "handler", handler)
-// 	defer log.Info("deleteHandlerJob completed")
-
-// 	handlerJob, err := r.IsHandlerLaunched(ctx, instance, *handler, handlerInstance)
-// 	if err != nil {
-// 		if !errors.IsNotFound(err) {
-// 			log.Info("Unable to determine if handler launched", "handler", handler)
-// 			return err
-// 		}
-// 		return nil
-// 	}
-// 	err = r.Delete(ctx, handlerJob, client.PropagationPolicy(metav1.DeletePropagationBackground))
-// 	return err
-// }
-
-func (r *ExperimentReconciler) deleteHandlerJob(ctx context.Context, job batchv1.Job) error {
+func (r *ExperimentReconciler) deleteHandlerJob(ctx context.Context, instance *v2alpha1.Experiment, handler *string, handlerInstance *int) error {
 	log := util.Logger(ctx)
 	log.Info("deleteHandlerJob called", "job", job.ObjectMeta.Namespace+"/"+job.ObjectMeta.Name)
 	defer log.Info("deleteHandlerJob completed")
 
-	err := r.Delete(ctx, &job, client.PropagationPolicy(metav1.DeletePropagationBackground))
+	handlerJob, err := r.IsHandlerLaunched(ctx, instance, *handler, handlerInstance)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			log.Info("Unable to determine if handler launched", "handler", handler)
+			return err
+		}
+		return nil
+	}
+	err = r.Delete(ctx, handlerJob, client.PropagationPolicy(metav1.DeletePropagationBackground))
 	return err
 }

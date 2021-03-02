@@ -321,7 +321,6 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	// when we do so for the first time, record the completion event and trigger the next experiment
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
 		log.Info("Updating stage advance to: Completed")
-		updateObservedWeights(ctx, instance, r.RestConfig)
 		r.recordExperimentCompleted(ctx, instance, msg)
 		r.updateStatus(ctx, instance)
 		r.triggerNextExperiment(ctx, instance.Spec.Target, instance)
@@ -415,17 +414,20 @@ func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance
 
 	for _, handlerType := range handlerTypes {
 		handler := r.GetHandler(instance, handlerType)
+		if handler == nil {
+			continue
+		}
+
 		if handlerType == HandlerTypeLoop {
-			for l := 1; l <= int(instance.Spec.GetMaxLoops()); l++ {
-				if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, &l); stop {
-					return stop, result, err
-				}
+			for loop := 1; loop <= int(instance.Spec.GetMaxLoops()); loop++ {
+				log.Info("finalizeExperiment deleting job", "handler", handler, "loop", loop)
+				r.deleteHandlerJob(ctx, instance, handler, &loop)
 			}
 		} else {
-			if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, nil); stop {
-				return stop, result, err
-			}
+			log.Info("finalizeExperiment deleting job", "handler", handler)
+			r.deleteHandlerJob(ctx, instance, handler, nil)
 		}
+		log.Info("finalizeExperiment deleting job", "handler", handler)
 	}
 
 	return !stop, dummyResult, nil
@@ -627,4 +629,148 @@ func (r *ExperimentReconciler) identifyDeletedExperiments(ctx context.Context, e
 		deletedExperimentToJobs[key] = value
 	}
 	return deletedExperimentToJobs
+}
+
+// checkHandlersStatus checks the status of a set of handlers and takes appropriate action:
+// If running, tell caller to stop (to wait for completion)
+// If failed, call failExperiment and tell caller to stop
+// If completed successfully, tell caller to continue
+func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance *v2alpha1.Experiment,
+	handlerTypes []HandlerType) (bool, ctrl.Result, error) {
+
+	log := util.Logger(ctx)
+	log.Info("checkHandlersStatus called", "handlerTypes", handlerTypes)
+	defer log.Info("checkHandlersStatus completed")
+
+	dummyResult := ctrl.Result{}
+	stop := true
+
+	for _, handlerType := range handlerTypes {
+		handler := r.GetHandler(instance, handlerType)
+		if handlerType == HandlerTypeLoop {
+			for l := 1; l <= int(instance.Spec.GetMaxLoops()); l++ {
+				if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, &l); stop {
+					return stop, result, err
+				}
+			}
+		} else {
+			if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, nil); stop {
+				return stop, result, err
+			}
+		}
+	}
+
+	return !stop, dummyResult, nil
+}
+
+func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance *v2alpha1.Experiment,
+	handlerType HandlerType, handler *string, handlerInstance *int) (bool, ctrl.Result, error) {
+
+	log := util.Logger(ctx)
+	log.Info("checkHandlerStatus called", "handlerType", handlerType, "handler", handler)
+	defer log.Info("checkHandlerStatus completed")
+
+	dummyResult := ctrl.Result{}
+	stop := true
+
+	switch r.GetHandlerStatus(ctx, instance, handler, handlerInstance) {
+	case HandlerStatusRunning:
+		// exit; keep waiting for handler to complete
+		result, err := r.endRequest(ctx, instance)
+		return stop, result, err
+	case HandlerStatusComplete:
+		switch handlerType {
+		case HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback:
+			// terminal handler completed; we end the experiment
+			result, err := r.endExperiment(ctx, instance, "Experiment Completed")
+			return stop, result, err
+		case HandlerTypeLoop:
+			// we update Status.CurrentWeightDistribution then allow reconcile to continue
+			updateObservedWeights(ctx, instance, r.RestConfig)
+			return !stop, dummyResult, nil
+		default: // HandlerTypeStart
+			// allow reconcile to continue
+			return !stop, dummyResult, nil
+		}
+	case HandlerStatusFailed:
+		// recommend termination when a handler fails
+		result, err := r.endExperiment(ctx, instance, "Failure handler failed")
+		return stop, result, err
+	default: // HandlerStatusNotLaunched, HandlerStatusNoHandler:
+		return !stop, dummyResult, nil
+	}
+
+}
+
+type handlerLaunchPrerequisiteChecker func() bool
+type handlerLaunchOnSuccess func()
+type handlerLaunchModifier struct {
+	// A prerequisite check is an extra check before launching an handler
+	// Used, for example, when launching the start handler to verify that the handler wasn't run in the past
+	prerequisiteCheck handlerLaunchPrerequisiteChecker
+	// the current loop; used by the loop handler to generate unique job names
+	loop *int
+	// Any steps to be called on a successful launch.
+	// A method is used instead of relying on the caller because the launch method recommends whether the caller
+	// should proceed or teminate. The launch method handles the behavior before returning.
+	// Used, for example, when a finish handler launches to advance the stage from Running to Finishing
+	onSuccessfulLaunch handlerLaunchOnSuccess
+}
+
+// launchHandlerWrapper wraps launchHandler with the following additional behavior:
+// Determine if a handler actually exists
+// Run an prerequisite check if one was provided
+// If the handler successfully launches, run any provided modifier
+// If the handler fails to launch, try launching the failure handler
+// Record any succesful launch
+// Return (a) whether or not the caller should stop processing the current Reconcile()
+//        (b) a ctrl.Result to be used by the caller when it should stop
+//        (c) an error if one occured
+// The caller should continue only if there is no handler or the prerequisite check failed
+// If a handler was launched the caller should wait for completion
+// If an error occurred, failExperiment was called and the caller should stop
+func (r *ExperimentReconciler) launchHandlerWrapper(
+	ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType,
+	modifier handlerLaunchModifier) (bool, ctrl.Result, error) {
+
+	log := util.Logger(ctx)
+	log.Info("launchHandlerWrapper called", "handlerType", handlerType)
+	defer log.Info("launchHandlerWrapper completed", "handlerType", handlerType)
+
+	dummyResult := ctrl.Result{}
+	stop := true
+
+	// run handler
+	handler := r.GetHandler(instance, handlerType)
+	if handler == nil {
+		log.Info("launchHandlerWrapper no handler", "handlerType", handlerType)
+		return !stop, dummyResult, nil
+	}
+
+	// verify any prerequisites; if not met, don't launch
+	// For example, to check that the handler hasn't been run in the past
+	if modifier.prerequisiteCheck != nil && !modifier.prerequisiteCheck() {
+		log.Info("launchHandlerWrapper prerequisite check rejected launch", "handlerType", handlerType)
+		return !stop, dummyResult, nil
+		// }
+	}
+
+	if err := r.LaunchHandler(ctx, instance, *handler, modifier.loop); err != nil {
+		// An error occurred trying to launch a handler; recommend immediate termination
+		result, err := r.endExperiment(ctx, instance, "failure executing failure handler")
+		return stop, result, err
+	}
+
+	// successfully launched the handler; run any modifier
+	// an example is to advance the stage after successfully launching a finishHandler
+	if modifier.onSuccessfulLaunch != nil {
+		modifier.onSuccessfulLaunch()
+	}
+
+	// record launch
+	r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
+
+	// tell caller to stop (to wait for handler to complete)
+	result, err := r.endRequest(ctx, instance)
+	return stop, result, err
 }

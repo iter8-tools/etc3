@@ -27,7 +27,7 @@ import (
 	"github.com/iter8-tools/etc3/util"
 )
 
-var _ = Describe("Reading Weights", func() {
+var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 	var namespace string
 	BeforeEach(func() {
 		namespace = "default"
@@ -86,9 +86,9 @@ var _ = Describe("Reading Weights", func() {
 		})
 	})
 
-	Context("When create an experiment", func() {
-		name := "observe-weights"
-		It("should read the weights", func() {
+	Context("When create an experiment where all versions have a weightRefObj", func() {
+		name := "observe-weights-all"
+		It("should read all the weights", func() {
 			objRef := &corev1.ObjectReference{
 				APIVersion: "iter8.tools/v2alpha1",
 				Kind:       "Experiment",
@@ -107,7 +107,8 @@ var _ = Describe("Reading Weights", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
+					return len(exp.Status.CurrentWeightDistribution) == 2 &&
+						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
 						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 3
@@ -115,6 +116,69 @@ var _ = Describe("Reading Weights", func() {
 			})
 		})
 	})
+
+  Context("When create an experiment where 1 version does not have a weightRefObj", func() {
+		name := "observe-weights-1"
+		It("should compute the missing weight", func() {
+			objRef := &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha1",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+				FieldPath:  "/spec/duration/maxLoops",
+			}
+			experiment := v2alpha1.NewExperiment(name, namespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithDuration(10, 5, 3).
+				WithBaselineVersion("baseline", objRef).
+				WithCandidateVersion("candidate", nil).
+				Build()
+
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			Eventually(func() bool {
+				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+					return len(exp.Status.CurrentWeightDistribution) == 2 &&
+						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
+						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
+						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
+						exp.Status.CurrentWeightDistribution[1].Value == 97
+				})
+			})
+		})
+	})
+
+	Context("When create an experiment where more than one version does not have a weightRefObj", func() {
+		name := "observe-weights-2"
+		It("should not compute the missing weights", func() {
+			objRef := &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha1",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+				FieldPath:  "/spec/duration/maxLoops",
+			}
+			experiment := v2alpha1.NewExperiment(name, namespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithDuration(10, 5, 3).
+				WithBaselineVersion("baseline", objRef).
+				WithCandidateVersion("candidate", nil).
+				WithCandidateVersion("candidate2", nil).
+				Build()
+
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			Eventually(func() bool {
+				// verifies that only 1 (of 3) weights is present and that its value
+				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+					return len(exp.Status.CurrentWeightDistribution) == 1 &&
+						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
+						exp.Status.CurrentWeightDistribution[0].Value == 3
+				})
+			})
+		})
+	})
+
 })
 
 var _ = Describe("Weight Patching", func() {
