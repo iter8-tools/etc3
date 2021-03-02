@@ -117,7 +117,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		})
 	})
 
-  Context("When create an experiment where 1 version does not have a weightRefObj", func() {
+	Context("When create an experiment where 1 version does not have a weightRefObj", func() {
 		name := "observe-weights-1"
 		It("should compute the missing weight", func() {
 			objRef := &corev1.ObjectReference{

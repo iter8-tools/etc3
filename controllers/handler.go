@@ -354,7 +354,7 @@ func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v
 
 func (r *ExperimentReconciler) deleteHandlerJob(ctx context.Context, instance *v2alpha1.Experiment, handler *string, handlerInstance *int) error {
 	log := util.Logger(ctx)
-	log.Info("deleteHandlerJob called", "job", job.ObjectMeta.Namespace+"/"+job.ObjectMeta.Name)
+	log.Info("deleteHandlerJob called", "handler", handler)
 	defer log.Info("deleteHandlerJob completed")
 
 	handlerJob, err := r.IsHandlerLaunched(ctx, instance, *handler, handlerInstance)

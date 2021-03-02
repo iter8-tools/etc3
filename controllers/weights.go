@@ -24,7 +24,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/PaesslerAG/jsonpath"
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
