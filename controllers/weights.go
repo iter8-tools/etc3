@@ -22,10 +22,8 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
-	"reflect"
 	"strings"
 
-	"github.com/PaesslerAG/jsonpath"
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
@@ -281,33 +279,29 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 	}
 	log.Info("observeWeight", "Go object", resultObj)
 
-	// convert fieldPath to jsonpath notation; see: https://pkg.go.dev/github.com/PaesslerAG/jsonpath
-	path := strings.ReplaceAll(objRef.FieldPath, "/", ".")
-	if len(path) == 0 {
-		return nil, errors.New("Field path must be of non-zero length")
+	if len(objRef.FieldPath) == 0 {
+		log.Error(err, "Unable to read zero length field", "objRef", objRef, "obj", obj)
+		return nil, errors.New("No fieldpath specified in referencing object")
 	}
-	prefix := "$"
-	if path[0] != '.' {
-		prefix = prefix + "."
-	}
-	path = prefix + path
-	log.Info("observeWeight", "path", path)
 
-	// read the value refereced by FieldPath (path)
-	value, err := jsonpath.Get(path, resultObj)
+	path := objRef.FieldPath
+	if objRef.FieldPath[0] == '/' {
+		path = path[1:]
+
+	}
+
+	fieldPath := strings.Split(path, "/")
+	log.Info("observeWeight", "path", objRef.FieldPath, "path", path)
+	fValue, found, err := unstructured.NestedFloat64(resultObj, fieldPath...)
+	if !found {
+		log.Error(err, "Unable to read field; not found", "objRef", objRef, "obj", obj)
+		return nil, errors.New("No such field")
+	}
 	if err != nil {
-		log.Error(err, "Unable to read value", "objRef", objRef.FieldPath, "path", path)
+		log.Error(err, "Unable to read field; unexpected type", "objRef", objRef, "obj", obj)
 		return nil, err
 	}
-	log.Info("observeWeight", "value", value)
 
-	// We expect an integer; convert
-	fValue, ok := value.(float64)
-	if !ok {
-		err := errors.New("Observed field is not of expected type")
-		log.Error(err, "path to non-integer value", "ref", objRef, "path", path, "weight", value, "type", reflect.TypeOf(value))
-		return nil, errors.New("Weight is not an integer value")
-	}
 	int32Value := int32(math.Round(fValue))
 
 	return &int32Value, nil

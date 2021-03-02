@@ -27,7 +27,7 @@ import (
 	"github.com/iter8-tools/etc3/util"
 )
 
-var _ = Describe("Reading Weights", func() {
+var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 	var namespace string
 	BeforeEach(func() {
 		namespace = "default"
@@ -150,7 +150,7 @@ var _ = Describe("Reading Weights", func() {
 
 	Context("When create an experiment where more than one version does not have a weightRefObj", func() {
 		name := "observe-weights-2"
-		It("should compute the missing weight", func() {
+		It("should not compute the missing weights", func() {
 			objRef := &corev1.ObjectReference{
 				APIVersion: "iter8.tools/v2alpha1",
 				Kind:       "Experiment",
@@ -169,6 +169,7 @@ var _ = Describe("Reading Weights", func() {
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool {
+				// verifies that only 1 (of 3) weights is present and that its value
 				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 1 &&
 						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&

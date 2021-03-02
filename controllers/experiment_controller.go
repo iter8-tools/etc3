@@ -344,7 +344,6 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	// when we do so for the first time, record the completion event and trigger the next experiment
 	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
 		log.Info("Updating stage advance to: Completed")
-		updateObservedWeights(ctx, instance, r.RestConfig)
 		r.recordExperimentCompleted(ctx, instance, msg)
 		r.updateStatus(ctx, instance)
 		r.triggerNextExperiment(ctx, instance)
