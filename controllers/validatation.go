@@ -18,8 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/iter8-tools/etc3/api/v2alpha1"
 )
@@ -70,12 +68,9 @@ func candidatesMatchStrategy(s v2alpha1.ExperimentSpec) bool {
 }
 
 func candidatesUnique(s v2alpha1.ExperimentSpec) bool {
-	fmt.Printf(">> called candidatesUnique")
 	versions := []string{s.VersionInfo.Baseline.Name}
 	for _, candidate := range s.VersionInfo.Candidates {
-		fmt.Printf(">> Considering %s in [%s]", candidate.Name, strings.Join(versions, " "))
 		if containsString(versions, candidate.Name) {
-			fmt.Printf(">>>>> found common name")
 			return false
 		}
 		versions = append(versions, candidate.Name)
