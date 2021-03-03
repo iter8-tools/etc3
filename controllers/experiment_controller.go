@@ -458,17 +458,9 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 			return !stop, dummyResult, nil
 		}
 	case HandlerStatusFailed:
-		switch handlerType {
-		case HandlerTypeFailure:
-			// a failure handler failed; don't call it again; just stop
-			result, err := r.endExperiment(ctx, instance, "Failure handler failed")
-			return stop, result, err
-		default:
-			// default is to fail experiment processing
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonHandlerFailed, "%s handler '%s' failed", handlerType, *handler)
-			result, err := r.failExperiment(ctx, instance, nil)
-			return stop, result, err
-		}
+		// a failure handler failed; don't call it again; just stop
+		result, err := r.endExperiment(ctx, instance, "Failure handler failed")
+		return stop, result, err
 	default: // HandlerStatusNotLaunched, HandlerStatusNoHandler:
 		return !stop, dummyResult, nil
 	}
@@ -528,7 +520,7 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	}
 
 	if err := r.LaunchHandler(ctx, instance, *handler, modifier.loop); err != nil {
-		// recommend termination when a handler fails
+		// An error occurred trying to launch a handler; recommend immediate termination
 		result, err := r.endExperiment(ctx, instance, "failure executing failure handler")
 		return stop, result, err
 	}
