@@ -414,14 +414,15 @@ func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance
 
 		if handlerType == HandlerTypeLoop {
 			for loop := 1; loop <= int(instance.Spec.GetMaxLoops()); loop++ {
-				log.Info("finalizeExperiment deleting job", "handler", handler, "loop", loop)
-				r.deleteHandlerJob(ctx, instance, handler, &loop)
+				if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, &loop); stop {
+					return stop, result, err
+				}
 			}
 		} else {
-			log.Info("finalizeExperiment deleting job", "handler", handler)
-			r.deleteHandlerJob(ctx, instance, handler, nil)
+			if stop, result, err := r.checkHandlerStatus(ctx, instance, handlerType, handler, nil); stop {
+				return stop, result, err
+			}
 		}
-		log.Info("finalizeExperiment deleting job", "handler", handler)
 	}
 
 	return !stop, dummyResult, nil
@@ -477,8 +478,15 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 type handlerLaunchPrerequisiteChecker func() bool
 type handlerLaunchOnSuccess func()
 type handlerLaunchModifier struct {
-	prerequisiteCheck  handlerLaunchPrerequisiteChecker
-	loop               *int
+	// A prerequisite check is an extra check before launching an handler
+	// Used, for example, when launching the start handler to verify that the handler wasn't run in the past
+	prerequisiteCheck handlerLaunchPrerequisiteChecker
+	// the current loop; used by the loop handler to generate unique job names
+	loop *int
+	// Any steps to be called on a successful launch.
+	// A method is used instead of relying on the caller because the launch method recommends whether the caller
+	// should proceed or teminate. The launch method handles the behavior before returning.
+	// Used, for example, when a finish handler launches to advance the stage from Running to Finishing
 	onSuccessfulLaunch handlerLaunchOnSuccess
 }
 
@@ -513,28 +521,20 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	}
 
 	// verify any prerequisites; if not met, don't launch
-	if modifier.prerequisiteCheck != nil &&
-		!modifier.prerequisiteCheck() {
-		// if checkFn, ok := modifiers[launchModifierPrerequisiteCheck]; ok {
-		// 	if !checkFn() {
+	// For example, to check that the handler hasn't been run in the past
+	if modifier.prerequisiteCheck != nil && !modifier.prerequisiteCheck() {
 		log.Info("launchHandlerWrapper prerequisite check rejected launch", "handlerType", handlerType)
 		return !stop, dummyResult, nil
-		// }
 	}
 
 	if err := r.LaunchHandler(ctx, instance, *handler, modifier.loop); err != nil {
-		if handlerType == HandlerTypeFailure {
-			// An error occurred trying to launch a failure handler
-			// Don't try to launch it again
-			result, err := r.endExperiment(ctx, instance, "failure executing failure handler")
-			return stop, result, err
-		}
-		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonLaunchHandlerFailed, "failure launching %s handler '%s': %s", handlerType, *handler, err.Error())
-		return r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
-			handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }})
+		// recommend termination when a handler fails
+		result, err := r.endExperiment(ctx, instance, "failure executing failure handler")
+		return stop, result, err
 	}
 
 	// successfully launched the handler; run any modifier
+	// an example is to advance the stage after successfully launching a finishHandler
 	if modifier.onSuccessfulLaunch != nil {
 		modifier.onSuccessfulLaunch()
 	}

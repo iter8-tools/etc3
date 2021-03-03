@@ -30,9 +30,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // HandlerType types of handlers
@@ -350,21 +348,4 @@ func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v
 	// handler job exists and is done
 	log.Info("GetHandlerStatus returning", "handler", handler, "status", HandlerStatusRunning)
 	return HandlerStatusRunning
-}
-
-func (r *ExperimentReconciler) deleteHandlerJob(ctx context.Context, instance *v2alpha1.Experiment, handler *string, handlerInstance *int) error {
-	log := util.Logger(ctx)
-	log.Info("deleteHandlerJob called", "handler", handler)
-	defer log.Info("deleteHandlerJob completed")
-
-	handlerJob, err := r.IsHandlerLaunched(ctx, instance, *handler, handlerInstance)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			log.Info("Unable to determine if handler launched", "handler", handler)
-			return err
-		}
-		return nil
-	}
-	err = r.Delete(ctx, handlerJob, client.PropagationPolicy(metav1.DeletePropagationBackground))
-	return err
 }
