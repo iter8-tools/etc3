@@ -98,8 +98,9 @@ func sameInstance(instance1 *v2alpha1.Experiment, instance2 *v2alpha1.Experiment
 
 // triggerWaitingExperiments looks at all targets (it finds them by looking at all experiments)
 // and triggers the next experiment waiting for the target if:
-//    (a) there isn't already an active experiment for the target
-//    (b) the next active experiment is this instance: acquireTarget will be called soon
+//    (a) there isn't already an active experiment for the target, and
+//    (b) the next active experiment for the target is this instance (because acquireTarget will
+//        be called soon -- when endExperiment() is called)
 func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, instance *v2alpha1.Experiment) {
 	log := util.Logger(ctx)
 	log.Info("triggerWaitingExperiments called")
@@ -126,7 +127,7 @@ func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, in
 // nextWaitingExperiment identifies the next experiment waiting for a given target.
 // If there are none (either because there are no waiting experiments for the given target
 // or because the target is already in use), nil is returned.
-// If instance is specified, it will not be returned.
+// If instance is specified (blacklisted), it will not be returned.
 func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target string, instance *v2alpha1.Experiment) *v2alpha1.Experiment {
 	log := util.Logger(ctx)
 	log.Info("nextWaitingExperiment called")

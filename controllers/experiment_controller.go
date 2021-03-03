@@ -77,10 +77,12 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	instance := &v2alpha1.Experiment{}
 	err := r.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
-		// if object not found, it has been deleted, we can ignore
-		// (if it is being deleted and there is a finalizer, we would have found it)
+		// if object not found, it has been deleted
 		if errors.IsNotFound(err) {
 			log.Info("Experiment not found")
+			// we make sure to have deleted all jobs and trigger any waiting experiment
+			r.cleanupDeletedExperiments(ctx, instance)
+			r.triggerWaitingExperiments(ctx, instance)
 			return ctrl.Result{}, nil
 		}
 		// other error reading instance; return
@@ -565,8 +567,8 @@ func (r *ExperimentReconciler) identifyExperimentsFromHandlers(ctx context.Conte
 	experimentToJobs := map[string][]batchv1.Job{}
 
 	jobs := &batchv1.JobList{}
-	if err := r.List(ctx, jobs); err != nil {
-		log.Error(err, "activeContendersForTarget Unable to list experiments")
+	if err := r.List(ctx, jobs, client.InNamespace(r.Iter8Config.Namespace)); err != nil {
+		log.Error(err, "identifyExperimentsFromHandlers Unable to list experiments")
 		return experimentToJobs
 	}
 	for _, job := range jobs.Items {
