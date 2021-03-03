@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/iter8-tools/etc3/api/v2alpha1"
 )
@@ -34,7 +36,8 @@ func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *
 // IsVersionInfoValid verifies that Spec.versionInfo is valid
 // DONE 1. verify that versionInfo is present
 // DONE 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
-// TODO 3. verify any ObjectReferences are existing objects in the cluster
+// DONE 3. verify that the names of the versionns are all unique
+// TODO 4. verify any ObjectReferences are existing objects in the cluster
 func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
 	// 1. verify that versionInfo is present
 	if instance.Spec.VersionInfo == nil {
@@ -46,7 +49,11 @@ func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance 
 		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invalid number of candidates for %s experiment", instance.Spec.Strategy.TestingPattern)
 		return false
 	}
-
+	// 3. verify that the names of the versionns are all unique
+	if !candidatesUnique(instance.Spec) {
+		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Version names are not unique")
+		return false
+	}
 	return true
 }
 
@@ -58,6 +65,20 @@ func candidatesMatchStrategy(s v2alpha1.ExperimentSpec) bool {
 		return len(s.VersionInfo.Candidates) == 1
 	case v2alpha1.TestingPatternABN:
 		return len(s.VersionInfo.Candidates) > 0
+	}
+	return true
+}
+
+func candidatesUnique(s v2alpha1.ExperimentSpec) bool {
+	fmt.Printf(">> called candidatesUnique")
+	versions := []string{s.VersionInfo.Baseline.Name}
+	for _, candidate := range s.VersionInfo.Candidates {
+		fmt.Printf(">> Considering %s in [%s]", candidate.Name, strings.Join(versions, " "))
+		if containsString(versions, candidate.Name) {
+			fmt.Printf(">>>>> found common name")
+			return false
+		}
+		versions = append(versions, candidate.Name)
 	}
 	return true
 }

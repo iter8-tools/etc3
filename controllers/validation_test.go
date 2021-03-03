@@ -106,4 +106,18 @@ var _ = Describe("Validation of VersionInfo", func() {
 		})
 	})
 
+	Context("Experiment has common names", func() {
+		experiment := v2alpha1.NewExperiment("abn-test", testNamespace).
+			WithTarget("target").
+			WithBaselineVersion("baseline", nil).
+			WithCandidateVersion("candidate", nil).
+			WithTestingPattern(v2alpha1.TestingPatternABN).Build()
+		It("should fail", func() {
+			By("adding another canidate with the same name")
+			experiment.Spec.VersionInfo.Candidates = append(experiment.Spec.VersionInfo.Candidates,
+				v2alpha1.VersionDetail{Name: "candidate"})
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+	})
+
 })
