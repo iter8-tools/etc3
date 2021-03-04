@@ -117,7 +117,7 @@ var _ = Describe("Target Acquisition", func() {
 			}, 10).Should(BeTrue())
 
 			By("Allowing the second to acquire the target and proceed")
-			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }, 5).Should(BeTrue())
 			// wantsName should be Waiting
 			Eventually(func() bool {
 				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
@@ -209,7 +209,7 @@ var _ = Describe("Finalizer", func() {
 			Eventually(func() bool { return isDeleted(hasName, testNamespace) }, 10).Should(BeTrue())
 
 			By("Allowing the second to acquire the target and proceed")
-			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }).Should(BeTrue())
+			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }, 5).Should(BeTrue())
 			// wantsName should be run and complete
 			Eventually(func() bool {
 				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
