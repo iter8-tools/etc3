@@ -82,7 +82,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 			log.Info("Experiment not found")
 			// we make sure to have deleted all jobs and trigger any waiting experiment
 			r.cleanupDeletedExperiments(ctx, instance)
-			r.triggerWaitingExperiments(ctx, instance)
+			r.triggerWaitingExperiments(ctx, nil)
 			return ctrl.Result{}, nil
 		}
 		// other error reading instance; return

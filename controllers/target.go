@@ -165,7 +165,7 @@ func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target
 // triggerNextExperiment finds the next experiment to trigger. If there is one, it is triggered.
 func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, target string, instance *v2alpha1.Experiment) {
 	log := util.Logger(ctx)
-	log.Info("triggerNextExperiment called", "target", target, "instance", instance)
+	log.Info("triggerNextExperiment called", "target", target)
 	defer log.Info("triggerNextExperiment completed")
 
 	next := r.nextWaitingExperiment(ctx, target, instance)
