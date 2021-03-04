@@ -93,10 +93,10 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	log.Info("Reconcile", "instance", instance)
 	ctx = context.WithValue(ctx, util.OriginalStatusKey, instance.Status.DeepCopy())
 
-	// check that there aren't any orphaned handler jobs
-	// or experiments stuck waiting to acquire a target
-	r.cleanupDeletedExperiments(ctx, instance)
-	r.triggerWaitingExperiments(ctx, instance)
+	// // check that there aren't any orphaned handler jobs
+	// // or experiments stuck waiting to acquire a target
+	// r.cleanupDeletedExperiments(ctx, instance)
+	// r.triggerWaitingExperiments(ctx, instance)
 
 	// If instance has never been seen before, initialize status object
 	if instance.Status.InitTime == nil {
