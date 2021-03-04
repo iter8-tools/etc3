@@ -37,7 +37,7 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 	}
 
 	// get the set of experiments (across all namespaces) that share the target and which are not completed
-	shareTarget := r.activeContendersForTarget(ctx, instance)
+	shareTarget := r.activeContendersForTarget(ctx, instance.Spec.Target)
 
 	// If another experiment has acquired the target, we cannot
 	// While checking, keep track of the highest priority (earliest init time) among the set of competitors
@@ -68,7 +68,7 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 	return false
 }
 
-func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, instance *v2alpha1.Experiment) []*v2alpha1.Experiment {
+func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, target string) []*v2alpha1.Experiment {
 	log := util.Logger(ctx)
 	log.Info("activeContendersForTarget called")
 	defer log.Info("activeContendersForTarget completed")
@@ -82,7 +82,7 @@ func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, in
 	}
 
 	for i := range experiments.Items {
-		if experiments.Items[i].Spec.Target == instance.Spec.Target &&
+		if experiments.Items[i].Spec.Target == target &&
 			experiments.Items[i].Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsFalse() {
 			result = append(result, &experiments.Items[i])
 		}
@@ -96,27 +96,58 @@ func sameInstance(instance1 *v2alpha1.Experiment, instance2 *v2alpha1.Experiment
 	return instance1.Name == instance2.Name && instance1.Namespace == instance2.Namespace
 }
 
-// nextExperimentToRun should be called by triggerNextExperiment when we are releasing the target
-func (r *ExperimentReconciler) nextExperimentToRun(ctx context.Context, instance *v2alpha1.Experiment) *v2alpha1.Experiment {
+// triggerWaitingExperiments looks at all targets (it finds them by looking at all experiments)
+// and triggers the next experiment waiting for the target if:
+//    (a) there isn't already an active experiment for the target, and
+//    (b) the next active experiment for the target is this instance (because acquireTarget will
+//        be called soon -- when endExperiment() is called)
+func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, instance *v2alpha1.Experiment) {
 	log := util.Logger(ctx)
-	log.Info("nextExperimentToRun called")
-	defer log.Info("nextExperimentToRun completed")
+	log.Info("triggerWaitingExperiments called")
+	defer log.Info("triggerWaitingExperiments completed")
 
-	shareTarget := r.activeContendersForTarget(ctx, instance)
+	targetsAlreadyChecked := []string{}
+
+	experiments := &v2alpha1.ExperimentList{}
+	if err := r.List(ctx, experiments); err != nil {
+		log.Error(err, "triggerWaitingExperiments: Unable to list experiments")
+		return
+	}
+
+	for _, experiment := range experiments.Items {
+		target := experiment.Spec.Target
+		if containsString(targetsAlreadyChecked, target) {
+			continue
+		}
+		targetsAlreadyChecked = append(targetsAlreadyChecked, target)
+		r.triggerNextExperiment(ctx, target, instance)
+	}
+}
+
+// nextWaitingExperiment identifies the next experiment waiting for a given target.
+// If there are none (either because there are no waiting experiments for the given target
+// or because the target is already in use), nil is returned.
+// If instance is specified (blacklisted), it will not be returned.
+func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target string, instance *v2alpha1.Experiment) *v2alpha1.Experiment {
+	log := util.Logger(ctx)
+	log.Info("nextWaitingExperiment called")
+	defer log.Info("nextWaitingExperiment completed")
+
+	shareTarget := r.activeContendersForTarget(ctx, target)
 
 	earliest := metav1.Now()
 	next := (*v2alpha1.Experiment)(nil)
 
 	for _, e := range shareTarget {
-		// not interested in ourself
-		if sameInstance(e, instance) {
+		// not interested in instance if it is provided
+		if instance != nil && sameInstance(e, instance) {
 			continue
 		}
 
 		// Note that we've already filtered out the completed ones so if there is another
 		// experiment that has acquired the target, we can't/shouldn't suggest another
 		if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
-			log.Info("nextExperimentToRun", "target owned by", e.Name)
+			log.Info("nextWaitingExperiment", "target already owned by", e.Name)
 			return nil
 		}
 		// keep track of the competitor with the highest priority (earliest init time)
@@ -126,17 +157,18 @@ func (r *ExperimentReconciler) nextExperimentToRun(ctx context.Context, instance
 		}
 	}
 	if next != nil {
-		log.Info("nextExperimentToRun", "name", next.Name, "namespace", next.Namespace)
+		log.Info("nextWaitingExperiment", "name", next.Name, "namespace", next.Namespace)
 	}
 	return next
 }
 
-func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, instance *v2alpha1.Experiment) {
+// triggerNextExperiment finds the next experiment to trigger. If there is one, it is triggered.
+func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, target string, instance *v2alpha1.Experiment) {
 	log := util.Logger(ctx)
-	log.Info("triggerNextExperiment called")
+	log.Info("triggerNextExperiment called", "target", target)
 	defer log.Info("triggerNextExperiment completed")
 
-	next := r.nextExperimentToRun(ctx, instance)
+	next := r.nextWaitingExperiment(ctx, target, instance)
 	if nil != next {
 		log.Info("triggerNextExperiment", "name", next.Name, "namespace", next.Namespace)
 		// found one

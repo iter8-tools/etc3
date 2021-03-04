@@ -118,13 +118,6 @@ var _ = Describe("Handlers Run", func() {
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				return err == nil
 			}, 10).Should(BeTrue())
-
-			By("Check that delete handler jobs works")
-			// Successful case
-			Expect(reconciler.deleteHandlerJob(ctx(), experiment, &handler, &testLoop)).Should(Succeed())
-			// Also a successful case (not found jobs are ignored)
-			notAHandler := "notahandler"
-			Expect(reconciler.deleteHandlerJob(ctx(), experiment, &notAHandler, nil)).Should(Succeed())
 		})
 	})
 
