@@ -30,9 +30,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // HandlerType types of handlers
@@ -51,6 +49,11 @@ const (
 	HandlerTypeFailure HandlerType = "Failure"
 	// HandlerTypeLoop is the type of a loop handler
 	HandlerTypeLoop HandlerType = "Loop"
+
+	// LabelExperimentName is key of label to be added to handler jobs for experiment name
+	LabelExperimentName = "iter8/experimentName"
+	// LabelExperimentNamespace is key of label to be added to handler jobs for experiment namespace
+	LabelExperimentNamespace = "iter8/experimentNamespace"
 )
 
 var allHandlerTypes []HandlerType = []HandlerType{
@@ -116,7 +119,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	// update job spec:
 	//   - assign a name unique for this experiment, handler type
 	//   - assign namespace same as namespace of iter8
-	//   - define labels "iter8/experimentName" and "iter8/experimentNamespace" used for event filtering
+	//   - define labels LabelExperimentName and LabelExperimentNamespace used for event filtering
 	//   - set serviceAccountName to iter8-handlers
 	//   - set environment variables: EXPERIMENT_NAME, EXPERIMENT_NAMESPACE
 	job.Name = jobName(instance, handler, handlerInstance)
@@ -124,8 +127,8 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	if job.Spec.Template.ObjectMeta.Labels == nil {
 		job.Spec.Template.ObjectMeta.SetLabels(map[string]string{})
 	}
-	job.Spec.Template.ObjectMeta.Labels["iter8/experimentName"] = instance.Name
-	job.Spec.Template.ObjectMeta.Labels["iter8/experimentNamespace"] = instance.Namespace
+	job.Spec.Template.ObjectMeta.Labels[LabelExperimentName] = instance.Name
+	job.Spec.Template.ObjectMeta.Labels[LabelExperimentNamespace] = instance.Namespace
 	job.Spec.Template.Spec.ServiceAccountName = ServiceAccountForHandlers
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAME", instance.Name)
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAMESPACE", instance.Namespace)
@@ -345,21 +348,4 @@ func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v
 	// handler job exists and is done
 	log.Info("GetHandlerStatus returning", "handler", handler, "status", HandlerStatusRunning)
 	return HandlerStatusRunning
-}
-
-func (r *ExperimentReconciler) deleteHandlerJob(ctx context.Context, instance *v2alpha1.Experiment, handler *string, handlerInstance *int) error {
-	log := util.Logger(ctx)
-	log.Info("deleteHandlerJob called", "handler", handler)
-	defer log.Info("deleteHandlerJob completed")
-
-	handlerJob, err := r.IsHandlerLaunched(ctx, instance, *handler, handlerInstance)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			log.Info("Unable to determine if handler launched", "handler", handler)
-			return err
-		}
-		return nil
-	}
-	err = r.Delete(ctx, handlerJob, client.PropagationPolicy(metav1.DeletePropagationBackground))
-	return err
 }
