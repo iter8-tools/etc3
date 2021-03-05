@@ -17,6 +17,8 @@ limitations under the License.
 package v2alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -73,9 +75,19 @@ func (b *MetricBuilder) WithProvider(provider string) *MetricBuilder {
 }
 
 // WithSampleSize ..
-func (b *MetricBuilder) WithSampleSize(namespace string, name string) *MetricBuilder {
+func (b *MetricBuilder) WithSampleSize(name string) *MetricBuilder {
+
+	var namespace *string
+	splt := strings.Split(name, "/")
+	if len(splt) == 2 {
+		namespace = &splt[0]
+		name = splt[1]
+	} else {
+		namespace = nil
+	}
+
 	b.Spec.SampleSize = &MetricReference{
-		Namespace: &namespace,
+		Namespace: namespace,
 		Name:      name,
 	}
 	return b

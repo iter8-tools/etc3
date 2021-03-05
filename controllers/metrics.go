@@ -36,22 +36,19 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 	namespace := instance.GetObjectMeta().GetNamespace()
 
 	// If the metric name includes a "/" then use the prefix as the namespace
-	explicitNamespaceProvided := false
 	splt := strings.Split(name, "/")
 	if len(splt) == 2 {
-		explicitNamespaceProvided = true
 		namespace = splt[0]
 		name = splt[1]
 	}
 
+	// if we've already read the metric, then we don't need to proceed; just return true
+	if _, ok := metricMap[key]; ok {
+		return true
+	}
+
 	metric := &v2alpha1.Metric{}
 	err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, metric)
-	if err != nil {
-		// if not found and we were not provided an explicit namespace, try again with the iter8 namespace
-		if errors.IsNotFound(err) && !explicitNamespaceProvided {
-			err = r.Get(ctx, types.NamespacedName{Name: name, Namespace: r.Iter8Config.Namespace}, metric)
-		}
-	}
 	if err != nil {
 		// could not read metric; record the problem and indicate that the read did not succeed
 		if errors.IsNotFound(err) {
@@ -62,8 +59,20 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 		return false // not ok
 	}
 
+	// add to the map
 	metricMap[key] = metric
-	return true // ok
+
+	// check if this metric references another metric. If so, read it too
+	if metric.Spec.SampleSize != nil {
+		referencedNamespace := metric.GetObjectMeta().GetNamespace()
+		if metric.Spec.SampleSize.Namespace != nil {
+			referencedNamespace = *metric.Spec.SampleSize.Namespace
+		}
+		return r.ReadMetric(ctx, instance, referencedNamespace+"/"+metric.Spec.SampleSize.Name, metricMap)
+	}
+
+	// must be ok
+	return true
 }
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment

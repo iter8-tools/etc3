@@ -62,7 +62,7 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 			WithDescription("valid metric").
 			WithParams(map[string]string{"foo": "bar"}).
 			WithType(v2alpha1.GaugeMetricType).
-			WithSampleSize("namespace", "name").
+			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			Build()
 

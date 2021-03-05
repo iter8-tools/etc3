@@ -227,7 +227,7 @@ var _ = Describe("Generated Code", func() {
 				WithProvider("prometheus").
 				WithType(v2alpha1.CounterMetricType).
 				WithUnits("ms").
-				WithSampleSize("sample", "default")
+				WithSampleSize("sample/default")
 			metric := metricBuilder.Build()
 			metricList := *&v2alpha1.MetricList{
 				Items: []v2alpha1.Metric{*metric},

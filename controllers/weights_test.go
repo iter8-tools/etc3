@@ -21,6 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
@@ -31,7 +32,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 	var namespace string
 	BeforeEach(func() {
 		namespace = "default"
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(namespace))
 	})
 	Context("When try to read field from object", func() {
 		name := "read"

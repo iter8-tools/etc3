@@ -131,6 +131,9 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(k8sClient.Create(ctx(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
 	})).Should(Succeed())
+	Expect(k8sClient.Create(ctx(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: "metric-namespace"},
+	})).Should(Succeed())
 
 	testTransport := &testHTTP{
 		analysis: &v2alpha1.Analysis{
@@ -222,6 +225,18 @@ func completesSuccessfully(name string, ns string) bool {
 	return completed && successful
 }
 
+func fails(name string, ns string) bool {
+	exp := &v2alpha1.Experiment{}
+	err := k8sClient.Get(ctx(), types.NamespacedName{Name: name, Namespace: ns}, exp)
+	if err != nil {
+		return false
+	}
+	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
+	failed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsTrue()
+
+	return completed && failed
+}
+
 func isDeleted(name string, ns string) bool {
 	exp := &v2alpha1.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
@@ -238,6 +253,12 @@ func hasValue(name string, ns string, check check) bool {
 		return false
 	}
 	return check(exp)
+}
+
+func isRunning(name string, ns string) bool {
+	return hasValue(name, ns, func(exp *v2alpha1.Experiment) bool {
+		return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+	})
 }
 
 func ctx() context.Context {

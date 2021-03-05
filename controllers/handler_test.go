@@ -18,6 +18,7 @@ import (
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -32,7 +33,7 @@ var _ = Describe("Handlers Run", func() {
 	BeforeEach(func() {
 		namespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{})
+		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(namespace))
 	})
 
 	Context("When an experiment with a start handler runs", func() {

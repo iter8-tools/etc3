@@ -127,11 +127,8 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	}
 
 	// LATE INITIALIZATION of instance.Spec
-	// TODO move to mutating webhook
-	if ok := r.LateInitialization(ctx, instance); !ok {
-		return r.failExperiment(ctx, instance, nil)
-	}
-	log.Info("Late initialization completed")
+	// Note: we don't actually modify instance; this is in memory only
+	instance.Spec.InitializeSpec(r.Iter8Config)
 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
 	// See IsExperimentValid() for list of validations done
@@ -167,6 +164,11 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return result, err
 	}
 	log.Info("Start Handling Complete")
+
+	// using spec.criteria, read the metrics objects into spec.metrics
+	if ok := r.ReadMetrics(ctx, instance); !ok {
+		r.failExperiment(ctx, instance, nil)
+	}
 
 	// advance stage from Initializing to Running
 	// when we advance for the first time, we've just finished the start handler (if there is one),
@@ -263,16 +265,8 @@ func removeString(slice []string, s string) (result []string) {
 	return
 }
 
-// Helper function for LATE INITIALIZATION
-
-// LateInitialization initializes any fields in e.Spec not already set
-// Returns false if something went wrong
-func (r *ExperimentReconciler) LateInitialization(ctx context.Context, instance *v2alpha1.Experiment) bool {
-	instance.Spec.InitializeSpec(r.Iter8Config)
-	return r.ReadMetrics(ctx, instance)
-}
-
 // Helper functions for maintaining stages
+
 func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alpha1.Experiment, to v2alpha1.ExperimentStageType) bool {
 	log := util.Logger(ctx)
 	log.Info("advanceStage called", "current stage", *instance.Status.Stage, "to", to)
