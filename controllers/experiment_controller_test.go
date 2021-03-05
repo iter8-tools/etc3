@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
@@ -252,7 +251,6 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				fmt.Printf("%v\n", events)
 				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
