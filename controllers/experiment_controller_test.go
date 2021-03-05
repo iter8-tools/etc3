@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
@@ -161,7 +162,7 @@ var _ = Describe("Metrics", func() {
 			WithSampleSize(metricsNamespace + "/request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjective)).Should(Succeed())
-		By("createing an objective that references request-count")
+		By("creating an objective that references request-count")
 		badObjective = v2alpha1.NewMetric("objective-with-bad-reference", "default").
 			WithType(v2alpha1.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
@@ -187,7 +188,9 @@ var _ = Describe("Metrics", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it starts Running")
 			// this assumes that it runs for a while
-			Eventually(func() bool { return isRunning(testName, testNamespace) }, 5).Should(BeTrue())
+			Eventually(func() bool {
+				return containsSubString(events, v2alpha1.ReasonStageAdvanced)
+			}, 5).Should(BeTrue())
 		})
 	})
 
@@ -205,7 +208,10 @@ var _ = Describe("Metrics", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
-			Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
+			Eventually(func() bool {
+				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
+			}, 5).Should(BeTrue())
+			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
 	})
 	Context("When creating another experiment which refers to a non-existing metric", func() {
@@ -222,7 +228,10 @@ var _ = Describe("Metrics", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
-			Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
+			Eventually(func() bool {
+				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
+			}, 5).Should(BeTrue())
+			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
 	})
 
@@ -242,7 +251,11 @@ var _ = Describe("Metrics", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
-			Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
+			Eventually(func() bool {
+				fmt.Printf("%v\n", events)
+				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
+			}, 5).Should(BeTrue())
+			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
 	})
 

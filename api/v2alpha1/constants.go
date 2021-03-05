@@ -103,6 +103,7 @@ const (
 	ReasonLaunchHandlerFailed        = "LaunchHandlerFailed"
 	ReasonWeightRedistributionFailed = "WeightRedistributionFailed"
 	ReasonInvalidExperiment          = "InvalidExperiment"
+	ReasonStageAdvanced              = "StageAdvanced"
 )
 
 // ExperimentStageType identifies valid stages of an experiment

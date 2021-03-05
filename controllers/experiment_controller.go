@@ -276,7 +276,7 @@ func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alp
 	if to.After(stage) {
 		stage = to
 		instance.Status.Stage = &stage
-		log.Info("advanceStage advanced", "to", to)
+		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonStageAdvanced, "Advanced to %s", to)
 		return true
 	}
 	return false

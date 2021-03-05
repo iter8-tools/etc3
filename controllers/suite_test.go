@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -56,6 +57,7 @@ var testEnv *envtest.Environment
 var lg logr.Logger = ctrl.Log.WithName("etc3").WithName("test")
 var recorder record.EventRecorder
 var reconciler *ExperimentReconciler
+var events []string
 
 type testHTTP struct {
 	analysis *v2alpha1.Analysis
@@ -73,13 +75,13 @@ func (t *testHTTP) Post(url, contentType string, body []byte) ([]byte, int, erro
 type testRecorder struct{}
 
 func (r testRecorder) Event(object runtime.Object, eventtype, reason, message string) {
-	fmt.Printf("%s (%s): %s\n", eventtype, reason, message)
+	events = append(events, fmt.Sprintf("%s (%s): %s\n", eventtype, reason, message))
 }
 func (r testRecorder) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {
-	fmt.Printf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...))
+	events = append(events, fmt.Sprintf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...)))
 }
 func (r testRecorder) AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
-	fmt.Printf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...))
+	events = append(events, fmt.Sprintf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...)))
 }
 
 func TestAPIs(t *testing.T) {
@@ -263,4 +265,14 @@ func isRunning(name string, ns string) bool {
 
 func ctx() context.Context {
 	return context.WithValue(context.Background(), util.LoggerKey, ctrl.Log)
+}
+
+// Helper functions to check and remove string from a slice of strings.
+func containsSubString(slice []string, s string) bool {
+	for _, item := range slice {
+		if strings.Contains(item, s) {
+			return true
+		}
+	}
+	return false
 }
