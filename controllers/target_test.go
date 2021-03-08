@@ -15,7 +15,7 @@ limitations under the License.
 package controllers
 
 import (
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,20 +32,20 @@ var _ = Describe("Target Acquisition", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
 	})
 	AfterEach(func() {
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
 	})
 
 	// This is indirectly tested by the test case below; this is an explicit test
 	Context("Experiment already has the target", func() {
-		var experiment *v2alpha1.Experiment
+		var experiment *v2alpha2.Experiment
 		JustBeforeEach(func() {
-			experiment = v2alpha1.NewExperiment("already-has-target", testNamespace).
+			experiment = v2alpha2.NewExperiment("already-has-target", testNamespace).
 				WithTarget("targettest1").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
-				WithCondition(v2alpha1.ExperimentConditionTargetAcquired, corev1.ConditionTrue, v2alpha1.ReasonTargetAcquired, "").
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithCondition(v2alpha2.ExperimentConditionTargetAcquired, corev1.ConditionTrue, v2alpha2.ReasonTargetAcquired, "").
 				Build()
 		})
 		It("should know it has the target", func() {
@@ -57,21 +57,21 @@ var _ = Describe("Target Acquisition", func() {
 	Context("Experiment wanting to acquire a target", func() {
 		var (
 			hasName, wantsName string
-			has, wants         *v2alpha1.Experiment
+			has, wants         *v2alpha2.Experiment
 		)
 		JustBeforeEach(func() {
 			hasName = "willget-target"
-			has = v2alpha1.NewExperiment(hasName, testNamespace).
+			has = v2alpha2.NewExperiment(hasName, testNamespace).
 				WithTarget("unavailable-target").
-				WithTestingPattern(v2alpha1.TestingPatternConformance).
+				WithTestingPattern(v2alpha2.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(4, 2, 1).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			wantsName = "wants-target"
-			wants = v2alpha1.NewExperiment(wantsName, testNamespace).
+			wants = v2alpha2.NewExperiment(wantsName, testNamespace).
 				WithTarget("unavailable-target").
-				WithTestingPattern(v2alpha1.TestingPatternConformance).
+				WithTestingPattern(v2alpha2.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(1, 1, 1).
 				WithBaselineVersion("baseline", nil).
@@ -83,8 +83,8 @@ var _ = Describe("Target Acquisition", func() {
 			Eventually(func() bool { return hasTarget(hasName, testNamespace) }).Should(BeTrue())
 			// Eventually hasName should be Running
 			Eventually(func() bool {
-				return hasValue(hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+				return hasValue(hasName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageRunning
 				})
 			}, 3).Should(BeTrue())
 
@@ -92,7 +92,7 @@ var _ = Describe("Target Acquisition", func() {
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
 					// status is initialized
 					return exp.Status.InitTime != nil
 				})
@@ -102,8 +102,8 @@ var _ = Describe("Target Acquisition", func() {
 			Expect(hasTarget(wantsName, testNamespace)).Should(BeFalse())
 			// wantsName should be Waiting
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageWaiting
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageWaiting
 				})
 			}, 3).Should(BeTrue())
 
@@ -111,8 +111,8 @@ var _ = Describe("Target Acquisition", func() {
 			Eventually(func() bool { return completes(hasName, testNamespace) }, 8).Should(BeTrue())
 			// hasName should be Completed
 			Eventually(func() bool {
-				return hasValue(hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
+				return hasValue(hasName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return *exp.Status.Stage == v2alpha2.ExperimentStageCompleted
 				})
 			}, 10).Should(BeTrue())
 
@@ -120,14 +120,14 @@ var _ = Describe("Target Acquisition", func() {
 			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }, 5).Should(BeTrue())
 			// wantsName should be Waiting
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && (*exp.Status.Stage == v2alpha1.ExperimentStageRunning || *exp.Status.Stage == v2alpha1.ExperimentStageCompleted)
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && (*exp.Status.Stage == v2alpha2.ExperimentStageRunning || *exp.Status.Stage == v2alpha2.ExperimentStageCompleted)
 				})
 			}, 5).Should(BeTrue())
 			Eventually(func() bool { return completes(wantsName, testNamespace) }).Should(BeTrue())
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageCompleted
 				})
 			}, 5).Should(BeTrue())
 
@@ -143,30 +143,30 @@ var _ = Describe("Finalizer", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
 	})
 	AfterEach(func() {
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
 	})
 
 	Context("Experiment wanting to acquire a target", func() {
 		var (
 			hasName, wantsName string
-			has, wants         *v2alpha1.Experiment
+			has, wants         *v2alpha2.Experiment
 		)
 		JustBeforeEach(func() {
 			hasName = "willget-target-finalizer"
-			has = v2alpha1.NewExperiment(hasName, testNamespace).
+			has = v2alpha2.NewExperiment(hasName, testNamespace).
 				WithTarget("unavailable-target-finalizer").
-				WithTestingPattern(v2alpha1.TestingPatternConformance).
+				WithTestingPattern(v2alpha2.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(4, 3, 1).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			wantsName = "wants-target-finalizer"
-			wants = v2alpha1.NewExperiment(wantsName, testNamespace).
+			wants = v2alpha2.NewExperiment(wantsName, testNamespace).
 				WithTarget("unavailable-target-finalizer").
-				WithTestingPattern(v2alpha1.TestingPatternConformance).
+				WithTestingPattern(v2alpha2.TestingPatternConformance).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(1, 1, 1).
 				WithBaselineVersion("baseline", nil).
@@ -178,8 +178,8 @@ var _ = Describe("Finalizer", func() {
 			Eventually(func() bool { return hasTarget(hasName, testNamespace) }, 5).Should(BeTrue())
 			// Eventually hasName should be Running
 			Eventually(func() bool {
-				return hasValue(hasName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+				return hasValue(hasName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageRunning
 				})
 			}, 3).Should(BeTrue())
 
@@ -187,7 +187,7 @@ var _ = Describe("Finalizer", func() {
 			Expect(k8sClient.Create(ctx(), wants)).Should(Succeed())
 			Eventually(func() bool { return isDeployed(wantsName, testNamespace) }).Should(BeTrue())
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
 					// status is initialized
 					return exp.Status.InitTime != nil
 				})
@@ -197,13 +197,13 @@ var _ = Describe("Finalizer", func() {
 			Expect(hasTarget(wantsName, testNamespace)).Should(BeFalse())
 			// wantsName should be Waiting
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageWaiting
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageWaiting
 				})
 			}, 3).Should(BeTrue())
 
 			By("Deleting the first experiment")
-			exp := &v2alpha1.Experiment{}
+			exp := &v2alpha2.Experiment{}
 			Expect(k8sClient.Get(ctx(), types.NamespacedName{Name: hasName, Namespace: testNamespace}, exp)).Should(Succeed())
 			Expect(k8sClient.Delete(ctx(), exp, client.PropagationPolicy(metav1.DeletePropagationBackground))).Should(Succeed())
 			Eventually(func() bool { return isDeleted(hasName, testNamespace) }, 10).Should(BeTrue())
@@ -212,8 +212,8 @@ var _ = Describe("Finalizer", func() {
 			Eventually(func() bool { return hasTarget(wantsName, testNamespace) }, 5).Should(BeTrue())
 			// wantsName should be run and complete
 			Eventually(func() bool {
-				return hasValue(wantsName, testNamespace, func(exp *v2alpha1.Experiment) bool {
-					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageCompleted
+				return hasValue(wantsName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+					return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageCompleted
 				})
 			}, 10).Should(BeTrue())
 		})

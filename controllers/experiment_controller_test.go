@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,9 +32,9 @@ var _ = Describe("Experiment Validation", func() {
 		testName := "test-invalid-duration"
 		testNamespace := "default"
 		It("Should fail to create experiment", func() {
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 0, 1).
 				Build()
@@ -47,9 +47,9 @@ var _ = Describe("Experiment Validation", func() {
 		testNamespace := "default"
 		It("Should succeed in creating experiment", func() {
 			ctx := context.Background()
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 1, 1).
 				Build()
@@ -60,8 +60,8 @@ var _ = Describe("Experiment Validation", func() {
 	Context("When creating a valid new Experiment", func() {
 		It("Should successfully complete late initialization", func() {
 			By("Providing a request-count metric")
-			m := v2alpha1.NewMetric("request-count", "iter8").
-				WithType(v2alpha1.CounterMetricType).
+			m := v2alpha2.NewMetric("request-count", "iter8").
+				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
@@ -70,7 +70,7 @@ var _ = Describe("Experiment Validation", func() {
 			// }
 			// Expect(k8sClient.Create(ctx, ns)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
-			// createdMetric := &v2alpha1.Metric{}
+			// createdMetric := &v2alpha2.Metric{}
 			// Eventually(func() bool {
 			// 	err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "iter8"}, createdMetric)
 			// 	if err != nil {
@@ -79,29 +79,29 @@ var _ = Describe("Experiment Validation", func() {
 			// 	return true
 			// }).Should(BeTrue())
 			By("creating a reward metric")
-			reward := v2alpha1.NewMetric("reward", "default").
-				WithType(v2alpha1.CounterMetricType).
+			reward := v2alpha2.NewMetric("reward", "default").
+				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
 			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
 			By("creating an indicator")
-			indicator := v2alpha1.NewMetric("indicataor", "default").
-				WithType(v2alpha1.CounterMetricType).
+			indicator := v2alpha2.NewMetric("indicataor", "default").
+				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
 			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
 			By("creating an objective")
-			objective := v2alpha1.NewMetric("objective", "default").
-				WithType(v2alpha1.CounterMetricType).
+			objective := v2alpha2.NewMetric("objective", "default").
+				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
 			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
 			By("creating an objective that is not in the cluster")
-			fake := v2alpha1.NewMetric("fake", "default").
-				WithType(v2alpha1.CounterMetricType).
+			fake := v2alpha2.NewMetric("fake", "default").
+				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
 				Build()
@@ -109,12 +109,12 @@ var _ = Describe("Experiment Validation", func() {
 			By("Creating a new Experiment")
 			testName := "late-initialization"
 			testNamespace := "default"
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
-				WithReward(*reward, v2alpha1.PreferredDirectionHigher).
+				WithReward(*reward, v2alpha2.PreferredDirectionHigher).
 				WithIndicator(*indicator).
 				WithObjective(*objective, nil, nil, false).
 				WithObjective(*fake, nil, nil, true).
@@ -123,7 +123,7 @@ var _ = Describe("Experiment Validation", func() {
 
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
 			Eventually(func() bool {
-				return hasValue(testName, testNamespace, func(exp *v2alpha1.Experiment) bool {
+				return hasValue(testName, testNamespace, func(exp *v2alpha2.Experiment) bool {
 					return exp.Status.InitTime != nil &&
 						exp.Status.LastUpdateTime != nil &&
 						exp.Status.CompletedIterations != nil &&
@@ -137,33 +137,33 @@ var _ = Describe("Experiment Validation", func() {
 var _ = Describe("Metrics", func() {
 	var testName string
 	var testNamespace, metricsNamespace string
-	var goodObjective, badObjective *v2alpha1.Metric
+	var goodObjective, badObjective *v2alpha2.Metric
 	BeforeEach(func() {
 		testNamespace = "default"
 		metricsNamespace = "metric-namespace"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(testNamespace))
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Metric{}, client.InNamespace(testNamespace))
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Metric{}, client.InNamespace(metricsNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Metric{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Metric{}, client.InNamespace(metricsNamespace))
 
 		By("Providing a request-count metric")
-		m := v2alpha1.NewMetric("request-count", metricsNamespace).
-			WithType(v2alpha1.CounterMetricType).
+		m := v2alpha2.NewMetric("request-count", metricsNamespace).
+			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
 			Build()
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
 		By("creating an objective that does not reference the request-count")
-		goodObjective = v2alpha1.NewMetric("objective-with-good-reference", "default").
-			WithType(v2alpha1.CounterMetricType).
+		goodObjective = v2alpha2.NewMetric("objective-with-good-reference", "default").
+			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
 			WithSampleSize(metricsNamespace + "/request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjective)).Should(Succeed())
 		By("creating an objective that references request-count")
-		badObjective = v2alpha1.NewMetric("objective-with-bad-reference", "default").
-			WithType(v2alpha1.CounterMetricType).
+		badObjective = v2alpha2.NewMetric("objective-with-bad-reference", "default").
+			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
 			WithSampleSize("request-count").
@@ -177,9 +177,9 @@ var _ = Describe("Metrics", func() {
 		It("Should successfully read the metrics and proceed", func() {
 			By("Creating experiment")
 			testName = "valid-reference"
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*goodObjective, nil, nil, false).
@@ -188,7 +188,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it starts Running")
 			// this assumes that it runs for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha1.ReasonStageAdvanced)
+				return containsSubString(events, v2alpha2.ReasonStageAdvanced)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -198,9 +198,9 @@ var _ = Describe("Metrics", func() {
 		It("Should fail to read metrics", func() {
 			By("Creating experiment")
 			testName = "invalid-metric"
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
 				Build()
@@ -208,7 +208,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
+				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
@@ -218,9 +218,9 @@ var _ = Describe("Metrics", func() {
 		It("Should fail to read metrics", func() {
 			By("Creating experiment")
 			testName = "invalid-metric"
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("iter8/request-count").
 				Build()
@@ -228,7 +228,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
+				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
@@ -240,9 +240,9 @@ var _ = Describe("Metrics", func() {
 		It("Should fail to read metrics", func() {
 			By("Creating experiment")
 			testName = "invalid-reference"
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*badObjective, nil, nil, false).
@@ -251,7 +251,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha1.ReasonMetricUnavailable)
+				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
@@ -270,9 +270,9 @@ var _ = Describe("Experiment proceeds", func() {
 			expectedIterations := int32(2)
 			initialInterval := int32(5)
 			modifiedInterval := int32(10)
-			experiment := v2alpha1.NewExperiment(testName, testNamespace).
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("early-reconcile-targets").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(initialInterval, expectedIterations, 1).
 				WithBaselineVersion("baseline", nil).
@@ -282,7 +282,7 @@ var _ = Describe("Experiment proceeds", func() {
 
 			By("Changing the interval before the reconcile event triggers")
 			time.Sleep(2 * time.Second)
-			createdExperiment := &v2alpha1.Experiment{}
+			createdExperiment := &v2alpha2.Experiment{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)).Should(Succeed())
 			createdExperiment.Spec.Duration.IntervalSeconds = &modifiedInterval
 			Expect(k8sClient.Update(ctx, createdExperiment)).Should(Succeed())

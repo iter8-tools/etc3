@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -71,7 +71,7 @@ var terminalHandlerTypes []HandlerType = []HandlerType{
 }
 
 // GetHandler returns handler of a given type
-func (r *ExperimentReconciler) GetHandler(instance *v2alpha1.Experiment, t HandlerType) *string {
+func (r *ExperimentReconciler) GetHandler(instance *v2alpha2.Experiment, t HandlerType) *string {
 	switch t {
 	case HandlerTypeStart:
 		return instance.Spec.GetStartHandler(r.Iter8Config)
@@ -88,7 +88,7 @@ func (r *ExperimentReconciler) GetHandler(instance *v2alpha1.Experiment, t Handl
 
 // IsHandlerLaunched returns the handler (job) if one has been launched
 // Otherwise it returns nil
-func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *v2alpha1.Experiment, handler string, handlerInstance *int) (*batchv1.Job, error) {
+func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *v2alpha2.Experiment, handler string, handlerInstance *int) (*batchv1.Job, error) {
 	log := util.Logger(ctx)
 	log.Info("IsHandlerLaunched called", "handler", handler)
 
@@ -104,7 +104,7 @@ func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *
 }
 
 // LaunchHandler lauches the job that implements a particular handler
-func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2alpha1.Experiment, handler string, handlerInstance *int) error {
+func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2alpha2.Experiment, handler string, handlerInstance *int) error {
 	log := util.Logger(ctx)
 	log.Info("LaunchHandler called", "handler", handler)
 	defer log.Info("LaunchHandler completed", "handler", handler)
@@ -271,7 +271,7 @@ func HandlerJobFailed(handlerJob *batchv1.Job) bool {
 }
 
 // generate job name
-func jobName(instance *v2alpha1.Experiment, handler string, handlerInstance *int) string {
+func jobName(instance *v2alpha2.Experiment, handler string, handlerInstance *int) string {
 	uid := string(instance.UID)
 	name := fmt.Sprintf("%s-handler-%s-%s", handler, instance.Name, uid[strings.LastIndex(uid, "-")+1:])
 	if handlerInstance != nil {
@@ -309,7 +309,7 @@ const (
 )
 
 // GetHandlerStatus determines a handlers status
-func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v2alpha1.Experiment, handler *string, handlerInstance *int) HandlerStatusType {
+func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v2alpha2.Experiment, handler *string, handlerInstance *int) HandlerStatusType {
 	log := util.Logger(ctx)
 	log.Info("GetHandlerStatus called", "handler", handler)
 

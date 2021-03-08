@@ -42,7 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/util"
 	// +kubebuilder:scaffold:imports
@@ -60,7 +60,7 @@ var reconciler *ExperimentReconciler
 var events []string
 
 type testHTTP struct {
-	analysis *v2alpha1.Analysis
+	analysis *v2alpha2.Analysis
 }
 
 func (t *testHTTP) Post(url, contentType string, body []byte) ([]byte, int, error) {
@@ -106,7 +106,7 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(cfg).ToNot(BeNil())
 
-	err = v2alpha1.AddToScheme(scheme.Scheme)
+	err = v2alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
@@ -117,9 +117,9 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 
 	iter8config := configuration.NewIter8Config().
-		WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-		WithTestingPattern(string(v2alpha1.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-		WithTestingPattern(string(v2alpha1.TestingPatternConformance), map[string]string{"start": "start"}).
+		WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+		WithTestingPattern(string(v2alpha2.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+		WithTestingPattern(string(v2alpha2.TestingPatternConformance), map[string]string{"start": "start"}).
 		WithRequestCount("request-count").
 		WithEndpoint("http://iter8-analytics:8080").
 		WithHandlersDir("../test/handlers").
@@ -138,22 +138,22 @@ var _ = BeforeSuite(func(done Done) {
 	})).Should(Succeed())
 
 	testTransport := &testHTTP{
-		analysis: &v2alpha1.Analysis{
-			AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
-				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-				Data:             map[string]v2alpha1.AggregatedMetricsData{},
+		analysis: &v2alpha2.Analysis{
+			AggregatedMetrics: &v2alpha2.AggregatedMetricsAnalysis{
+				AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+				Data:             map[string]v2alpha2.AggregatedMetricsData{},
 			},
-			WinnerAssessment: &v2alpha1.WinnerAssessmentAnalysis{
-				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-				Data:             v2alpha1.WinnerAssessmentData{},
+			WinnerAssessment: &v2alpha2.WinnerAssessmentAnalysis{
+				AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+				Data:             v2alpha2.WinnerAssessmentData{},
 			},
-			VersionAssessments: &v2alpha1.VersionAssessmentAnalysis{
-				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-				Data:             map[string]v2alpha1.BooleanList{},
+			VersionAssessments: &v2alpha2.VersionAssessmentAnalysis{
+				AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+				Data:             map[string]v2alpha2.BooleanList{},
 			},
-			Weights: &v2alpha1.WeightsAnalysis{
-				AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-				Data:             []v2alpha1.WeightData{},
+			Weights: &v2alpha2.WeightsAnalysis{
+				AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+				Data:             []v2alpha2.WeightData{},
 			},
 		},
 	}
@@ -188,7 +188,7 @@ var _ = AfterSuite(func() {
 })
 
 func isDeployed(name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
@@ -197,59 +197,59 @@ func isDeployed(name string, ns string) bool {
 }
 
 func hasTarget(name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
 
-	return exp.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue()
+	return exp.Status.GetCondition(v2alpha2.ExperimentConditionTargetAcquired).IsTrue()
 }
 
 func completes(name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
-	return exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
+	return exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue()
 }
 
 func completesSuccessfully(name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
-	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
-	successful := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsFalse()
+	completed := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue()
+	successful := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentFailed).IsFalse()
 
 	return completed && successful
 }
 
 func fails(name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(ctx(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
 	}
-	completed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue()
-	failed := exp.Status.GetCondition(v2alpha1.ExperimentConditionExperimentFailed).IsTrue()
+	completed := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue()
+	failed := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentFailed).IsTrue()
 
 	return completed && failed
 }
 
 func isDeleted(name string, ns string) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	return err != nil &&
 		(errors.IsNotFound(err) || errors.IsGone(err))
 }
 
-type check func(*v2alpha1.Experiment) bool
+type check func(*v2alpha2.Experiment) bool
 
 func hasValue(name string, ns string, check check) bool {
-	exp := &v2alpha1.Experiment{}
+	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
 	if err != nil {
 		return false
@@ -258,8 +258,8 @@ func hasValue(name string, ns string, check check) bool {
 }
 
 func isRunning(name string, ns string) bool {
-	return hasValue(name, ns, func(exp *v2alpha1.Experiment) bool {
-		return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha1.ExperimentStageRunning
+	return hasValue(name, ns, func(exp *v2alpha2.Experiment) bool {
+		return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageRunning
 	})
 }
 

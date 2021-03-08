@@ -17,7 +17,7 @@ package controllers
 import (
 	"context"
 
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -34,9 +34,9 @@ var _ = Describe("Validation of VersionInfo", func() {
 	// The way to have no versions is to have no VersionInfo
 
 	Context("Experiment is a Conformance test", func() {
-		bldr := v2alpha1.NewExperiment("conformance-test", testNamespace).
+		bldr := v2alpha2.NewExperiment("conformance-test", testNamespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternConformance)
+			WithTestingPattern(v2alpha2.TestingPatternConformance)
 		It("should be valid only when 1 version is identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -50,9 +50,9 @@ var _ = Describe("Validation of VersionInfo", func() {
 	})
 
 	Context("Experiment is an AB test", func() {
-		bldr := v2alpha1.NewExperiment("ab-test", testNamespace).
+		bldr := v2alpha2.NewExperiment("ab-test", testNamespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternAB)
+			WithTestingPattern(v2alpha2.TestingPatternAB)
 		It("should be valid only when 2 versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -69,9 +69,9 @@ var _ = Describe("Validation of VersionInfo", func() {
 	})
 
 	Context("Experiment is an Canary test", func() {
-		bldr := v2alpha1.NewExperiment("canary-test", testNamespace).
+		bldr := v2alpha2.NewExperiment("canary-test", testNamespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary)
+			WithTestingPattern(v2alpha2.TestingPatternCanary)
 		It("should be valid only when 2 versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -88,9 +88,9 @@ var _ = Describe("Validation of VersionInfo", func() {
 	})
 
 	Context("Experiment is an ABN test", func() {
-		bldr := v2alpha1.NewExperiment("abn-test", testNamespace).
+		bldr := v2alpha2.NewExperiment("abn-test", testNamespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternABN)
+			WithTestingPattern(v2alpha2.TestingPatternABN)
 		It("should be valid only when more than 2 or more versions are identified", func() {
 			By("returning false when no versions are specified")
 			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
@@ -107,15 +107,15 @@ var _ = Describe("Validation of VersionInfo", func() {
 	})
 
 	Context("Experiment has common names", func() {
-		experiment := v2alpha1.NewExperiment("abn-test", testNamespace).
+		experiment := v2alpha2.NewExperiment("abn-test", testNamespace).
 			WithTarget("target").
 			WithBaselineVersion("baseline", nil).
 			WithCandidateVersion("candidate", nil).
-			WithTestingPattern(v2alpha1.TestingPatternABN).Build()
+			WithTestingPattern(v2alpha2.TestingPatternABN).Build()
 		It("should fail", func() {
 			By("adding another canidate with the same name")
 			experiment.Spec.VersionInfo.Candidates = append(experiment.Spec.VersionInfo.Candidates,
-				v2alpha1.VersionDetail{Name: "candidate"})
+				v2alpha2.VersionDetail{Name: "candidate"})
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})

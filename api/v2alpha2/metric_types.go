@@ -16,7 +16,7 @@ limitations under the License.
 
 // metric_types.go - go model for metric CRD
 
-package v2alpha1
+package v2alpha2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

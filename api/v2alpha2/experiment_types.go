@@ -14,7 +14,7 @@ limitations under the License.
 
 // experiment_types.go - go model for experiment CRD
 
-package v2alpha1
+package v2alpha2
 
 import (
 	corev1 "k8s.io/api/core/v1"

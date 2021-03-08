@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha1_test
+package v2alpha2_test
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -43,7 +43,7 @@ var _ = Describe("Metrics Not Created When Invalid", func() {
 		"invalid7.yaml": "spec has an extra field",
 	} {
 		Context("When "+feature, func() {
-			metric := v2alpha1.Metric{}
+			metric := v2alpha2.Metric{}
 			readMetricFromFile(path.Join(testMetricsDir, file), &metric)
 
 			It("should fail to create", func() {
@@ -58,10 +58,10 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 	ctx := context.Background()
 
 	Context("When metric is valid", func() {
-		metric := v2alpha1.NewMetric("test", "default").
+		metric := v2alpha2.NewMetric("test", "default").
 			WithDescription("valid metric").
 			WithParams(map[string]string{"foo": "bar"}).
-			WithType(v2alpha1.GaugeMetricType).
+			WithType(v2alpha2.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			Build()
@@ -72,7 +72,7 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 	})
 })
 
-func readMetricFromFile(templateFile string, job *v2alpha1.Metric) error {
+func readMetricFromFile(templateFile string, job *v2alpha2.Metric) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err

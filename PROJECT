@@ -3,8 +3,8 @@ repo: github.com/iter8-tools/etc3
 resources:
 - group: 
   kind: Experiment
-  version: v2alpha1
+  version: v2alpha2
 - group: 
   kind: Metric
-  version: v2alpha1
+  version: v2alpha2
 version: "2"

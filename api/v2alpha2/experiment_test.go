@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha1_test
+package v2alpha2_test
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/ghodss/yaml"
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,7 +52,7 @@ var _ = Describe("Experiment with actions", func() {
 		Context(tc.feature, func() {
 			It("should deal with actions with tasks with inputs", func() {
 				By("reading experiment")
-				s := v2alpha1.Experiment{}
+				s := v2alpha2.Experiment{}
 				Expect(readExperimentFromFile(util.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
 
 				testMap := make(map[string]interface{})
@@ -69,8 +69,8 @@ var _ = Describe("Experiment with actions", func() {
 				By("fetching the experiment with unknown fields")
 				exp2 := &unstructured.Unstructured{}
 				exp2.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v2alpha1.GroupVersion.Group,
-					Version: v2alpha1.GroupVersion.Version,
+					Group:   v2alpha2.GroupVersion.Group,
+					Version: v2alpha2.GroupVersion.Version,
 					Kind:    "Experiment",
 				})
 				Expect(k8sClient.Get(ctx, types.NamespacedName{
@@ -89,7 +89,7 @@ var _ = Describe("Experiment with actions", func() {
 
 })
 
-func readExperimentFromFile(templateFile string, exp *v2alpha1.Experiment) error {
+func readExperimentFromFile(templateFile string, exp *v2alpha2.Experiment) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err

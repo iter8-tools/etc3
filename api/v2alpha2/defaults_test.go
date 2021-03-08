@@ -12,12 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha1_test
+package v2alpha2_test
 
 import (
 	"reflect"
 
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/configuration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,18 +29,18 @@ import (
 var _ = Describe("Stages", func() {
 	Context("When stages are compared", func() {
 		It("Evaluates the order correctly", func() {
-			Expect(v2alpha1.ExperimentStageCompleted.After(v2alpha1.ExperimentStageRunning)).Should(BeTrue())
-			Expect(v2alpha1.ExperimentStageRunning.After(v2alpha1.ExperimentStageInitializing)).Should(BeTrue())
-			Expect(v2alpha1.ExperimentStageInitializing.After(v2alpha1.ExperimentStageRunning)).Should(BeFalse())
+			Expect(v2alpha2.ExperimentStageCompleted.After(v2alpha2.ExperimentStageRunning)).Should(BeTrue())
+			Expect(v2alpha2.ExperimentStageRunning.After(v2alpha2.ExperimentStageInitializing)).Should(BeTrue())
+			Expect(v2alpha2.ExperimentStageInitializing.After(v2alpha2.ExperimentStageRunning)).Should(BeFalse())
 		})
 	})
 })
 
 var _ = Describe("Initialization", func() {
 	Context("When initialize", func() {
-		experiment := v2alpha1.NewExperiment("experiment", "namespace").
+		experiment := v2alpha2.NewExperiment("experiment", "namespace").
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 			WithRequestCount("request-count").
 			Build()
@@ -55,19 +55,19 @@ var _ = Describe("Initialization", func() {
 
 			By("Initializing Spec")
 			c := configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-				WithTestingPattern(string(v2alpha1.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-				WithTestingPattern(string(v2alpha1.TestingPatternConformance), map[string]string{"start": "start"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternConformance), map[string]string{"start": "start"}).
 				WithRequestCount("request-count").
 				WithEndpoint("http://iter8-analytics:8080").
 				Build()
 			experiment.Spec.InitializeSpec(c)
-			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha1.DefaultIterationsPerLoop))
-			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(v2alpha1.DefaultMaxLoops))
-			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha1.DefaultIntervalSeconds)))
-			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha1.DefaultMaxCandidateWeight))
-			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha1.DefaultMaxCandidateWeightIncrement))
-			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha1.DefaultDeploymentPattern))
+			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha2.DefaultIterationsPerLoop))
+			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(v2alpha2.DefaultMaxLoops))
+			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha2.DefaultIntervalSeconds)))
+			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha2.DefaultMaxCandidateWeight))
+			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha2.DefaultMaxCandidateWeightIncrement))
+			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha2.DefaultDeploymentPattern))
 			// Expect(len(experiment.Spec.Metrics)).Should(Equal(1))
 			Expect(*experiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
 		})
@@ -76,20 +76,20 @@ var _ = Describe("Initialization", func() {
 
 var _ = Describe("Handler Initialization", func() {
 	var (
-		experiment *v2alpha1.Experiment
+		experiment *v2alpha2.Experiment
 		cfg        configuration.Iter8Config
 	)
 	Context("When hanlders are set in an experiment", func() {
 		BeforeEach(func() {
-			experiment = v2alpha1.NewExperiment("test", "default").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+			experiment = v2alpha2.NewExperiment("test", "default").
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "expStart", "finish": "expFinish"}).
 				Build()
 		})
 
 		It("the value of the start handler should match the value in experiment when a configuration is present", func() {
 			cfg = configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
@@ -102,9 +102,9 @@ var _ = Describe("Handler Initialization", func() {
 		})
 		It("the value of GetStartHandler should should be nil when set to none even if a configuration is present", func() {
 			cfg = configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
-			none := v2alpha1.NoneHandler
+			none := v2alpha2.NoneHandler
 			experiment.Spec.Strategy.Handlers.Start = &none
 
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
@@ -125,16 +125,16 @@ var _ = Describe("Handler Initialization", func() {
 	})
 
 	Context("When handlers are not defined in an experiment", func() {
-		experiment := v2alpha1.NewExperiment("test", "default").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+		experiment := v2alpha2.NewExperiment("test", "default").
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			Build()
 
 		It("the value is set by late initialization from the configuration", func() {
-			experiment := v2alpha1.NewExperiment("test", "default").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+			experiment := v2alpha2.NewExperiment("test", "default").
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				Build()
 			cfg := configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 			experiment.Spec.InitializeHandlers(cfg)
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
@@ -144,7 +144,7 @@ var _ = Describe("Handler Initialization", func() {
 
 		It("the value of the start handler shoud match the value im the configuration when it is present", func() {
 			cfg := configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha1.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
+				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
 				Build()
 			Expect(experiment.Spec.Strategy.Handlers).Should(BeNil())
 			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgStart"))
@@ -167,7 +167,7 @@ var _ = Describe("Handler Initialization", func() {
 
 var _ = Describe("VersionInfo", func() {
 	Context("When count versions", func() {
-		builder := v2alpha1.NewExperiment("test", "default").WithTarget("target")
+		builder := v2alpha2.NewExperiment("test", "default").WithTarget("target")
 		It("should count correctly", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
@@ -205,13 +205,13 @@ var _ = Describe("VersionInfo", func() {
 
 var _ = Describe("Criteria", func() {
 	Context("Criteria", func() {
-		builder := v2alpha1.NewExperiment("test", "default").WithTarget("target")
+		builder := v2alpha2.NewExperiment("test", "default").WithTarget("target")
 		It("", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.GetReward()).Should(BeNil())
 
 			experiment = builder.DeepCopy().
-				WithReward(*v2alpha1.NewMetric("metric", "default").Build(), v2alpha1.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(experiment.Spec.GetReward()).ShouldNot(BeNil())
 		})
@@ -221,16 +221,16 @@ var _ = Describe("Criteria", func() {
 var _ = Describe("Generated Code", func() {
 	Context("When a Metric object is copied", func() {
 		Specify("the copy should be the same as the original", func() {
-			metricBuilder := v2alpha1.NewMetric("reward", "default").
+			metricBuilder := v2alpha2.NewMetric("reward", "default").
 				WithDescription("reward metric").
 				WithParams(map[string]string{"query": "query"}).
 				WithProvider("prometheus").
-				WithType(v2alpha1.CounterMetricType).
+				WithType(v2alpha2.CounterMetricType).
 				WithUnits("ms").
 				WithSampleSize("sample/default")
 			metric := metricBuilder.Build()
-			metricList := *&v2alpha1.MetricList{
-				Items: []v2alpha1.Metric{*metric},
+			metricList := *&v2alpha2.MetricList{
+				Items: []v2alpha2.Metric{*metric},
 			}
 
 			Expect(reflect.DeepEqual(metricBuilder, metricBuilder.DeepCopy())).Should(BeTrue())
@@ -241,10 +241,10 @@ var _ = Describe("Generated Code", func() {
 
 	Context("When an Experiment object is copied", func() {
 		Specify("the copy should be the same as the original", func() {
-			experimentBuilder := v2alpha1.NewExperiment("test", "default").
+			experimentBuilder := v2alpha2.NewExperiment("test", "default").
 				WithTarget("copy").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
-				WithDeploymentPattern(v2alpha1.DeploymentPatternFixedSplit).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
 				WithHandlers(map[string]string{"start": "st", "finish": "fin", "failure": "fail", "rollback": "back", "loop": "lo"}).
 				WithDuration(3, 2, 1).
 				WithBaselineVersion("baseline", nil).
@@ -259,30 +259,30 @@ var _ = Describe("Generated Code", func() {
 				WithCurrentWeight("baseline", 25).WithCurrentWeight("candidate", 75).
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
 				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
-				WithCondition(v2alpha1.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha1.ReasonHandlerFailed, "foo %s", "bar").
-				WithAction("start", []v2alpha1.TaskSpec{{Library: "library", Task: "task"}}).
+				WithCondition(v2alpha2.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha2.ReasonHandlerFailed, "foo %s", "bar").
+				WithAction("start", []v2alpha2.TaskSpec{{Library: "library", Task: "task"}}).
 				WithRequestCount("request-count").
-				WithReward(*v2alpha1.NewMetric("reward", "default").Build(), v2alpha1.PreferredDirectionHigher).
-				WithIndicator(*v2alpha1.NewMetric("indicator", "default").Build()).
-				WithObjective(*v2alpha1.NewMetric("reward", "default").Build(), nil, nil, false)
+				WithReward(*v2alpha2.NewMetric("reward", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithIndicator(*v2alpha2.NewMetric("indicator", "default").Build()).
+				WithObjective(*v2alpha2.NewMetric("reward", "default").Build(), nil, nil, false)
 			experiment := experimentBuilder.Build()
 			now := metav1.Now()
 			message := "message"
 			winner := "winner"
 			q := resource.Quantity{}
 			ss := int32(1)
-			experiment.Status.Analysis = &v2alpha1.Analysis{
-				AggregatedMetrics: &v2alpha1.AggregatedMetricsAnalysis{
-					AnalysisMetaData: v2alpha1.AnalysisMetaData{
+			experiment.Status.Analysis = &v2alpha2.Analysis{
+				AggregatedMetrics: &v2alpha2.AggregatedMetricsAnalysis{
+					AnalysisMetaData: v2alpha2.AnalysisMetaData{
 						Provenance: "provenance",
 						Timestamp:  now,
 						Message:    &message,
 					},
-					Data: map[string]v2alpha1.AggregatedMetricsData{
+					Data: map[string]v2alpha2.AggregatedMetricsData{
 						"metric1": {
 							Max: &q,
 							Min: &q,
-							Data: map[string]v2alpha1.AggregatedMetricsVersionData{
+							Data: map[string]v2alpha2.AggregatedMetricsVersionData{
 								"metric": {
 									Min:        &q,
 									Max:        &q,
@@ -293,30 +293,30 @@ var _ = Describe("Generated Code", func() {
 						},
 					},
 				},
-				WinnerAssessment: &v2alpha1.WinnerAssessmentAnalysis{
-					AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-					Data: v2alpha1.WinnerAssessmentData{
+				WinnerAssessment: &v2alpha2.WinnerAssessmentAnalysis{
+					AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+					Data: v2alpha2.WinnerAssessmentData{
 						WinnerFound: true,
 						Winner:      &winner,
 					},
 				},
-				VersionAssessments: &v2alpha1.VersionAssessmentAnalysis{
-					AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-					Data: map[string]v2alpha1.BooleanList{
+				VersionAssessments: &v2alpha2.VersionAssessmentAnalysis{
+					AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+					Data: map[string]v2alpha2.BooleanList{
 						"baseline":  []bool{false},
 						"candidate": []bool{false},
 					},
 				},
-				Weights: &v2alpha1.WeightsAnalysis{
-					AnalysisMetaData: v2alpha1.AnalysisMetaData{},
-					Data: []v2alpha1.WeightData{
+				Weights: &v2alpha2.WeightsAnalysis{
+					AnalysisMetaData: v2alpha2.AnalysisMetaData{},
+					Data: []v2alpha2.WeightData{
 						{Name: "baseline", Value: 25},
 						{Name: "candidate", Value: 75},
 					},
 				},
 			}
-			experimentList := *&v2alpha1.ExperimentList{
-				Items: []v2alpha1.Experiment{*experiment},
+			experimentList := *&v2alpha2.ExperimentList{
+				Items: []v2alpha2.Experiment{*experiment},
 			}
 
 			Expect(reflect.DeepEqual(experimentBuilder, experimentBuilder.DeepCopy())).Should(BeTrue())

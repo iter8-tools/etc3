@@ -20,7 +20,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -30,7 +30,7 @@ import (
 // If the name is of the form "namespace/name", look in namespace for name.
 // Otherwise look for name. If not found, look in util.Iter8InstallNamespace() for name.
 // If not found return NotFound error
-func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha1.Experiment, name string, metricMap map[string]*v2alpha1.Metric) bool {
+func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha2.Experiment, name string, metricMap map[string]*v2alpha2.Metric) bool {
 	key := name
 	// default namespace to use is the experiment namespace
 	namespace := instance.GetObjectMeta().GetNamespace()
@@ -47,14 +47,14 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 		return true
 	}
 
-	metric := &v2alpha1.Metric{}
+	metric := &v2alpha2.Metric{}
 	err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, metric)
 	if err != nil {
 		// could not read metric; record the problem and indicate that the read did not succeed
 		if errors.IsNotFound(err) {
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricUnavailable, "Unable to find metric %s", name)
+			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonMetricUnavailable, "Unable to find metric %s", name)
 		} else {
-			r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonMetricsUnreadable, "Unable to load metric %s", name)
+			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonMetricsUnreadable, "Unable to load metric %s", name)
 		}
 		return false // not ok
 	}
@@ -77,7 +77,7 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
 // result is false if an error occurred reading metrics
-func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha1.Experiment) bool {
+func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha2.Experiment) bool {
 	log := util.Logger(ctx)
 	log.Info("ReadMetrics called")
 	defer log.Info("ReadMetrics completed")
@@ -87,7 +87,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		return true
 	}
 
-	metricsCache := make(map[string]*v2alpha1.Metric)
+	metricsCache := make(map[string]*v2alpha2.Metric)
 
 	// name of request counter
 	requestCount := instance.Spec.GetRequestCount(r.Iter8Config)
@@ -123,7 +123,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 	// found all metrics; copy into instance.Spec
 	for name, obj := range metricsCache {
 		instance.Spec.Metrics = append(instance.Spec.Metrics,
-			v2alpha1.MetricInfo{Name: name, MetricObj: *obj})
+			v2alpha2.MetricInfo{Name: name, MetricObj: *obj})
 	}
 	return true
 }

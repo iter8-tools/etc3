@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/controllers"
 	// +kubebuilder:scaffold:imports
@@ -54,7 +54,7 @@ const (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
-	_ = v2alpha1.AddToScheme(scheme)
+	_ = v2alpha2.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -143,13 +143,13 @@ func validateConfig(cfg configuration.Iter8Config) error {
 	// validate EnvironmentTypes
 	for _, expType := range cfg.ExperimentTypes {
 		ok := false
-		for _, validValue := range v2alpha1.ValidTestingPatternTypes {
+		for _, validValue := range v2alpha2.ValidTestingPatternTypes {
 			if expType.Name == string(validValue) {
 				ok = true
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid experiment type: %s, valid types are: %v", expType.Name, v2alpha1.ValidTestingPatternTypes)
+			return fmt.Errorf("Invalid experiment type: %s, valid types are: %v", expType.Name, v2alpha2.ValidTestingPatternTypes)
 		}
 	}
 	return nil

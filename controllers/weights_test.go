@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
 )
 
@@ -32,20 +32,20 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 	var namespace string
 	BeforeEach(func() {
 		namespace = "default"
-		k8sClient.DeleteAllOf(ctx(), &v2alpha1.Experiment{}, client.InNamespace(namespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(namespace))
 	})
 	Context("When try to read field from object", func() {
 		name := "read"
-		var experiment *v2alpha1.Experiment
+		var experiment *v2alpha2.Experiment
 		var objRef *corev1.ObjectReference
 		JustBeforeEach(func() {
-			experiment = v2alpha1.NewExperiment(name, namespace).
+			experiment = v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				Build()
 			objRef = &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha1",
+				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
@@ -91,15 +91,15 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		name := "observe-weights-all"
 		It("should read all the weights", func() {
 			objRef := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha1",
+				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
 				FieldPath:  "/spec/duration/maxLoops",
 			}
-			experiment := v2alpha1.NewExperiment(name, namespace).
+			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", objRef).
@@ -107,7 +107,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool {
-				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 2 &&
 						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
 						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
@@ -122,15 +122,15 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		name := "observe-weights-1"
 		It("should compute the missing weight", func() {
 			objRef := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha1",
+				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
 				FieldPath:  "/spec/duration/maxLoops",
 			}
-			experiment := v2alpha1.NewExperiment(name, namespace).
+			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -138,7 +138,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool {
-				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 2 &&
 						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
 						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
@@ -153,15 +153,15 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		name := "observe-weights-2"
 		It("should not compute the missing weights", func() {
 			objRef := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha1",
+				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
 				FieldPath:  "/spec/duration/maxLoops",
 			}
-			experiment := v2alpha1.NewExperiment(name, namespace).
+			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha1.TestingPatternCanary).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -171,7 +171,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool {
 				// verifies that only 1 (of 3) weights is present and that its value
-				return hasValue(name, namespace, func(exp *v2alpha1.Experiment) bool {
+				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 1 &&
 						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
 						exp.Status.CurrentWeightDistribution[0].Value == 3
@@ -190,9 +190,9 @@ var _ = Describe("Weight Patching", func() {
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 
 	Context("When experimentType is Conformance", func() {
-		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
+		experiment := v2alpha2.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternConformance).
+			WithTestingPattern(v2alpha2.TestingPatternConformance).
 			Build()
 		It("should succeed without error", func() {
 			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())
@@ -200,10 +200,10 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When algorithm is FixedSplit", func() {
-		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
+		experiment := v2alpha2.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
-			WithDeploymentPattern(v2alpha1.DeploymentPatternFixedSplit).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
+			WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
 			Build()
 		It("should succeed without error", func() {
 			Expect(redistributeWeight(ctx, experiment, restCfg)).Should(Succeed())
@@ -211,9 +211,9 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When no versionInfo", func() {
-		experiment := v2alpha1.NewExperiment("noVersionInfo", namespace).
+		experiment := v2alpha2.NewExperiment("noVersionInfo", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			Build()
 		It("Should fail with error", func() {
 			err := redistributeWeight(ctx, experiment, restCfg)
@@ -222,9 +222,9 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When WeightObjRef is not set", func() {
-		experiment := v2alpha1.NewExperiment("noWeightObRef", namespace).
+		experiment := v2alpha2.NewExperiment("noWeightObRef", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", nil).
 			Build()
@@ -237,9 +237,9 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When WeightObjRef set but no FieldPath", func() {
-		experiment := v2alpha1.NewExperiment("noFieldPath", namespace).
+		experiment := v2alpha2.NewExperiment("noFieldPath", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -257,9 +257,9 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When full WeightObjRef set but no weight recommendation", func() {
-		experiment := v2alpha1.NewExperiment("noWeightRecommendation", namespace).
+		experiment := v2alpha2.NewExperiment("noWeightRecommendation", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -278,9 +278,9 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When full WeightObjRef and weight recommendation matches current value", func() {
-		experiment := v2alpha1.NewExperiment("recommendationIsCurrent", namespace).
+		experiment := v2alpha2.NewExperiment("recommendationIsCurrent", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -300,9 +300,9 @@ var _ = Describe("Weight Patching", func() {
 		})
 	})
 	Context("When full WeightObjRef and weight recommendation does not match the current value", func() {
-		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
+		experiment := v2alpha2.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -322,9 +322,9 @@ var _ = Describe("Weight Patching", func() {
 		})
 	})
 	Context("When multiple versions require updates to the same object", func() {
-		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
+		experiment := v2alpha2.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -362,9 +362,9 @@ var _ = Describe("Weight Patching", func() {
 	})
 
 	Context("When multiple versions require updates to different objects", func() {
-		experiment := v2alpha1.NewExperiment("recommendationNotCurrent", namespace).
+		experiment := v2alpha2.NewExperiment("recommendationNotCurrent", namespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha1.TestingPatternCanary).
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",

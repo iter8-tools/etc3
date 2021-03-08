@@ -10,7 +10,7 @@ import (
 	"runtime"
 
 	"github.com/go-logr/logr"
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 )
 
 const (
@@ -27,8 +27,8 @@ func Logger(ctx context.Context) logr.Logger {
 }
 
 // OriginalStatus gets the status from the context
-func OriginalStatus(ctx context.Context) *v2alpha1.ExperimentStatus {
-	return ctx.Value(OriginalStatusKey).(*v2alpha1.ExperimentStatus)
+func OriginalStatus(ctx context.Context) *v2alpha2.ExperimentStatus {
+	return ctx.Value(OriginalStatusKey).(*v2alpha2.ExperimentStatus)
 }
 
 // CompletePath is a helper function for converting file paths, specified relative to the caller of this function, into absolute ones.

@@ -19,20 +19,20 @@ package controllers
 import (
 	"context"
 
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
-func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2alpha1.Experiment) bool {
+func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2alpha2.Experiment) bool {
 	log := util.Logger(ctx)
 	log.Info("acquireTarget called")
 	defer log.Info("acquireTarget completed")
 
 	// do we already have the target?
-	log.Info("acquireTarget", "Acquired", instance.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired))
-	if instance.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
+	log.Info("acquireTarget", "Acquired", instance.Status.GetCondition(v2alpha2.ExperimentConditionTargetAcquired))
+	if instance.Status.GetCondition(v2alpha2.ExperimentConditionTargetAcquired).IsTrue() {
 		return true
 	}
 
@@ -45,7 +45,7 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 	earliest := instance.Status.InitTime
 	for _, e := range shareTarget {
 		if !sameInstance(instance, e) {
-			if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
+			if e.Status.GetCondition(v2alpha2.ExperimentConditionTargetAcquired).IsTrue() {
 				log.Info("acquireTarget", "target already owned by", e.Name)
 				return false
 			}
@@ -68,14 +68,14 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 	return false
 }
 
-func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, target string) []*v2alpha1.Experiment {
+func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, target string) []*v2alpha2.Experiment {
 	log := util.Logger(ctx)
 	log.Info("activeContendersForTarget called")
 	defer log.Info("activeContendersForTarget completed")
 
-	result := []*v2alpha1.Experiment{}
+	result := []*v2alpha2.Experiment{}
 
-	experiments := &v2alpha1.ExperimentList{}
+	experiments := &v2alpha2.ExperimentList{}
 	if err := r.List(ctx, experiments); err != nil {
 		log.Error(err, "activeContendersForTarget Unable to list experiments")
 		return result
@@ -83,7 +83,7 @@ func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, ta
 
 	for i := range experiments.Items {
 		if experiments.Items[i].Spec.Target == target &&
-			experiments.Items[i].Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsFalse() {
+			experiments.Items[i].Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsFalse() {
 			result = append(result, &experiments.Items[i])
 		}
 	}
@@ -92,7 +92,7 @@ func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, ta
 	return result
 }
 
-func sameInstance(instance1 *v2alpha1.Experiment, instance2 *v2alpha1.Experiment) bool {
+func sameInstance(instance1 *v2alpha2.Experiment, instance2 *v2alpha2.Experiment) bool {
 	return instance1.Name == instance2.Name && instance1.Namespace == instance2.Namespace
 }
 
@@ -101,14 +101,14 @@ func sameInstance(instance1 *v2alpha1.Experiment, instance2 *v2alpha1.Experiment
 //    (a) there isn't already an active experiment for the target, and
 //    (b) the next active experiment for the target is this instance (because acquireTarget will
 //        be called soon -- when endExperiment() is called)
-func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, instance *v2alpha1.Experiment) {
+func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, instance *v2alpha2.Experiment) {
 	log := util.Logger(ctx)
 	log.Info("triggerWaitingExperiments called")
 	defer log.Info("triggerWaitingExperiments completed")
 
 	targetsAlreadyChecked := []string{}
 
-	experiments := &v2alpha1.ExperimentList{}
+	experiments := &v2alpha2.ExperimentList{}
 	if err := r.List(ctx, experiments); err != nil {
 		log.Error(err, "triggerWaitingExperiments: Unable to list experiments")
 		return
@@ -128,7 +128,7 @@ func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, in
 // If there are none (either because there are no waiting experiments for the given target
 // or because the target is already in use), nil is returned.
 // If instance is specified (blacklisted), it will not be returned.
-func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target string, instance *v2alpha1.Experiment) *v2alpha1.Experiment {
+func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target string, instance *v2alpha2.Experiment) *v2alpha2.Experiment {
 	log := util.Logger(ctx)
 	log.Info("nextWaitingExperiment called")
 	defer log.Info("nextWaitingExperiment completed")
@@ -136,7 +136,7 @@ func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target
 	shareTarget := r.activeContendersForTarget(ctx, target)
 
 	earliest := metav1.Now()
-	next := (*v2alpha1.Experiment)(nil)
+	next := (*v2alpha2.Experiment)(nil)
 
 	for _, e := range shareTarget {
 		// not interested in instance if it is provided
@@ -146,7 +146,7 @@ func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target
 
 		// Note that we've already filtered out the completed ones so if there is another
 		// experiment that has acquired the target, we can't/shouldn't suggest another
-		if e.Status.GetCondition(v2alpha1.ExperimentConditionTargetAcquired).IsTrue() {
+		if e.Status.GetCondition(v2alpha2.ExperimentConditionTargetAcquired).IsTrue() {
 			log.Info("nextWaitingExperiment", "target already owned by", e.Name)
 			return nil
 		}
@@ -163,7 +163,7 @@ func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target
 }
 
 // triggerNextExperiment finds the next experiment to trigger. If there is one, it is triggered.
-func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, target string, instance *v2alpha1.Experiment) {
+func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, target string, instance *v2alpha2.Experiment) {
 	log := util.Logger(ctx)
 	log.Info("triggerNextExperiment called", "target", target)
 	defer log.Info("triggerNextExperiment completed")

@@ -23,7 +23,7 @@ spec:
     - jsonPath: .spec.description
       name: description
       type: string
-    name: v2alpha1
+    name: v2alpha2
     schema:
       openAPIV3Schema:
         description: Metric is the Schema for the metrics API

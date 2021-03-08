@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/iter8-tools/etc3/analytics"
-	v2alpha1 "github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,7 +74,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	defer log.Info("Reconcile completed")
 
 	// Fetch instance on which started
-	instance := &v2alpha1.Experiment{}
+	instance := &v2alpha2.Experiment{}
 	err := r.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		// if object not found, it has been deleted
@@ -105,13 +105,13 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 			log.Error(err, "Failed to update Status after initialization.")
 		}
 		r.recordExperimentProgress(ctx, instance,
-			v2alpha1.ReasonExperimentInitialized, "Experiment status initialized")
+			v2alpha2.ReasonExperimentInitialized, "Experiment status initialized")
 		return r.endRequest(ctx, instance)
 	}
 	log.Info("Status initialized")
 
 	// If experiment already completed, stop
-	if instance.Status.GetCondition(v2alpha1.ExperimentConditionExperimentCompleted).IsTrue() {
+	if instance.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue() {
 		log.Info("Experiment already completed.")
 		return r.endRequest(ctx, instance)
 	}
@@ -147,7 +147,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	// advance stage from Waiting to Initializing
 	// when we advance for the first time, we exit to force update; will be retriggered
-	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageInitializing); ok {
+	if ok := r.advanceStage(ctx, instance, v2alpha2.ExperimentStageInitializing); ok {
 		log.Info("Update stage advance to: Initializing")
 		return r.endRequest(ctx, instance)
 	}
@@ -174,7 +174,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// when we advance for the first time, we've just finished the start handler (if there is one),
 	// so we update Status.CurrentWeightDistribution
 	// when we advance for the first time, we exit to force update; will be retriggered
-	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageRunning); ok {
+	if ok := r.advanceStage(ctx, instance, v2alpha2.ExperimentStageRunning); ok {
 		log.Info("Updating stage advance to: Running")
 		updateObservedWeights(ctx, instance, r.RestConfig)
 		return r.endRequest(ctx, instance)
@@ -190,7 +190,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	instance.Status.SetRecommendedBaseline(instance.Spec.VersionInfo.Baseline.Name)
 
 	// INITIAL WEIGHT DISTRIBUTION (FixedSplit only)
-	// if instance.Spec.GetAlgorithm() == v2alpha1.AlgorithmTypeFixedSplit {
+	// if instance.Spec.GetAlgorithm() == v2alpha2.AlgorithmTypeFixedSplit {
 	// 	redistributeWeight (ctx, instance, instance.Spec.GetWeightDistribution())
 	// }
 
@@ -237,7 +237,7 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	)
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v2alpha1.Experiment{}).
+		For(&v2alpha2.Experiment{}).
 		Watches(&source.Kind{Type: &batchv1.Job{}},
 			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
 			builder.WithPredicates(jobPredicateFuncs)).
@@ -267,7 +267,7 @@ func removeString(slice []string, s string) (result []string) {
 
 // Helper functions for maintaining stages
 
-func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alpha1.Experiment, to v2alpha1.ExperimentStageType) bool {
+func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alpha2.Experiment, to v2alpha2.ExperimentStageType) bool {
 	log := util.Logger(ctx)
 	log.Info("advanceStage called", "current stage", *instance.Status.Stage, "to", to)
 	defer log.Info("advanceStage completed")
@@ -276,7 +276,7 @@ func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alp
 	if to.After(stage) {
 		stage = to
 		instance.Status.Stage = &stage
-		r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonStageAdvanced, "Advanced to %s", to)
+		r.recordExperimentProgress(ctx, instance, v2alpha2.ReasonStageAdvanced, "Advanced to %s", to)
 		return true
 	}
 	return false
@@ -285,7 +285,7 @@ func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alp
 // Helper functions for TERMINATION
 
 // endRequest writes any changes (if needed) in preparation for ending processing of this reconcile request
-func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha1.Experiment, interval ...time.Duration) (ctrl.Result, error) {
+func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha2.Experiment, interval ...time.Duration) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("endRequest called")
 	defer log.Info("endRequest completed")
@@ -300,7 +300,7 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha
 }
 
 // endExperiment is called to mark an experiment as completed and triggers next experiment object
-func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2alpha1.Experiment, msg string) (ctrl.Result, error) {
+func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2alpha2.Experiment, msg string) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("endExperiment called")
 	defer log.Info("endExperiment completed")
@@ -309,7 +309,7 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	// when we advance to Completed for the first time, any terminal handler has completed. We update
 	// Status.CurrentWeightDistribution to reflect any possible change to distributiom.
 	// when we do so for the first time, record the completion event and trigger the next experiment
-	if ok := r.advanceStage(ctx, instance, v2alpha1.ExperimentStageCompleted); ok {
+	if ok := r.advanceStage(ctx, instance, v2alpha2.ExperimentStageCompleted); ok {
 		log.Info("Updating stage advance to: Completed")
 		r.recordExperimentCompleted(ctx, instance, msg)
 		r.updateStatus(ctx, instance)
@@ -319,13 +319,13 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 	return r.endRequest(ctx, instance)
 }
 
-func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
+func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v2alpha2.Experiment) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("finishExperiment called")
 	defer log.Info("finishExperiment completed")
 
 	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFinish,
-		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
+		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha2.ExperimentStageFinishing) }},
 	); stop {
 		return result, err
 	}
@@ -333,13 +333,13 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	return r.endExperiment(ctx, instance, "Experiment completed successfully")
 }
 
-func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2alpha1.Experiment) (ctrl.Result, error) {
+func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2alpha2.Experiment) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("rollbackExperiment called")
 	defer log.Info("rollbackExperiment ended")
 
 	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeRollback,
-		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
+		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha2.ExperimentStageFinishing) }},
 	); stop {
 		return result, err
 	}
@@ -347,7 +347,7 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 	return r.endExperiment(ctx, instance, "Experiment rolled back")
 }
 
-func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2alpha1.Experiment, err error) (ctrl.Result, error) {
+func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2alpha2.Experiment, err error) (ctrl.Result, error) {
 	log := util.Logger(ctx)
 	log.Info("failExperiment called")
 	defer log.Info("failExperiment completed")
@@ -357,7 +357,7 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 	}
 
 	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
-		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha1.ExperimentStageFinishing) }},
+		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha2.ExperimentStageFinishing) }},
 	); stop {
 		return result, err
 	}
@@ -373,7 +373,7 @@ func validUpdateErr(err error) bool {
 	return strings.Contains(err.Error(), benignMsg)
 }
 
-func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alpha1.Experiment) error {
+func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alpha2.Experiment) error {
 	log := util.Logger(ctx)
 	originalStatus := util.OriginalStatus(ctx)
 
@@ -392,7 +392,7 @@ func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alp
 // If running, tell caller to stop (to wait for completion)
 // If failed, call failExperiment and tell caller to stop
 // If completed successfully, tell caller to continue
-func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance *v2alpha2.Experiment,
 	handlerTypes []HandlerType) (bool, ctrl.Result, error) {
 
 	log := util.Logger(ctx)
@@ -424,7 +424,7 @@ func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance
 	return !stop, dummyResult, nil
 }
 
-func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance *v2alpha1.Experiment,
+func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance *v2alpha2.Experiment,
 	handlerType HandlerType, handler *string, handlerInstance *int) (bool, ctrl.Result, error) {
 
 	log := util.Logger(ctx)
@@ -491,7 +491,7 @@ type handlerLaunchModifier struct {
 // If a handler was launched the caller should wait for completion
 // If an error occurred, failExperiment was called and the caller should stop
 func (r *ExperimentReconciler) launchHandlerWrapper(
-	ctx context.Context, instance *v2alpha1.Experiment, handlerType HandlerType,
+	ctx context.Context, instance *v2alpha2.Experiment, handlerType HandlerType,
 	modifier handlerLaunchModifier) (bool, ctrl.Result, error) {
 
 	log := util.Logger(ctx)
@@ -528,14 +528,14 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	}
 
 	// record launch
-	r.recordExperimentProgress(ctx, instance, v2alpha1.ReasonHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
+	r.recordExperimentProgress(ctx, instance, v2alpha2.ReasonHandlerLaunched, "%s handler '%s' launched", handlerType, *handler)
 
 	// tell caller to stop (to wait for handler to complete)
 	result, err := r.endRequest(ctx, instance)
 	return stop, result, err
 }
 
-func (r *ExperimentReconciler) cleanupDeletedExperiments(ctx context.Context, instance *v2alpha1.Experiment) {
+func (r *ExperimentReconciler) cleanupDeletedExperiments(ctx context.Context, instance *v2alpha2.Experiment) {
 	log := util.Logger(ctx)
 	log.Info("cleanupDeletedExperiments called")
 	defer log.Info("cleanupDeletedExperiments completed")
@@ -596,7 +596,7 @@ func (r *ExperimentReconciler) identifyDeletedExperiments(ctx context.Context, e
 
 	for key, value := range experimentToJobs {
 		splitKey := strings.Split(key, "/")
-		experiment := v2alpha1.Experiment{}
+		experiment := v2alpha2.Experiment{}
 		err := r.Get(ctx, types.NamespacedName{Name: splitKey[1], Namespace: splitKey[0]}, &experiment)
 		if err == nil {
 			// we found the experiment, it is not deleted

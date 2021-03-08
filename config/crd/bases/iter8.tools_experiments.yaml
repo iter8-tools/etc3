@@ -32,7 +32,7 @@ spec:
     - jsonPath: .status.message
       name: message
       type: string
-    name: v2alpha1
+    name: v2alpha2
     schema:
       openAPIV3Schema:
         description: Experiment is the Schema for the experiments API

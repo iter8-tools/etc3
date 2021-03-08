@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +30,7 @@ type HTTP interface {
 }
 
 // Invoke sends payload to endpoint and gets response back
-func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTTP) (*v2alpha1.Analysis, error) {
+func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTTP) (*v2alpha2.Analysis, error) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTT
 		return nil, fmt.Errorf("%v", string(body))
 	}
 
-	var response v2alpha1.Analysis
+	var response v2alpha2.Analysis
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, err

@@ -14,7 +14,7 @@ limitations under the License.
 
 // metrics_builder.go - methods to programatically create metrics; used for testing
 
-package v2alpha1
+package v2alpha2
 
 import (
 	"strings"

@@ -1,10 +1,10 @@
-package v2alpha1_test
+package v2alpha2_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/rest"
@@ -38,7 +38,7 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(cfg).ToNot(BeNil())
 
-	err = v2alpha1.AddToScheme(scheme.Scheme)
+	err = v2alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

@@ -19,7 +19,7 @@ package controllers
 import (
 	"context"
 
-	"github.com/iter8-tools/etc3/api/v2alpha1"
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 )
 
 // IsExperimentValid verifies that instance.Spec is valid; this should be done after late initialization
@@ -27,7 +27,7 @@ import (
 // TODO 2. Warning if no criteria?
 // TODO 3. For ab and abn there is a reward
 // TODO 4. If rollbackOnFailure there is a rollback handler?
-func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
+func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *v2alpha2.Experiment) bool {
 	return true
 }
 
@@ -36,38 +36,38 @@ func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *
 // DONE 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
 // DONE 3. verify that the names of the versions are all unique
 // TODO 4. verify any ObjectReferences are existing objects in the cluster
-func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha1.Experiment) bool {
+func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha2.Experiment) bool {
 	// 1. verify that versionInfo is present
 	if instance.Spec.VersionInfo == nil {
-		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "No versionInfo in experiment")
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "No versionInfo in experiment")
 		return false
 	}
 	// 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
 	if !candidatesMatchStrategy(instance.Spec) {
-		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Invalid number of candidates for %s experiment", instance.Spec.Strategy.TestingPattern)
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Invalid number of candidates for %s experiment", instance.Spec.Strategy.TestingPattern)
 		return false
 	}
 	// 3. verify that the names of the versionns are all unique
 	if !versionsUnique(instance.Spec) {
-		r.recordExperimentFailed(ctx, instance, v2alpha1.ReasonInvalidExperiment, "Version names are not unique")
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Version names are not unique")
 		return false
 	}
 	return true
 }
 
-func candidatesMatchStrategy(s v2alpha1.ExperimentSpec) bool {
+func candidatesMatchStrategy(s v2alpha2.ExperimentSpec) bool {
 	switch s.Strategy.TestingPattern {
-	case v2alpha1.TestingPatternConformance:
+	case v2alpha2.TestingPatternConformance:
 		return len(s.VersionInfo.Candidates) == 0
-	case v2alpha1.TestingPatternAB, v2alpha1.TestingPatternCanary:
+	case v2alpha2.TestingPatternAB, v2alpha2.TestingPatternCanary:
 		return len(s.VersionInfo.Candidates) == 1
-	case v2alpha1.TestingPatternABN:
+	case v2alpha2.TestingPatternABN:
 		return len(s.VersionInfo.Candidates) > 0
 	}
 	return true
 }
 
-func versionsUnique(s v2alpha1.ExperimentSpec) bool {
+func versionsUnique(s v2alpha2.ExperimentSpec) bool {
 	versions := []string{s.VersionInfo.Baseline.Name}
 	for _, candidate := range s.VersionInfo.Candidates {
 		if containsString(versions, candidate.Name) {
