@@ -262,7 +262,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
 
-		It("should be valid when more than 1 reward", func() {
+		It("should be invalid when more than 1 reward", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
@@ -270,7 +270,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 				WithReward(*v2alpha2.NewMetric("metric-1", "default").Build(), v2alpha2.PreferredDirectionHigher).
 				WithReward(*v2alpha2.NewMetric("metric-2", "default").Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
-			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 

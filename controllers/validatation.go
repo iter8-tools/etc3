@@ -94,7 +94,7 @@ func validNumberOfRewards(s v2alpha2.ExperimentSpec) bool {
 	case v2alpha2.TestingPatternAB:
 		return s.Criteria != nil && len(s.Criteria.Rewards) == 1
 	case v2alpha2.TestingPatternABN:
-		return s.Criteria != nil && len(s.Criteria.Rewards) > 0
+		return s.Criteria != nil && len(s.Criteria.Rewards) == 1
 	}
 	return true
 }
