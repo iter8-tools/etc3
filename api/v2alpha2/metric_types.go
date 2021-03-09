@@ -57,8 +57,9 @@ type MetricSpec struct {
 
 	// SampleSize is a reference to a counter metric resource.
 	// It needs to indicte the number of data points over which this metric is computed.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
-	SampleSize *MetricReference `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
+	SampleSize *string `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 
 	// Provider identifies the metric backend including its authentication properties and its unmarshaller
 	// +kubebuilder:validation:MinLength:=1
@@ -72,18 +73,6 @@ type Param struct {
 
 	// Value of parameter
 	Value string `json:"value" yaml:"value"`
-}
-
-// MetricReference is a reference to another metric
-type MetricReference struct {
-	// Namespace is the namespace where the metric is defined
-	// If not provided, it is assumed to be in the same namespace as the referrer.
-	// +optional
-	Namespace *string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-
-	// Name is the name of the metric
-	// +kubebuilder:validation:MinLength:=1
-	Name string `json:"name" yaml:"name"`
 }
 
 // MetricStatus defines the observed state of Metric

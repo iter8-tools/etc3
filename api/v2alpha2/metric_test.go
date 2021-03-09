@@ -38,9 +38,7 @@ var _ = Describe("Metrics Not Created When Invalid", func() {
 		"invalid2.yaml": "spec.type is invalid",
 		"invalid3.yaml": "spec.provider is not set",
 		"invalid4.yaml": "spec.provider is \"\"",
-		"invalid5.yaml": "spec.sampleSize.name is \"\"",
-		"invalid6.yaml": "spec.sampleSize.name is not set",
-		"invalid7.yaml": "spec has an extra field",
+		"invalid5.yaml": "spec has an extra field",
 	} {
 		Context("When "+feature, func() {
 			metric := v2alpha2.Metric{}

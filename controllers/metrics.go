@@ -64,11 +64,7 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 
 	// check if this metric references another metric. If so, read it too
 	if metric.Spec.SampleSize != nil {
-		referencedNamespace := metric.GetObjectMeta().GetNamespace()
-		if metric.Spec.SampleSize.Namespace != nil {
-			referencedNamespace = *metric.Spec.SampleSize.Namespace
-		}
-		return r.ReadMetric(ctx, instance, referencedNamespace+"/"+metric.Spec.SampleSize.Name, metricMap)
+		return r.ReadMetric(ctx, instance, *metric.Spec.SampleSize, metricMap)
 	}
 
 	// must be ok
@@ -127,4 +123,16 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 			v2alpha2.MetricInfo{Name: name, MetricObj: *obj})
 	}
 	return true
+}
+
+func namespaceName(name string) (*string, string) {
+	var namespace *string
+	splt := strings.Split(name, "/")
+	if len(splt) == 2 {
+		namespace = &splt[0]
+		name = splt[1]
+	} else {
+		namespace = nil
+	}
+	return namespace, name
 }
