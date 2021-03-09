@@ -135,13 +135,11 @@ spec:
                       - preferredDirection
                       type: object
                     type: array
-                  with:
-                    additionalProperties:
-                      x-kubernetes-preserve-unknown-fields: true
+                  support:
                     description: Support identifies the required degree of support
                       the analytics provides before the analytics engine will assert
                       success for an objective.
-                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
                 type: object
               duration:
                 description: Duration describes how long the experiment will last.
