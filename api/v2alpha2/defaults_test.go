@@ -208,12 +208,19 @@ var _ = Describe("Criteria", func() {
 		builder := v2alpha2.NewExperiment("test", "default").WithTarget("target")
 		It("", func() {
 			experiment := builder.DeepCopy().Build()
-			Expect(experiment.Spec.GetReward()).Should(BeNil())
+			Expect(experiment.Spec.Criteria).Should(BeNil())
+
+			experiment = builder.DeepCopy().
+				WithIndicator(*v2alpha2.NewMetric("metric", "default").Build()).
+				Build()
+			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
+			Expect(experiment.Spec.Criteria.Rewards).Should(BeEmpty())
 
 			experiment = builder.DeepCopy().
 				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
-			Expect(experiment.Spec.GetReward()).ShouldNot(BeNil())
+			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
+			Expect(experiment.Spec.Criteria.Rewards).ShouldNot(BeEmpty())
 		})
 	})
 })

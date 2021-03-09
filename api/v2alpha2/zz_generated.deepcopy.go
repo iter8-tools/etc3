@@ -251,10 +251,10 @@ func (in *Criteria) DeepCopyInto(out *Criteria) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Reward != nil {
-		in, out := &in.Reward, &out.Reward
-		*out = new(Reward)
-		**out = **in
+	if in.Rewards != nil {
+		in, out := &in.Rewards, &out.Rewards
+		*out = make([]Reward, len(*in))
+		copy(*out, *in)
 	}
 	if in.Indicators != nil {
 		in, out := &in.Indicators, &out.Indicators

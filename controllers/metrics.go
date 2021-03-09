@@ -95,11 +95,12 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		return ok
 	}
 
-	// name of reward, if any
-	reward := instance.Spec.GetReward()
-	if reward != nil {
-		if ok := r.ReadMetric(ctx, instance, reward.Metric, metricsCache); !ok {
-			return ok
+	// rewards
+	for _, reward := range criteria.Rewards {
+		if metricsCache[reward.Metric] == nil {
+			if ok := r.ReadMetric(ctx, instance, reward.Metric, metricsCache); !ok {
+				return ok
+			}
 		}
 	}
 

@@ -114,24 +114,27 @@ spec:
                       user
                     type: string
                   reward:
-                    description: Reward is the metric that should be used to evaluate
-                      the reward for a version in the experiment.
-                    properties:
-                      metric:
-                        description: Metric ..
-                        type: string
-                      preferredDirection:
-                        description: PreferredDirection identifies whether higher
-                          or lower values of the reward metric are preferred valid
-                          values are "higher" and "lower"
-                        enum:
-                        - High
-                        - Low
-                        type: string
-                    required:
-                    - metric
-                    - preferredDirection
-                    type: object
+                    description: Reward is a list of metrics that should be used to
+                      evaluate the reward for a version in the experiment.
+                    items:
+                      description: Reward ..
+                      properties:
+                        metric:
+                          description: Metric ..
+                          type: string
+                        preferredDirection:
+                          description: PreferredDirection identifies whether higher
+                            or lower values of the reward metric are preferred valid
+                            values are "higher" and "lower"
+                          enum:
+                          - High
+                          - Low
+                          type: string
+                      required:
+                      - metric
+                      - preferredDirection
+                      type: object
+                    type: array
                 type: object
               duration:
                 description: Duration describes how long the experiment will last.

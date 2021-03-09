@@ -240,10 +240,10 @@ func (b *ExperimentBuilder) WithReward(metric Metric, preferredDirection Preferr
 		b.Spec.Criteria = &Criteria{}
 	}
 	name := metric.Namespace + "/" + metric.Name
-	b.Spec.Criteria.Reward = &Reward{
+	b.Spec.Criteria.Rewards = append(b.Spec.Criteria.Rewards, Reward{
 		Metric:             name,
 		PreferredDirection: preferredDirection,
-	}
+	})
 	return b
 }
 
