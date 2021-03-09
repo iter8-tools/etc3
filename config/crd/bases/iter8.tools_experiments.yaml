@@ -754,11 +754,6 @@ spec:
                   - value
                   type: object
                 type: array
-              endTime:
-                description: EndTime is the time when experiment completes (after
-                  the finish handler completed)
-                format: date-time
-                type: string
               initTime:
                 description: InitTime is the times when the experiment is initialized
                   (experiment CR is new) matches example

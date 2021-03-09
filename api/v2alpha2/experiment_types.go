@@ -316,10 +316,6 @@ type ExperimentStatus struct {
 	// matches
 	StartTime *metav1.Time `json:"startTime,omitempty" yaml:"startTime,omitempty"`
 
-	// EndTime is the time when experiment completes (after the finish handler completed)
-	// +optional
-	EndTime *metav1.Time `json:"endTime,omitempty" yaml:"endTime,omitempty"`
-
 	// LastUpdateTime is the last time iteration has been updated
 	// +optional
 	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty" yaml:"lastUpdateTime,omitempty"`
