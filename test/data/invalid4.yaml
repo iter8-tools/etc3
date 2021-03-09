@@ -8,3 +8,4 @@ spec:
     foo: bar
   type: gauge
   provider: ""
+  url: url

@@ -8,3 +8,4 @@ spec:
   description: Invalid metric - invalid type
   type: invalid
   provider: provider
+  url: url

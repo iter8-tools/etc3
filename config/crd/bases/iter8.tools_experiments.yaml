@@ -188,11 +188,34 @@ spec:
                             description:
                               description: Text description of the metric
                               type: string
+                            headers:
+                              description: HeaderTemplates are templates for headers
+                                that should be passed to the metrics backend. Typically
+                                these are authentication headers. Any fields of the
+                                form '$name' are treated as variables whose value
+                                is looked up in the secret referred to by spec.secretRef.
+                                If the secret does not contain the variable as a key,
+                                the full string "$name" is used.
+                              items:
+                                description: NamedValue name/value to be used in constructing
+                                  a REST query to backend metrics server
+                                properties:
+                                  name:
+                                    description: Name of parameter
+                                    type: string
+                                  value:
+                                    description: Value of parameter
+                                    type: string
+                                required:
+                                - name
+                                - value
+                                type: object
+                              type: array
                             params:
                               description: Params are key/value pairs used to construct
                                 a REST query to the metrics backend
                               items:
-                                description: Param name/value to be used in constructing
+                                description: NamedValue name/value to be used in constructing
                                   a REST query to backend metrics server
                                 properties:
                                   name:
@@ -217,6 +240,12 @@ spec:
                                 data points over which this metric is computed.
                               minLength: 1
                               type: string
+                            secret:
+                              description: SecretRef the name of a kubernetes Secret
+                                containing authentication details for the metrics
+                                backend
+                              minLength: 1
+                              type: string
                             type:
                               default: gauge
                               description: Type of the metric
@@ -227,8 +256,17 @@ spec:
                             units:
                               description: Units used for display only
                               type: string
+                            urlTemplate:
+                              description: URLTemplate is a template of the url of
+                                metrics backend. Any fields pf the form '$name' are
+                                treated as variables whose value is looked up in the
+                                secret referred to by spec.secretRef. If the secret
+                                does not contain the variable as a key, the full string
+                                "$name" is used.
+                              type: string
                           required:
                           - provider
+                          - urlTemplate
                           type: object
                       type: object
                       x-kubernetes-embedded-resource: true

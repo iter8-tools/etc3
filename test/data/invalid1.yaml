@@ -7,4 +7,5 @@ spec:
   params:
   type: gauge
   provider: provider
+  url: url
 

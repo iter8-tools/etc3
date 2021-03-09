@@ -62,6 +62,7 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 			WithType(v2alpha2.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
+			WithURLTemplate("url").
 			Build()
 
 		It("should be created", func() {

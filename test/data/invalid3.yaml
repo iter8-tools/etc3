@@ -7,3 +7,4 @@ spec:
   params:
     foo: bar
   type: gauge
+  url: url

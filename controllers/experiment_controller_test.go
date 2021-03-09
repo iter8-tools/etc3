@@ -64,6 +64,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithURLTemplate("url").
 				Build()
 			// ns := &corev1.Namespace{
 			// 	ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
@@ -83,6 +84,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithURLTemplate("url").
 				Build()
 			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
 			By("creating an indicator")
@@ -90,6 +92,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithURLTemplate("url").
 				Build()
 			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
 			By("creating an objective")
@@ -97,6 +100,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithURLTemplate("url").
 				Build()
 			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
 			By("creating an objective that is not in the cluster")
@@ -104,6 +108,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithURLTemplate("url").
 				Build()
 
 			By("Creating a new Experiment")
@@ -151,6 +156,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithURLTemplate("url").
 			Build()
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
 		By("creating an objective that does not reference the request-count")
@@ -158,6 +164,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithURLTemplate("url").
 			WithSampleSize(metricsNamespace + "/request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjective)).Should(Succeed())
@@ -166,6 +173,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithURLTemplate("url").
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), badObjective)).Should(Succeed())

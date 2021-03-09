@@ -9,3 +9,4 @@ spec:
   type: gauge
   provider: prometheus
   foo: bar
+  url: url
