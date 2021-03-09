@@ -247,7 +247,7 @@ type Criteria struct {
 	// Support identifies the required degree of support the analytics provides before the analytics engine
 	// will assert success for an objective.
 	// +optional
-	Support map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
+	Support map[string]apiextensionsv1.JSON `json:"support,omitempty" yaml:"support,omitempty"`
 }
 
 // Reward ..
