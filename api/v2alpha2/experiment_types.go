@@ -230,9 +230,9 @@ type Criteria struct {
 	// + optional
 	RequestCount *string `json:"requestCount,omitempty" yaml:"requestCount,omitempty"`
 
-	// Reward is the metric that should be used to evaluate the reward for a version in the experiment.
+	// Reward is a list of metrics that should be used to evaluate the reward for a version in the experiment.
 	// +optional
-	Reward *Reward `json:"reward,omitempty" yaml:"reward,omitempty"`
+	Rewards []Reward `json:"reward,omitempty" yaml:"reward,omitempty"`
 
 	// Indicators is a list of metrics to be measured and reported on each iteration of the experiment.
 	// +optional
