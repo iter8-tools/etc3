@@ -244,7 +244,7 @@ type Criteria struct {
 	// +optional
 	Objectives []Objective `json:"objectives,omitempty" yaml:"objectives,omitempty"`
 
-	// Support identifies the required degree of support the analytics provides before the analytics engine
+	// Support identifies the required degree of support the analytics must provide before the analytics engine
 	// will assert success for an objective.
 	// +optional
 	Support apiextensionsv1.JSON `json:"support,omitempty" yaml:"support,omitempty"`
