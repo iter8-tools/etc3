@@ -34,75 +34,243 @@ var _ = Describe("Validation of VersionInfo", func() {
 	// The way to have no versions is to have no VersionInfo
 
 	Context("Experiment is a Conformance test", func() {
-		bldr := v2alpha2.NewExperiment("conformance-test", testNamespace).
-			WithTarget("target").
-			WithTestingPattern(v2alpha2.TestingPatternConformance)
-		It("should be valid only when 1 version is identified", func() {
-			By("returning false when no versions are specified")
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning true when 1 version is identified")
-			bldr = bldr.WithBaselineVersion("baseline", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeTrue())
-			By("returning false when more than 1 version is identified")
-			bldr = bldr.WithCandidateVersion("candidate-1", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
+		var bldr *v2alpha2.ExperimentBuilder
+		BeforeEach(func() {
+			bldr = v2alpha2.NewExperiment("conformance-test", testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternConformance)
+		})
+		It("should be invalid when no versions are specified", func() {
+			experiment := bldr.
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when exactly 1 version is specified", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid when candidate versions are specified", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when there is no reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid when there is a reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment is an AB test", func() {
-		bldr := v2alpha2.NewExperiment("ab-test", testNamespace).
-			WithTarget("target").
-			WithTestingPattern(v2alpha2.TestingPatternAB)
-		It("should be valid only when 2 versions are identified", func() {
-			By("returning false when no versions are specified")
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning false when 1 version is identified")
-			bldr = bldr.WithBaselineVersion("baseline", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning true when exactly than 2 versions are identified")
-			bldr = bldr.WithCandidateVersion("candidate-1", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeTrue())
-			By("returning false when more than 2 version are identified")
-			bldr = bldr.WithCandidateVersion("candidate-2", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
+		var bldr *v2alpha2.ExperimentBuilder
+		BeforeEach(func() {
+			bldr = v2alpha2.NewExperiment("ab-test", testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternAB)
+		})
+		It("should be invalid when no versions are specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be invalid when exactly 1 version is specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when exactly 2 versions are specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid when more than 2 version are specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithCandidateVersion("candidate-2", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be invalid when there is no reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when there is a single reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+		It("should be invalid when there is are multiple rewards", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithReward(*v2alpha2.NewMetric("metric-1", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric-2", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment is an Canary test", func() {
-		bldr := v2alpha2.NewExperiment("canary-test", testNamespace).
-			WithTarget("target").
-			WithTestingPattern(v2alpha2.TestingPatternCanary)
-		It("should be valid only when 2 versions are identified", func() {
-			By("returning false when no versions are specified")
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning false when 1 version is identified")
-			bldr = bldr.WithBaselineVersion("baseline", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning true when exactly than 2 versions are identified")
-			bldr = bldr.WithCandidateVersion("candidate-1", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeTrue())
-			By("returning false when more than 2 version are identified")
-			bldr = bldr.WithCandidateVersion("candidate-2", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
+		var bldr *v2alpha2.ExperimentBuilder
+		BeforeEach(func() {
+			bldr = v2alpha2.NewExperiment("canary-test", testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternCanary)
+		})
+
+		It("should be invalid when no versions are specified", func() {
+			experiment := bldr.
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be invalid when exactly 1 version is specified", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when exactly 2 versions are specified", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid when more than 2 version are specified", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithCandidateVersion("candidate-2", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when there is no reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid when there is a reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment is an ABN test", func() {
-		bldr := v2alpha2.NewExperiment("abn-test", testNamespace).
-			WithTarget("target").
-			WithTestingPattern(v2alpha2.TestingPatternABN)
-		It("should be valid only when more than 2 or more versions are identified", func() {
-			By("returning false when no versions are specified")
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning false when 1 version is identified")
-			bldr = bldr.WithBaselineVersion("baseline", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeFalse())
-			By("returning false when 2 versions are identified")
-			bldr = bldr.WithCandidateVersion("candidate-1", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeTrue())
-			By("returning true when more than 2 version are identified")
-			bldr = bldr.WithCandidateVersion("candidate-2", nil)
-			Expect(reconciler.IsVersionInfoValid(ctx, bldr.Build())).Should(BeTrue())
+		var bldr *v2alpha2.ExperimentBuilder
+		BeforeEach(func() {
+			bldr = v2alpha2.NewExperiment("abn-test", testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternABN)
+		})
+
+		It("should be invalid when no versions are specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be invalid when exactly 1 version is specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithBaselineVersion("baseline", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when exactly 2 versions are specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be valid when more than 2 version are specified", func() {
+			experiment := bldr.
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithCandidateVersion("candidate-2", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid when no reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithCandidateVersion("candidate-2", nil).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be valid when 1 reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithCandidateVersion("candidate-2", nil).
+				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be valid when more than 1 reward", func() {
+			experiment := bldr.
+				WithBaselineVersion("baseline", nil).
+				WithCandidateVersion("candidate-1", nil).
+				WithCandidateVersion("candidate-2", nil).
+				WithReward(*v2alpha2.NewMetric("metric-1", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric-2", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
 	})
 

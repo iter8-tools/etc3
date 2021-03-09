@@ -33,9 +33,10 @@ func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *
 
 // IsVersionInfoValid verifies that Spec.versionInfo is valid
 // DONE 1. verify that versionInfo is present
-// DONE 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
+// DONE 2. verify that the number of versions (spec.versionInfo) is suitable to the spec.strategy.testingPattern
 // DONE 3. verify that the names of the versions are all unique
-// TODO 4. verify any ObjectReferences are existing objects in the cluster
+// DONE 4. verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
+// TODO 5. verify any ObjectReferences are existing objects in the cluster
 func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha2.Experiment) bool {
 	// 1. verify that versionInfo is present
 	if instance.Spec.VersionInfo == nil {
@@ -50,6 +51,12 @@ func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance 
 	// 3. verify that the names of the versionns are all unique
 	if !versionsUnique(instance.Spec) {
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Version names are not unique")
+		return false
+	}
+
+	// 4. verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
+	if !validNumberOfRewards(instance.Spec) {
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Invalid number of rewards for %s experiment", instance.Spec.Strategy.TestingPattern)
 		return false
 	}
 	return true
@@ -74,6 +81,20 @@ func versionsUnique(s v2alpha2.ExperimentSpec) bool {
 			return false
 		}
 		versions = append(versions, candidate.Name)
+	}
+	return true
+}
+
+func validNumberOfRewards(s v2alpha2.ExperimentSpec) bool {
+	switch s.Strategy.TestingPattern {
+	case v2alpha2.TestingPatternConformance:
+		return s.Criteria == nil || len(s.Criteria.Rewards) == 0
+	case v2alpha2.TestingPatternCanary:
+		return s.Criteria == nil || len(s.Criteria.Rewards) == 0
+	case v2alpha2.TestingPatternAB:
+		return s.Criteria != nil && len(s.Criteria.Rewards) == 1
+	case v2alpha2.TestingPatternABN:
+		return s.Criteria != nil && len(s.Criteria.Rewards) > 0
 	}
 	return true
 }
