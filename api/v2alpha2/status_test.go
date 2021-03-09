@@ -51,15 +51,15 @@ var _ = Describe("Winner Determination", func() {
 	})
 	Context("When no Status.Analysis is present", func() {
 		Specify("Recommended baseline is current baseline", func() {
-			experiment.Status.SetRecommendedBaseline(experiment.Spec.VersionInfo.Baseline.Name)
-			Expect(*experiment.Status.RecommendedBaseline).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
+			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
+			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
 		})
 	})
 	Context("When no winner assessment is present in Status.Analysis", func() {
 		Specify("Recommended baseline is current baseline", func() {
 			experiment.Status.Analysis = &v2alpha2.Analysis{}
-			experiment.Status.SetRecommendedBaseline(experiment.Spec.VersionInfo.Baseline.Name)
-			Expect(*experiment.Status.RecommendedBaseline).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
+			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
+			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
 		})
 	})
 	Context("When no winner found", func() {
@@ -74,8 +74,8 @@ var _ = Describe("Winner Determination", func() {
 					},
 				},
 			}
-			experiment.Status.SetRecommendedBaseline(experiment.Spec.VersionInfo.Baseline.Name)
-			Expect(*experiment.Status.RecommendedBaseline).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
+			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
+			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
 		})
 	})
 	Context("When winner found", func() {
@@ -90,8 +90,8 @@ var _ = Describe("Winner Determination", func() {
 					},
 				},
 			}
-			experiment.Status.SetRecommendedBaseline(experiment.Spec.VersionInfo.Baseline.Name)
-			Expect(*experiment.Status.RecommendedBaseline).Should(Equal("winner"))
+			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
+			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal("winner"))
 		})
 	})
 

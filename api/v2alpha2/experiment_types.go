@@ -243,6 +243,11 @@ type Criteria struct {
 	// Failure of an objective might also trigger an experiment rollback.
 	// +optional
 	Objectives []Objective `json:"objectives,omitempty" yaml:"objectives,omitempty"`
+
+	// Support identifies the required degree of support the analytics provides before the analytics engine
+	// will assert success for an objective.
+	// +optional
+	Support map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
 }
 
 // Reward ..
@@ -337,11 +342,11 @@ type ExperimentStatus struct {
 	// +optional
 	Analysis *Analysis `json:"analysis,omitempty" yaml:"analysis,omitempty"`
 
-	// RecommendedBaseline is the version recommended as the baseline after the experiment completes.
+	// VersionRecommendedForPromotion is the version recommended as the baseline after the experiment completes.
 	// Will be set to the winner (status.analysis[].data.winner)
 	// or to the current baseline in the case of a rollback.
 	// +optional
-	RecommendedBaseline *string `json:"recommendedBaseline,omitempty" yaml:"recommendedBaseline,omitempty"`
+	VersionRecommendedForPromotion *string `json:"versionRecommendedForPromotion,omitempty" yaml:"versionRecommendedForPromotion,omitempty"`
 
 	// Message specifies message to show in the kubectl printer
 	// +optional

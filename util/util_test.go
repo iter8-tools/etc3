@@ -34,9 +34,9 @@ func TestContext(t *testing.T) {
 	recommendation := "winner"
 	message := "message"
 	status := v2alpha2.ExperimentStatus{
-		CompletedIterations: &iterations,
-		RecommendedBaseline: &recommendation,
-		Message:             &message,
+		CompletedIterations:            &iterations,
+		VersionRecommendedForPromotion: &recommendation,
+		Message:                        &message,
 	}
 	ctx = context.WithValue(ctx, OriginalStatusKey, &status)
 

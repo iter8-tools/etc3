@@ -186,8 +186,8 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return r.failExperiment(ctx, instance, nil)
 	}
 
-	// If not set, set an initial status.recommendedBaseline
-	instance.Status.SetRecommendedBaseline(instance.Spec.VersionInfo.Baseline.Name)
+	// If not set, set an initial status.versionRecommendedForPromotion
+	instance.Status.SetVersionRecommendedForPromotion(instance.Spec.VersionInfo.Baseline.Name)
 
 	// INITIAL WEIGHT DISTRIBUTION (FixedSplit only)
 	// if instance.Spec.GetAlgorithm() == v2alpha2.AlgorithmTypeFixedSplit {

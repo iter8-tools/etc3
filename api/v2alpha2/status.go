@@ -107,18 +107,18 @@ func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
 	return *s.CompletedIterations
 }
 
-// SetRecommendedBaseline sets a recommended baseline to either:
+// SetVersionRecommendedForPromotion sets a recommended baseline to either:
 // the recommended winner or the current baseline
-func (s *ExperimentStatus) SetRecommendedBaseline(currentBaseline string) {
+func (s *ExperimentStatus) SetVersionRecommendedForPromotion(currentBaseline string) {
 	recommendation := identfiedWinner(s.Analysis)
 	if recommendation == nil {
 		recommendation = &currentBaseline
 	}
-	if s.RecommendedBaseline == nil {
-		s.RecommendedBaseline = recommendation
+	if s.VersionRecommendedForPromotion == nil {
+		s.VersionRecommendedForPromotion = recommendation
 	}
-	if *s.RecommendedBaseline != *recommendation {
-		s.RecommendedBaseline = recommendation
+	if *s.VersionRecommendedForPromotion != *recommendation {
+		s.VersionRecommendedForPromotion = recommendation
 	}
 }
 

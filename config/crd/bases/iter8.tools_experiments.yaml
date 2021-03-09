@@ -135,6 +135,13 @@ spec:
                       - preferredDirection
                       type: object
                     type: array
+                  with:
+                    additionalProperties:
+                      x-kubernetes-preserve-unknown-fields: true
+                    description: Support identifies the required degree of support
+                      the analytics provides before the analytics engine will assert
+                      success for an objective.
+                    type: object
                 type: object
               duration:
                 description: Duration describes how long the experiment will last.
@@ -796,12 +803,6 @@ spec:
               message:
                 description: Message specifies message to show in the kubectl printer
                 type: string
-              recommendedBaseline:
-                description: RecommendedBaseline is the version recommended as the
-                  baseline after the experiment completes. Will be set to the winner
-                  (status.analysis[].data.winner) or to the current baseline in the
-                  case of a rollback.
-                type: string
               stage:
                 description: Stage indicates where the experiment is in its process
                   of execution
@@ -816,6 +817,12 @@ spec:
                 description: StartTime is the time when the experiment starts (after
                   the start handler finished) matches
                 format: date-time
+                type: string
+              versionRecommendedForPromotion:
+                description: VersionRecommendedForPromotion is the version recommended
+                  as the baseline after the experiment completes. Will be set to the
+                  winner (status.analysis[].data.winner) or to the current baseline
+                  in the case of a rollback.
                 type: string
             type: object
         type: object

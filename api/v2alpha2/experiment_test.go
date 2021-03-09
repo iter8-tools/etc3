@@ -60,7 +60,7 @@ var _ = Describe("Experiment with actions", func() {
 				Expect(err).ToNot(HaveOccurred())
 				err = json.Unmarshal(withBytes, &testMap)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(testMap["args"]).To(Equal([]interface{}{"apply", "-k", "https://github.com/my-org/my-repo/path/to/overlays/{{ Status.RecommendedBaseline }}"}))
+				Expect(testMap["args"]).To(Equal([]interface{}{"apply", "-k", "https://github.com/my-org/my-repo/path/to/overlays/{{ Status.VersionRecommendedForPromotion }}"}))
 				Expect(testMap["cmd"]).To(Equal("kubectl"))
 
 				By("creating the experiment")

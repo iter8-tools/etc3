@@ -114,8 +114,8 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// after weights have been redistributed, update Status.CurrentWeightDistribution
 	updateObservedWeights(ctx, instance, r.RestConfig)
 
-	// update status.recommendedBaseline if a new winner identified
-	instance.Status.SetRecommendedBaseline(instance.Spec.VersionInfo.Baseline.Name)
+	// update status.versionRecommendedForPromotion if a new winner identified
+	instance.Status.SetVersionRecommendedForPromotion(instance.Spec.VersionInfo.Baseline.Name)
 
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)
