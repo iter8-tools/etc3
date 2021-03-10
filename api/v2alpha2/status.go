@@ -107,7 +107,7 @@ func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
 	return *s.CompletedIterations
 }
 
-// SetVersionRecommendedForPromotion sets a recommended baseline to either:
+// SetVersionRecommendedForPromotion sets a version recommended for promotion to either:
 // the recommended winner or the current baseline
 func (s *ExperimentStatus) SetVersionRecommendedForPromotion(currentBaseline string) {
 	recommendation := identfiedWinner(s.Analysis)

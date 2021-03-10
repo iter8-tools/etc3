@@ -50,20 +50,20 @@ var _ = Describe("Winner Determination", func() {
 			Build()
 	})
 	Context("When no Status.Analysis is present", func() {
-		Specify("Recommended baseline is current baseline", func() {
+		Specify("Version recommended for promotion is current baseline", func() {
 			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
 			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
 		})
 	})
 	Context("When no winner assessment is present in Status.Analysis", func() {
-		Specify("Recommended baseline is current baseline", func() {
+		Specify("Version recommended for promotion is current baseline", func() {
 			experiment.Status.Analysis = &v2alpha2.Analysis{}
 			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
 			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
 		})
 	})
 	Context("When no winner found", func() {
-		Specify("Recommended baseline is current baseline", func() {
+		Specify("Version recommended for promotion is current baseline", func() {
 			winner := "winner"
 			experiment.Status.Analysis = &v2alpha2.Analysis{
 				WinnerAssessment: &v2alpha2.WinnerAssessmentAnalysis{
@@ -79,7 +79,7 @@ var _ = Describe("Winner Determination", func() {
 		})
 	})
 	Context("When winner found", func() {
-		Specify("Recommended baseline is winner", func() {
+		Specify("Version recommended for promotion is winner", func() {
 			winner := "winner"
 			experiment.Status.Analysis = &v2alpha2.Analysis{
 				WinnerAssessment: &v2alpha2.WinnerAssessmentAnalysis{
