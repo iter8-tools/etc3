@@ -67,8 +67,7 @@ type ExperimentSpec struct {
 	Strategy Strategy `json:"strategy" yaml:"strategy"`
 
 	// Criteria contains a list of Criterion for assessing the candidates
-	// Note that at most one reward metric is allowed
-	// If more than one reward criterion is included, the first will be used while others would be omitted
+	// Note that the number of rewards that can be/must be specified depends on the testing pattern
 	// +optional
 	Criteria *Criteria `json:"criteria,omitempty" yaml:"criteria,omitempty"`
 

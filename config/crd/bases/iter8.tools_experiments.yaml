@@ -54,9 +54,8 @@ spec:
             properties:
               criteria:
                 description: Criteria contains a list of Criterion for assessing the
-                  candidates Note that at most one reward metric is allowed If more
-                  than one reward criterion is included, the first will be used while
-                  others would be omitted
+                  candidates Note that the number of rewards that can be/must be specified
+                  depends on the testing pattern
                 properties:
                   indicators:
                     description: Indicators is a list of metrics to be measured and
