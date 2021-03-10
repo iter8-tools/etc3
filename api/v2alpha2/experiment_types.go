@@ -164,9 +164,6 @@ type Action []TaskSpec
 
 // TaskSpec contains the specification of a task.
 type TaskSpec struct {
-	// Library where this task is defined.
-	// Examples include 'common', 'knative', etc.
-	Library string `json:"library" yaml:"library"`
 	// Task unique identifies the task to be executed with the library.
 	// Examples include 'init-experiment', 'exec', etc.
 	Task string `json:"task" yaml:"task"`

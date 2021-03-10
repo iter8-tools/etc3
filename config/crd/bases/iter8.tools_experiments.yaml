@@ -137,8 +137,8 @@ spec:
                     type: array
                   support:
                     description: Support identifies the required degree of support
-                      the analytics provides before the analytics engine will assert
-                      success for an objective.
+                      the analytics must provide before the analytics engine will
+                      assert success for an objective.
                     x-kubernetes-preserve-unknown-fields: true
                 type: object
               duration:
@@ -293,10 +293,6 @@ spec:
                       items:
                         description: TaskSpec contains the specification of a task.
                         properties:
-                          library:
-                            description: Library where this task is defined. Examples
-                              include 'common', 'knative', etc.
-                            type: string
                           task:
                             description: Task unique identifies the task to be executed
                               with the library. Examples include 'init-experiment',
@@ -311,7 +307,6 @@ spec:
                               task libraries.
                             type: object
                         required:
-                        - library
                         - task
                         type: object
                       type: array

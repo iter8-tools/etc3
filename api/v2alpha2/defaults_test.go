@@ -267,7 +267,7 @@ var _ = Describe("Generated Code", func() {
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
 				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
 				WithCondition(v2alpha2.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha2.ReasonHandlerFailed, "foo %s", "bar").
-				WithAction("start", []v2alpha2.TaskSpec{{Library: "library", Task: "task"}}).
+				WithAction("start", []v2alpha2.TaskSpec{{Task: "task"}}).
 				WithRequestCount("request-count").
 				WithReward(*v2alpha2.NewMetric("reward", "default").Build(), v2alpha2.PreferredDirectionHigher).
 				WithIndicator(*v2alpha2.NewMetric("indicator", "default").Build()).
