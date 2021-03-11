@@ -83,15 +83,6 @@ type MetricSpec struct {
 	URLTemplate string `json:"urlTemplate" yaml:"urlTemplate"`
 }
 
-// NamedValue name/value to be used in constructing a REST query to backend metrics server
-type NamedValue struct {
-	// Name of parameter
-	Name string `json:"name" yaml:"name"`
-
-	// Value of parameter
-	Value string `json:"value" yaml:"value"`
-}
-
 // MetricStatus defines the observed state of Metric
 type MetricStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster

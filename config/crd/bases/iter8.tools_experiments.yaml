@@ -112,9 +112,9 @@ spec:
                       (based on setup configuration) but can be overridden by the
                       user
                     type: string
-                  reward:
-                    description: Reward is a list of metrics that should be used to
-                      evaluate the reward for a version in the experiment.
+                  rewards:
+                    description: Rewards is a list of metrics that should be used
+                      to evaluate the reward for a version in the experiment.
                     items:
                       description: Reward ..
                       properties:
@@ -409,14 +409,14 @@ spec:
                         description: Variables is a list of variables that can be
                           used by handlers and in metrics queries
                         items:
-                          description: Variable a name/value pair that can be used
-                            by handlers and in metrics queries
+                          description: NamedValue name/value to be used in constructing
+                            a REST query to backend metrics server
                           properties:
                             name:
-                              description: Name is the name of the variable
+                              description: Name of parameter
                               type: string
                             value:
-                              description: Value is the value of the variable
+                              description: Value of parameter
                               type: string
                           required:
                           - name
@@ -476,14 +476,14 @@ spec:
                           description: Variables is a list of variables that can be
                             used by handlers and in metrics queries
                           items:
-                            description: Variable a name/value pair that can be used
-                              by handlers and in metrics queries
+                            description: NamedValue name/value to be used in constructing
+                              a REST query to backend metrics server
                             properties:
                               name:
-                                description: Name is the name of the variable
+                                description: Name of parameter
                                 type: string
                               value:
-                                description: Value is the value of the variable
+                                description: Value of parameter
                                 type: string
                             required:
                             - name
@@ -574,8 +574,9 @@ spec:
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     x-kubernetes-int-or-string: true
                                   sampleSize:
-                                    description: SampleSize is the number of requests
-                                      observed for this version
+                                    description: SampleSize is the  size of the sample
+                                      used for computing this metric. This field is
+                                      applicable only to gauge metrics
                                     format: int32
                                     minimum: 0
                                     type: integer

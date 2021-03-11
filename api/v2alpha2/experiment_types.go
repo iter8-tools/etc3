@@ -110,20 +110,11 @@ type VersionDetail struct {
 
 	// Variables is a list of variables that can be used by handlers and in metrics queries
 	// +optional
-	Variables []Variable `json:"variables,omitempty" yaml:"variables,omitempty"`
+	Variables []NamedValue `json:"variables,omitempty" yaml:"variables,omitempty"`
 
 	// WeightObjRef is a reference to another kubernetes object
 	// +optional
 	WeightObjRef *corev1.ObjectReference `json:"weightObjRef,omitempty" yaml:"weightObjRef,omitempty"`
-}
-
-// Variable a name/value pair that can be used by handlers and in metrics queries
-type Variable struct {
-	// Name is the name of the variable
-	Name string `json:"name" yaml:"name"`
-
-	// Value is the value of the variable
-	Value string `json:"value" yaml:"value"`
 }
 
 // Strategy identifies the type of experiment and its properties
@@ -226,9 +217,9 @@ type Criteria struct {
 	// + optional
 	RequestCount *string `json:"requestCount,omitempty" yaml:"requestCount,omitempty"`
 
-	// Reward is a list of metrics that should be used to evaluate the reward for a version in the experiment.
+	// Rewards is a list of metrics that should be used to evaluate the reward for a version in the experiment.
 	// +optional
-	Rewards []Reward `json:"reward,omitempty" yaml:"reward,omitempty"`
+	Rewards []Reward `json:"rewards,omitempty" yaml:"rewards,omitempty"`
 
 	// Indicators is a list of metrics to be measured and reported on each iteration of the experiment.
 	// +optional
@@ -482,7 +473,8 @@ type AggregatedMetricsVersionData struct {
 	// +optional
 	Value *resource.Quantity `json:"value,omitempty" yaml:"value,omitempty"`
 
-	// SampleSize is the number of requests observed for this version
+	// SampleSize is the  size of the sample used for computing this metric.
+	// This field is applicable only to gauge metrics
 	// +kubebuilder:validation:Minimum:=0
 	SampleSize *int32 `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 }
