@@ -167,7 +167,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	// using spec.criteria, read the metrics objects into spec.metrics
 	if ok := r.ReadMetrics(ctx, instance); !ok {
-		r.failExperiment(ctx, instance, nil)
+		return r.failExperiment(ctx, instance, nil)
 	}
 
 	// advance stage from Initializing to Running
