@@ -87,7 +87,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance, r.HTTP)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
-		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonAnalyticsServiceError, "Unable to contact analytics engine %s", analyticsEndpoint)
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonAnalyticsServiceError, "Call to analytics engine failed")
 		return r.failExperiment(ctx, instance, err)
 	}
 

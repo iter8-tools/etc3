@@ -30,10 +30,8 @@ import (
 // If the name is of the form "namespace/name", look in namespace for name.
 // Otherwise look for name. If not found, look in util.Iter8InstallNamespace() for name.
 // If not found return NotFound error
-func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha2.Experiment, name string, metricMap map[string]*v2alpha2.Metric) bool {
+func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha2.Experiment, namespace string, name string, metricMap map[string]*v2alpha2.Metric) bool {
 	key := name
-	// default namespace to use is the experiment namespace
-	namespace := instance.GetObjectMeta().GetNamespace()
 
 	// If the metric name includes a "/" then use the prefix as the namespace
 	splt := strings.Split(name, "/")
@@ -64,7 +62,7 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 
 	// check if this metric references another metric. If so, read it too
 	if metric.Spec.SampleSize != nil {
-		return r.ReadMetric(ctx, instance, *metric.Spec.SampleSize, metricMap)
+		return r.ReadMetric(ctx, instance, metric.GetObjectMeta().GetNamespace(), *metric.Spec.SampleSize, metricMap)
 	}
 
 	// must be ok
@@ -83,18 +81,19 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		return true
 	}
 
+	namespace := instance.GetObjectMeta().GetNamespace()
 	metricsCache := make(map[string]*v2alpha2.Metric)
 
 	// name of request counter
 	requestCount := instance.Spec.GetRequestCount(r.Iter8Config)
-	if ok := r.ReadMetric(ctx, instance, *requestCount, metricsCache); !ok {
+	if ok := r.ReadMetric(ctx, instance, namespace, *requestCount, metricsCache); !ok {
 		return ok
 	}
 
 	// rewards
 	for _, reward := range criteria.Rewards {
 		if metricsCache[reward.Metric] == nil {
-			if ok := r.ReadMetric(ctx, instance, reward.Metric, metricsCache); !ok {
+			if ok := r.ReadMetric(ctx, instance, namespace, reward.Metric, metricsCache); !ok {
 				return ok
 			}
 		}
@@ -103,7 +102,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 	// indicators
 	for _, indicator := range criteria.Indicators {
 		if metricsCache[indicator] == nil {
-			if ok := r.ReadMetric(ctx, instance, indicator, metricsCache); !ok {
+			if ok := r.ReadMetric(ctx, instance, namespace, indicator, metricsCache); !ok {
 				return ok
 			}
 		}
@@ -111,7 +110,7 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 
 	for _, objective := range criteria.Objectives {
 		if metricsCache[objective.Metric] == nil {
-			if ok := r.ReadMetric(ctx, instance, objective.Metric, metricsCache); !ok {
+			if ok := r.ReadMetric(ctx, instance, namespace, objective.Metric, metricsCache); !ok {
 				return ok
 			}
 		}

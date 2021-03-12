@@ -142,7 +142,7 @@ var _ = Describe("Experiment Validation", func() {
 var _ = Describe("Metrics", func() {
 	var testName string
 	var testNamespace, metricsNamespace string
-	var goodObjective, badObjective *v2alpha2.Metric
+	var goodObjective, goodObjective2, badObjective *v2alpha2.Metric
 	BeforeEach(func() {
 		testNamespace = "default"
 		metricsNamespace = "metric-namespace"
@@ -159,6 +159,14 @@ var _ = Describe("Metrics", func() {
 			WithURLTemplate("url").
 			Build()
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
+		goodObjective2 = v2alpha2.NewMetric("objective-with-good-reference-2", metricsNamespace).
+			WithType(v2alpha2.CounterMetricType).
+			WithParams(map[string]string{"param": "value"}).
+			WithProvider("prometheus").
+			WithURLTemplate("url").
+			WithSampleSize("request-count").
+			Build()
+		Expect(k8sClient.Create(ctx(), goodObjective2)).Should(Succeed())
 		By("creating an objective that does not reference the request-count")
 		goodObjective = v2alpha2.NewMetric("objective-with-good-reference", "default").
 			WithType(v2alpha2.CounterMetricType).
@@ -262,6 +270,29 @@ var _ = Describe("Metrics", func() {
 				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
+		})
+	})
+
+	Context("When creating an experiment referencing a metric with a bad reference", func() {
+		// experiment (in default namespace) refers to metric "objective-with-bad-reference"
+		// which has a sampleSize "request-count" (not in same ns as the referring metric (default))
+		It("Should successfully read metrics", func() {
+			By("Creating experiment")
+			testName = "good-reference-2"
+
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
+				WithRequestCount(metricsNamespace+"/objective-with-good-reference-2").
+				WithObjective(*goodObjective2, nil, nil, false).
+				Build()
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			By("Checking that it starts Running")
+			// this assumes that it runs for a while
+			Eventually(func() bool {
+				return containsSubString(events, v2alpha2.ReasonStageAdvanced)
+			}, 5).Should(BeTrue())
 		})
 	})
 
