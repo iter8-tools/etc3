@@ -46,7 +46,7 @@ spec:
               description:
                 description: Text description of the metric
                 type: string
-              headerTenplates:
+              headerTemplates:
                 description: HeaderTemplates are templates for headers that should
                   be passed to the metrics backend. Typically these are authentication
                   headers. Any fields of the form '$name' are treated as variables

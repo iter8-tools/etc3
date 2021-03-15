@@ -75,7 +75,7 @@ type MetricSpec struct {
 	// variables whose value is looked up in the secret referred to by spec.secretRef. If the
 	// secret does not contain the variable as a key, the full string "$name" is used.
 	// +optional
-	HeaderTemplates *[]NamedValue `json:"headerTenplates,omitempty" yaml:"headers,omitempty"`
+	HeaderTemplates *[]NamedValue `json:"headerTemplates,omitempty" yaml:"headerTemplates,omitempty"`
 
 	// URLTemplate is a template of the url of metrics backend. Any fields pf the form '$name' are
 	// treated as variables whose value is looked up in the secret referred to by spec.secretRef.
