@@ -32,33 +32,48 @@ func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *
 }
 
 // IsVersionInfoValid verifies that Spec.versionInfo is valid
-// DONE 1. verify that versionInfo is present
-// DONE 2. verify that the number of versions (spec.versionInfo) is suitable to the spec.strategy.testingPattern
-// DONE 3. verify that the names of the versions are all unique
-// DONE 4. verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
-// TODO 5. verify any ObjectReferences are existing objects in the cluster
+// DONE Verify that versionInfo is present
+// DONE Verify that the number of versions (spec.versionInfo) is suitable to the spec.strategy.testingPattern
+// DONE Verify that the names of the versions are all unique
+// DONE Verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
+// DONE Verify that each fieldpath starts with '.'
+// TODO Verify any ObjectReferences are existing objects in the cluster
 func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2alpha2.Experiment) bool {
-	// 1. verify that versionInfo is present
+	// Verify that versionInfo is present
 	if instance.Spec.VersionInfo == nil {
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "No versionInfo in experiment")
 		return false
 	}
-	// 2. verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
+	// Verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
 	if !candidatesMatchStrategy(instance.Spec) {
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Invalid number of candidates for %s experiment", instance.Spec.Strategy.TestingPattern)
 		return false
 	}
-	// 3. verify that the names of the versionns are all unique
+	// Verify that the names of the versionns are all unique
 	if !versionsUnique(instance.Spec) {
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Version names are not unique")
 		return false
 	}
 
-	// 4. verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
+	// Verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
 	if !validNumberOfRewards(instance.Spec) {
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Invalid number of rewards for %s experiment", instance.Spec.Strategy.TestingPattern)
 		return false
 	}
+
+	// Verify that any specified fieldpath starts with a '.'
+	b := instance.Spec.VersionInfo.Baseline.WeightObjRef
+	if b != nil && b.FieldPath != "" && b.FieldPath[0] != '.' {
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Fieldpaths must start with '.'")
+		return false
+	}
+	for _, c := range instance.Spec.VersionInfo.Candidates {
+		if c.WeightObjRef != nil && len(c.WeightObjRef.FieldPath) != 0 && c.WeightObjRef.FieldPath[0] != '.' {
+			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Fieldpaths must start with '.'")
+			return false
+		}
+	}
+
 	return true
 }
 

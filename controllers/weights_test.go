@@ -16,10 +16,13 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -51,8 +54,24 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 				Namespace:  namespace,
 			}
 		})
+		It("A FieldPath into an array returns a valid value", func() {
+			objRef.FieldPath = ".status.currentWeightDistribution[2].value"
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			time.Sleep(3 * time.Second)
+			exp := v2alpha2.Experiment{}
+			Expect(k8sClient.Get(ctx(), types.NamespacedName{Namespace: namespace, Name: name}, &exp)).Should(Succeed())
+			exp.Status.CurrentWeightDistribution = []v2alpha2.WeightData{
+				{Name: "v1", Value: 10},
+				{Name: "v2", Value: 20},
+				{Name: "v3", Value: 30},
+				{Name: "v4", Value: 40},
+			}
+			Expect(k8sClient.Status().Update(ctx(), &exp)).Should(Succeed())
+			value, _ := observeWeight(ctx(), objRef, cfg)
+			Expect(*value).To(Equal(int32(30)))
+		})
 		It("A FieldPath returns a valid value", func() {
-			objRef.FieldPath = "/spec/duration/maxLoops"
+			objRef.FieldPath = ".spec.duration.maxLoops"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			value, _ := observeWeight(ctx(), objRef, cfg)
 			Expect(*value).To(Equal(int32(3)))
@@ -65,14 +84,14 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		})
 		It("Invalid FieldPath returns an error", func() {
 			experiment.Name = "invalid-fieldpath"
-			objRef.FieldPath = "/invalid/path"
+			objRef.FieldPath = ".invalid.path"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			_, err := observeWeight(ctx(), objRef, cfg)
 			Expect(err).To(HaveOccurred())
 		})
 		It("Valid path to non int returns an error", func() {
 			experiment.Name = "non-int-fieldpath"
-			objRef.FieldPath = "/spec/target"
+			objRef.FieldPath = ".spec.target"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			_, err := observeWeight(ctx(), objRef, cfg)
 			Expect(err).To(HaveOccurred())
@@ -80,7 +99,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		It("Reference to invalid object returns an error", func() {
 			experiment.Name = "invalid-ref"
 			objRef.Name = "no-such-object"
-			objRef.FieldPath = "/spec/duration/maxLoops"
+			objRef.FieldPath = ".spec.duration.maxLoops"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			_, err := observeWeight(ctx(), objRef, cfg)
 			Expect(err).To(HaveOccurred())
@@ -95,7 +114,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
-				FieldPath:  "/spec/duration/maxLoops",
+				FieldPath:  ".spec.duration.maxLoops",
 			}
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
@@ -126,7 +145,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
-				FieldPath:  "/spec/duration/maxLoops",
+				FieldPath:  ".spec.duration.maxLoops",
 			}
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
@@ -157,7 +176,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
-				FieldPath:  "/spec/duration/maxLoops",
+				FieldPath:  ".spec.duration.maxLoops",
 			}
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
@@ -180,6 +199,64 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		})
 	})
 
+})
+
+var _ = Describe("patch", func() {
+	var namespace string
+	BeforeEach(func() {
+		namespace = "default"
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(namespace))
+	})
+	Context("path gets updated", func() {
+		name := "write"
+		var bldr *v2alpha2.ExperimentBuilder
+		var objRef *corev1.ObjectReference
+		JustBeforeEach(func() {
+			bldr = v2alpha2.NewExperiment(name, namespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithDuration(10, 5, 3)
+
+			objRef = &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha2",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+			}
+		})
+		It("Should patch the desired field", func() {
+			By("Create experiment")
+			objRef.FieldPath = ".spec.duration.maxLoops"
+			experiment := bldr.WithBaselineVersion("v1", nil).
+				WithCandidateVersion("v2", objRef).
+				Build()
+
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			time.Sleep(3 * time.Second)
+			exp := v2alpha2.Experiment{}
+			Expect(k8sClient.Get(ctx(), types.NamespacedName{Namespace: namespace, Name: name}, &exp)).Should(Succeed())
+			By("Updating experiment with recommended weights")
+			exp.Status.Analysis = &v2alpha2.Analysis{
+				Weights: &v2alpha2.WeightsAnalysis{
+					AnalysisMetaData: v2alpha2.AnalysisMetaData{
+						Provenance: "provenance",
+						Timestamp:  metav1.Now(),
+					},
+					Data: []v2alpha2.WeightData{
+						{Name: "v1", Value: 14},
+						{Name: "v2", Value: 16},
+					},
+				},
+			}
+			Expect(k8sClient.Status().Update(ctx(), &exp)).Should(Succeed())
+			By("calling redistributeWeight")
+			Expect(shouldRedistribute(&exp)).Should(BeTrue())
+			Expect(redistributeWeight(ctx(), &exp, reconciler.RestConfig)).Should(Succeed())
+			By("verifying that the weight was changed")
+			value, _ := observeWeight(ctx(), objRef, cfg)
+			Expect(*value).To(Equal(int32(16)))
+		})
+	})
 })
 
 var _ = Describe("Weight Patching", func() {
@@ -266,7 +343,7 @@ var _ = Describe("Weight Patching", func() {
 				Kind:       "VirtualService",
 				Name:       "vs",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight",
+				FieldPath:  ".path.to.weight",
 			}).
 			Build()
 		It("Should not fail and not add a patch", func() {
@@ -287,7 +364,7 @@ var _ = Describe("Weight Patching", func() {
 				Kind:       "VirtualService",
 				Name:       "vs",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight",
+				FieldPath:  ".path.to.weight",
 			}).
 			WithCurrentWeight("baseline", int32(25)).
 			WithRecommendedWeight("baseline", int32(25)).
@@ -309,7 +386,7 @@ var _ = Describe("Weight Patching", func() {
 				Kind:       "VirtualService",
 				Name:       "vs",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight",
+				FieldPath:  ".path.to.weight",
 			}).
 			WithCurrentWeight("baseline", int32(25)).
 			WithRecommendedWeight("baseline", int32(50)).
@@ -331,14 +408,14 @@ var _ = Describe("Weight Patching", func() {
 				Kind:       "VirtualService",
 				Name:       "vs",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight/0",
+				FieldPath:  ".path.to.weight[0]",
 			}).
 			WithCandidateVersion("candidate", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight/1",
+				FieldPath:  ".path.to.weight[1]",
 			}).
 			WithCurrentWeight("baseline", int32(25)).
 			WithCurrentWeight("candidate", int32(75)).
@@ -371,14 +448,14 @@ var _ = Describe("Weight Patching", func() {
 				Kind:       "VirtualService",
 				Name:       "vs0",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight/0",
+				FieldPath:  ".path.to.weight[0]",
 			}).
 			WithCandidateVersion("candidate", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs1",
 				Namespace:  namespace,
-				FieldPath:  "/path/to/weight/1",
+				FieldPath:  ".path.to.weight[1]",
 			}).
 			WithCurrentWeight("baseline", int32(25)).
 			WithCurrentWeight("candidate", int32(75)).

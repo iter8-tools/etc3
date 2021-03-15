@@ -18,10 +18,11 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"math"
+	"strconv"
 	"strings"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
@@ -37,6 +38,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
+	jp "k8s.io/client-go/util/jsonpath"
 )
 
 func shouldRedistribute(instance *v2alpha2.Experiment) bool {
@@ -88,12 +90,6 @@ func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, rest
 		}
 	}
 
-	// set status.currentWeightDistribution to match set weights
-	// for now copy from status.analysis.weights
-	instance.Status.CurrentWeightDistribution = make([]v2alpha2.WeightData, len(instance.Status.Analysis.Weights.Data))
-	for i, w := range instance.Status.Analysis.Weights.Data {
-		instance.Status.CurrentWeightDistribution[i] = w
-	}
 	return nil
 }
 
@@ -114,8 +110,10 @@ func addPatch(ctx context.Context, instance *v2alpha2.Experiment, version v2alph
 	}
 
 	// get the latest recommended weight from the analytics service (cached in Status)
+	log.Info("addPatch", "analysis", instance.Status.Analysis)
 	var weight *int32
 	if instance.Status.Analysis != nil {
+		log.Info("addPatch", "weights", instance.Status.Analysis.Weights.Data)
 		weight = getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
 	}
 	if weight == nil {
@@ -123,18 +121,25 @@ func addPatch(ctx context.Context, instance *v2alpha2.Experiment, version v2alph
 		// fatal error; expected a weight recommendation for all versions
 		return errors.New("No weight recommendation provided")
 	}
+	log.Info("addPatch", "version", version.Name, "recommended weight", weight)
 
 	if *weight == *getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
 		log.Info("No change in weight distribution", "version", version.Name)
 		return nil
 	}
 
+	path := strings.Replace(version.WeightObjRef.FieldPath, "[", "/", -1)
+	path = strings.Replace(path, "].", "/", -1)
+	path = strings.Replace(path, ".", "/", -1)
+
 	// create patch
 	patch := patchIntValue{
 		Op:    "add",
-		Path:  version.WeightObjRef.FieldPath,
+		Path:  path,
 		Value: *weight,
 	}
+
+	log.Info("addPatch adding patch", "patch", patch)
 
 	// add patch to patchMap
 	key := getKey(*version.WeightObjRef)
@@ -279,30 +284,30 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 	}
 	log.Info("observeWeight", "Go object", resultObj)
 
+	// quit if nothing there
 	if len(objRef.FieldPath) == 0 {
 		log.Error(err, "Unable to read zero length field", "objRef", objRef, "obj", obj)
 		return nil, errors.New("No fieldpath specified in referencing object")
 	}
 
-	path := objRef.FieldPath
-	if objRef.FieldPath[0] == '/' {
-		path = path[1:]
-
-	}
-
-	fieldPath := strings.Split(path, "/")
-	log.Info("observeWeight", "path", objRef.FieldPath, "path", path)
-	fValue, found, err := unstructured.NestedFloat64(resultObj, fieldPath...)
-	if !found {
-		log.Error(err, "Unable to read field; not found", "objRef", objRef, "obj", obj)
-		return nil, errors.New("No such field")
-	}
-	if err != nil {
-		log.Error(err, "Unable to read field; unexpected type", "objRef", objRef, "obj", obj)
+	// create JSONPath object and parse template (fieldpath)
+	j := jp.New("observe")
+	if err := j.Parse("{" + objRef.FieldPath + "}"); err != nil {
+		log.Error(err, "Unable to parse", "obj", objRef)
 		return nil, err
 	}
 
-	int32Value := int32(math.Round(fValue))
+	// read value and convert to int32
+	buf := new(bytes.Buffer)
+	if err := j.Execute(buf, resultObj); err != nil {
+		log.Error(err, "Unable to find value", "obj", objRef)
+	}
+	out := buf.String()
+	int64Value, err := strconv.ParseInt(out, 10, 32)
+	if err != nil {
+		log.Error(err, "Unexpected type", "value", out)
+	}
+	int32Value := int32(int64Value)
 
 	return &int32Value, nil
 }

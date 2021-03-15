@@ -19,6 +19,7 @@ import (
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
+	v1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	. "github.com/onsi/ginkgo"
@@ -279,12 +280,36 @@ var _ = Describe("Validation of VersionInfo", func() {
 			WithTarget("target").
 			WithBaselineVersion("baseline", nil).
 			WithCandidateVersion("candidate", nil).
-			WithTestingPattern(v2alpha2.TestingPatternABN).Build()
+			WithTestingPattern(v2alpha2.TestingPatternABN).
+			Build()
 		It("should fail", func() {
 			By("adding another canidate with the same name")
 			experiment.Spec.VersionInfo.Candidates = append(experiment.Spec.VersionInfo.Candidates,
 				v2alpha2.VersionDetail{Name: "candidate"})
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+		})
+	})
+
+	Context("Spec.VersionInfo.*.WeightObjRef.FieldPath validity", func() {
+		bldr := v2alpha2.NewExperiment("invalid-fieldpath", testNamespace).
+			WithTarget("target").
+			WithTestingPattern(v2alpha2.TestingPatternConformance)
+		It("Should reject the experiment if fieldpath starts without '.'", func() {
+			experiment := bldr.WithBaselineVersion("baseline", &v1.ObjectReference{
+				Name:      "object",
+				Namespace: "ns",
+				FieldPath: "foo",
+			}).Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
+			Expect(containsSubString(events, "Fieldpaths must start with '.'")).Should(BeTrue())
+		})
+		It("Should accept the experiment if fieldpath starts with '.'", func() {
+			experiment := bldr.WithBaselineVersion("baseline", &v1.ObjectReference{
+				Name:      "object",
+				Namespace: "ns",
+				FieldPath: ".foo",
+			}).Build()
+			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
 	})
 
