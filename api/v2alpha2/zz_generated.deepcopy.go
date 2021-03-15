@@ -683,8 +683,8 @@ func (in *MetricSpec) DeepCopyInto(out *MetricSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.SecretRef != nil {
-		in, out := &in.SecretRef, &out.SecretRef
+	if in.Secret != nil {
+		in, out := &in.Secret, &out.Secret
 		*out = new(string)
 		**out = **in
 	}

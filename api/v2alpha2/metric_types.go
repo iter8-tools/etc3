@@ -68,14 +68,14 @@ type MetricSpec struct {
 	// SecretRef the name of a kubernetes Secret containing authentication details for the metrics backend
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
-	SecretRef *string `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Secret *string `json:"secret,omitempty" yaml:"secret,omitempty"`
 
 	// HeaderTemplates are templates for headers that should be passed to the metrics backend.
 	// Typically these are authentication headers. Any fields of the form '$name' are treated as
 	// variables whose value is looked up in the secret referred to by spec.secretRef. If the
 	// secret does not contain the variable as a key, the full string "$name" is used.
 	// +optional
-	HeaderTemplates *[]NamedValue `json:"headers,omitempty" yaml:"headers,omitempty"`
+	HeaderTemplates *[]NamedValue `json:"headerTenplates,omitempty" yaml:"headers,omitempty"`
 
 	// URLTemplate is a template of the url of metrics backend. Any fields pf the form '$name' are
 	// treated as variables whose value is looked up in the secret referred to by spec.secretRef.

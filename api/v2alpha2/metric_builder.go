@@ -79,8 +79,8 @@ func (b *MetricBuilder) WithSampleSize(name string) *MetricBuilder {
 }
 
 // WithSecret ..
-func (b *MetricBuilder) WithSecretRef(name string) *MetricBuilder {
-	b.Spec.SecretRef = &name
+func (b *MetricBuilder) WithSecret(name string) *MetricBuilder {
+	b.Spec.Secret = &name
 	return b
 }
 
