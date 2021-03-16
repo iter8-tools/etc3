@@ -303,11 +303,13 @@ spec:
                               'exec', etc.
                             type: string
                           with:
+                            additionalProperties:
+                              x-kubernetes-preserve-unknown-fields: true
                             description: With holds inputs to this task. Different
                               task require different types of inputs. Hence, this
                               data is held as json.RawMessage to be decoded by individual
                               task libraries.
-                            x-kubernetes-preserve-unknown-fields: true
+                            type: object
                         required:
                         - task
                         type: object
