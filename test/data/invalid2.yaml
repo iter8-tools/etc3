@@ -8,4 +8,5 @@ spec:
   description: Invalid metric - invalid type
   type: invalid
   provider: provider
+  jqExpression: ".data.result[0].value[1] | tonumber"
   url: url

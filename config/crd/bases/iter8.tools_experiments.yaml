@@ -215,6 +215,12 @@ spec:
                                 - value
                                 type: object
                               type: array
+                            jqExpression:
+                              description: JQExpression defines how the value of the
+                                metric should be extracted from the metric value returned
+                                by a query to the backend metrics server
+                              minLength: 1
+                              type: string
                             params:
                               description: Params are key/value pairs used to construct
                                 a REST query to the metrics backend
@@ -269,7 +275,6 @@ spec:
                                 "$name" is used.
                               type: string
                           required:
-                          - provider
                           - urlTemplate
                           type: object
                       type: object
@@ -298,13 +303,11 @@ spec:
                               'exec', etc.
                             type: string
                           with:
-                            additionalProperties:
-                              x-kubernetes-preserve-unknown-fields: true
                             description: With holds inputs to this task. Different
                               task require different types of inputs. Hence, this
                               data is held as json.RawMessage to be decoded by individual
                               task libraries.
-                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
                         required:
                         - task
                         type: object

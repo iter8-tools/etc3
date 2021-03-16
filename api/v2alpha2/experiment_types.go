@@ -160,7 +160,7 @@ type TaskSpec struct {
 	// With holds inputs to this task.
 	// Different task require different types of inputs. Hence, this data is held as json.RawMessage to be decoded by individual task libraries.
 	// +optional
-	With map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
+	With *apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
 }
 
 // Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.

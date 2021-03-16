@@ -836,10 +836,8 @@ func (in *TaskSpec) DeepCopyInto(out *TaskSpec) {
 	*out = *in
 	if in.With != nil {
 		in, out := &in.With, &out.With
-		*out = make(map[string]apiextensionsv1.JSON, len(*in))
-		for key, val := range *in {
-			(*out)[key] = *val.DeepCopy()
-		}
+		*out = new(apiextensionsv1.JSON)
+		(*in).DeepCopyInto(*out)
 	}
 }
 

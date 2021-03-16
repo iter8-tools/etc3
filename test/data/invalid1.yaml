@@ -7,5 +7,6 @@ spec:
   params:
   type: gauge
   provider: provider
+  jqExpression: ".data.result[0].value[1] | tonumber"
   url: url
 

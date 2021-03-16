@@ -217,7 +217,7 @@ var _ = Describe("Criteria", func() {
 			Expect(experiment.Spec.Criteria.Rewards).Should(BeEmpty())
 
 			experiment = builder.DeepCopy().
-				WithReward(*v2alpha2.NewMetric("metric", "default").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
 			Expect(experiment.Spec.Criteria.Rewards).ShouldNot(BeEmpty())
@@ -232,6 +232,7 @@ var _ = Describe("Generated Code", func() {
 				WithDescription("reward metric").
 				WithParams(map[string]string{"query": "query"}).
 				WithProvider("prometheus").
+				WithJQExpression("expr").
 				WithType(v2alpha2.CounterMetricType).
 				WithUnits("ms").
 				WithSampleSize("sample/default")
@@ -269,9 +270,9 @@ var _ = Describe("Generated Code", func() {
 				WithCondition(v2alpha2.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha2.ReasonHandlerFailed, "foo %s", "bar").
 				WithAction("start", []v2alpha2.TaskSpec{{Task: "task"}}).
 				WithRequestCount("request-count").
-				WithReward(*v2alpha2.NewMetric("reward", "default").Build(), v2alpha2.PreferredDirectionHigher).
-				WithIndicator(*v2alpha2.NewMetric("indicator", "default").Build()).
-				WithObjective(*v2alpha2.NewMetric("reward", "default").Build(), nil, nil, false)
+				WithReward(*v2alpha2.NewMetric("reward", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithIndicator(*v2alpha2.NewMetric("indicator", "default").WithJQExpression("expr").Build()).
+				WithObjective(*v2alpha2.NewMetric("reward", "default").WithJQExpression("expr").Build(), nil, nil, false)
 			experiment := experimentBuilder.Build()
 			now := metav1.Now()
 			message := "message"

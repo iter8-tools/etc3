@@ -100,6 +100,12 @@ func (b *MetricBuilder) WithURLTemplate(urlTemplate string) *MetricBuilder {
 	return b
 }
 
+// WithJQExpression ...
+func (b *MetricBuilder) WithJQExpression(jqExpression string) *MetricBuilder {
+	b.Spec.JQExpression = jqExpression
+	return b
+}
+
 // Build ..
 func (b *MetricBuilder) Build() *Metric {
 	return (*Metric)(b)

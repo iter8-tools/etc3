@@ -36,8 +36,8 @@ var _ = Describe("Metrics Not Created When Invalid", func() {
 	for file, feature := range map[string]string{
 		"invalid1.yaml": "spec.params is {}",
 		"invalid2.yaml": "spec.type is invalid",
-		"invalid3.yaml": "spec.provider is not set",
-		"invalid4.yaml": "spec.provider is \"\"",
+		"invalid3.yaml": "spec.jqExpression is not set",
+		"invalid4.yaml": "spec.jqExpression is \"\"",
 		"invalid5.yaml": "spec has an extra field",
 	} {
 		Context("When "+feature, func() {
@@ -62,6 +62,7 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 			WithType(v2alpha2.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
+			WithJQExpression("expr").
 			WithURLTemplate("url").
 			Build()
 

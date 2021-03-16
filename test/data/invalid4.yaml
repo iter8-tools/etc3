@@ -7,5 +7,5 @@ spec:
   params:
     foo: bar
   type: gauge
-  provider: ""
+  jqExpression: ""
   url: url

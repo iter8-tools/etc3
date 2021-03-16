@@ -8,5 +8,6 @@ spec:
     foo: bar
   type: gauge
   provider: prometheus
+  jqExpression: ".data.result[0].value[1] | tonumber"
   foo: bar
   url: url

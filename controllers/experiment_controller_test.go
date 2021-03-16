@@ -64,6 +64,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithJQExpression("expr").
 				WithURLTemplate("url").
 				Build()
 			// ns := &corev1.Namespace{
@@ -84,6 +85,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithJQExpression("expr").
 				WithURLTemplate("url").
 				Build()
 			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
@@ -92,6 +94,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithJQExpression("expr").
 				WithURLTemplate("url").
 				Build()
 			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
@@ -100,6 +103,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithJQExpression("expr").
 				WithURLTemplate("url").
 				Build()
 			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
@@ -108,6 +112,7 @@ var _ = Describe("Experiment Validation", func() {
 				WithType(v2alpha2.CounterMetricType).
 				WithParams(map[string]string{"param": "value"}).
 				WithProvider("prometheus").
+				WithJQExpression("expr").
 				WithURLTemplate("url").
 				Build()
 
@@ -156,6 +161,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithJQExpression("expr").
 			WithURLTemplate("url").
 			Build()
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
@@ -163,6 +169,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithJQExpression("expr").
 			WithURLTemplate("url").
 			WithSampleSize("request-count").
 			Build()
@@ -172,6 +179,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithJQExpression("expr").
 			WithURLTemplate("url").
 			WithSampleSize(metricsNamespace + "/request-count").
 			Build()
@@ -181,6 +189,7 @@ var _ = Describe("Metrics", func() {
 			WithType(v2alpha2.CounterMetricType).
 			WithParams(map[string]string{"param": "value"}).
 			WithProvider("prometheus").
+			WithJQExpression("expr").
 			WithURLTemplate("url").
 			WithSampleSize("request-count").
 			Build()
