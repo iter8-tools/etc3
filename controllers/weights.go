@@ -346,7 +346,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 			w, err := observeWeight(ctx, c.WeightObjRef, restCfg)
 			// if an error occurs, we ignore it (was logged in observeWeight())
 			// it just means that no weight was observed for this version
-			if err != nil {
+			if err == nil {
 				observedWeights = append(observedWeights, v2alpha2.WeightData{Name: c.Name, Value: *w})
 				total += *w
 			} else if missing == nil {

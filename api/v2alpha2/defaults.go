@@ -19,13 +19,26 @@ package v2alpha2
 
 import (
 	"time"
-
-	"github.com/iter8-tools/etc3/configuration"
 )
 
 const (
 	// NoneHandler is the keyword users can use to indicate no handler
 	NoneHandler string = "none"
+
+	// DefaultStartHandler is the prefix of the default start handler
+	DefaultStartHandler string = "start"
+
+	// DefaultFinishHandler is the prefix of the default finish handler
+	DefaultFinishHandler string = "finish"
+
+	// DefaultFailureHandler is the prefix of the default failure handler
+	DefaultFailureHandler string = "finish"
+
+	// DefaultRollbackHandler is the prefix of the default rollback handler
+	DefaultRollbackHandler string = "finish"
+
+	// DefaultLoopHandler is the prefix of the default loop handler
+	DefaultLoopHandler string = "loop"
 
 	// DefaultMaxCandidateWeight is the default traffic percentage used in experiment, which is 100
 	DefaultMaxCandidateWeight int32 = 100
@@ -76,38 +89,29 @@ func (s *ExperimentSpec) GetNumberOfBaseline() int {
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
 
-func handlersForStrategy(cfg configuration.Iter8Config, testingPattern TestingPatternType) *configuration.Handlers {
-	for _, t := range cfg.ExperimentTypes {
-		if t.Name == string(testingPattern) {
-			return &t.Handlers
-		}
-	}
-	return nil
-}
+// func handlersForStrategy(cfg configuration.Iter8Config, testingPattern TestingPatternType) *configuration.Handlers {
+// 	for _, t := range cfg.ExperimentTypes {
+// 		if t.Name == string(testingPattern) {
+// 			return &t.Handlers
+// 		}
+// 	}
+// 	return nil
+// }
 
 // GetStartHandler returns the name of the handler to be called when an experiment starts
-func (s *ExperimentSpec) GetStartHandler(cfg configuration.Iter8Config) *string {
-	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Start == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
-		if handlers == nil || handlers.Start == "" {
-			return nil
-		}
-		return &handlers.Start
-	}
-	if *s.Strategy.Handlers.Start == NoneHandler {
-		return nil
-	}
-	return s.Strategy.Handlers.Start
+func (s *ExperimentSpec) GetStartHandler() *string {
+	handler := DefaultStartHandler
+	return &handler
 }
 
 // InitializeStartHandler iinitializes the start handler (if not already set) to the
 // default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeStartHandler() {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Start == nil {
-		handler := s.GetStartHandler(cfg)
+		handler := s.GetStartHandler()
 		if handler != nil {
 			s.Strategy.Handlers.Start = handler
 		}
@@ -115,28 +119,19 @@ func (s *ExperimentSpec) InitializeStartHandler(cfg configuration.Iter8Config) {
 }
 
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
-func (s *ExperimentSpec) GetFinishHandler(cfg configuration.Iter8Config) *string {
-	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Finish == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
-		if handlers == nil || handlers.Finish == "" {
-			return nil
-		}
-		return &handlers.Finish
-	}
-	if *s.Strategy.Handlers.Finish == NoneHandler {
-		return nil
-	}
-	return s.Strategy.Handlers.Finish
+func (s *ExperimentSpec) GetFinishHandler() *string {
+	handler := DefaultFinishHandler
+	return &handler
 }
 
 // InitializeFinishHandler iinitializes the finish handler (if not already set) to the
 // default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeFinishHandler() {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Finish == nil {
-		handler := s.GetFinishHandler(cfg)
+		handler := s.GetFinishHandler()
 		if handler != nil {
 			s.Strategy.Handlers.Finish = handler
 		}
@@ -144,28 +139,19 @@ func (s *ExperimentSpec) InitializeFinishHandler(cfg configuration.Iter8Config) 
 }
 
 // GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
-func (s *ExperimentSpec) GetRollbackHandler(cfg configuration.Iter8Config) *string {
-	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Rollback == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
-		if handlers == nil || handlers.Rollback == "" {
-			return nil
-		}
-		return &handlers.Rollback
-	}
-	if *s.Strategy.Handlers.Rollback == NoneHandler {
-		return nil
-	}
-	return s.Strategy.Handlers.Rollback
+func (s *ExperimentSpec) GetRollbackHandler() *string {
+	handler := DefaultRollbackHandler
+	return &handler
 }
 
 // InitializeRollbackHandler initializes the rollback handler (if not already set) to the
 // default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeRollbackHandler() {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Rollback == nil {
-		handler := s.GetRollbackHandler(cfg)
+		handler := s.GetRollbackHandler()
 		if handler != nil {
 			s.Strategy.Handlers.Rollback = handler
 		}
@@ -173,28 +159,18 @@ func (s *ExperimentSpec) InitializeRollbackHandler(cfg configuration.Iter8Config
 }
 
 // GetFailureHandler returns the handler to be called if there is a failure during experiment execution
-func (s *ExperimentSpec) GetFailureHandler(cfg configuration.Iter8Config) *string {
-	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Failure == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
-		if handlers == nil || handlers.Failure == "" {
-			return nil
-		}
-		return &handlers.Failure
-
-	}
-	if *s.Strategy.Handlers.Failure == NoneHandler {
-		return nil
-	}
-	return s.Strategy.Handlers.Failure
+func (s *ExperimentSpec) GetFailureHandler() *string {
+	handler := DefaultFailureHandler
+	return &handler
 }
 
 // InitializeFailureHandler initializes the finish handler (if not already set) to the default handler
-func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeFailureHandler() {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Failure == nil {
-		handler := s.GetFailureHandler(cfg)
+		handler := s.GetFailureHandler()
 		if handler != nil {
 			s.Strategy.Handlers.Failure = handler
 		}
@@ -202,28 +178,18 @@ func (s *ExperimentSpec) InitializeFailureHandler(cfg configuration.Iter8Config)
 }
 
 // GetLoopHandler returns the handler to be called at the end of each loop (except the last)
-func (s *ExperimentSpec) GetLoopHandler(cfg configuration.Iter8Config) *string {
-	if s.Strategy.Handlers == nil || s.Strategy.Handlers.Loop == nil {
-		handlers := handlersForStrategy(cfg, s.Strategy.TestingPattern)
-		if handlers == nil || handlers.Loop == "" {
-			return nil
-		}
-		return &handlers.Loop
-
-	}
-	if *s.Strategy.Handlers.Loop == NoneHandler {
-		return nil
-	}
-	return s.Strategy.Handlers.Loop
+func (s *ExperimentSpec) GetLoopHandler() *string {
+	handler := DefaultLoopHandler
+	return &handler
 }
 
 // InitializeLoopHandler initializes the loop handler (if not already set) to the default handler
-func (s *ExperimentSpec) InitializeLoopHandler(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeLoopHandler() {
 	if s.Strategy.Handlers == nil {
 		s.Strategy.Handlers = &Handlers{}
 	}
 	if s.Strategy.Handlers.Loop == nil {
-		handler := s.GetLoopHandler(cfg)
+		handler := s.GetLoopHandler()
 		if handler != nil {
 			s.Strategy.Handlers.Loop = handler
 		}
@@ -231,12 +197,12 @@ func (s *ExperimentSpec) InitializeLoopHandler(cfg configuration.Iter8Config) {
 }
 
 // InitializeHandlers initialize handlers if not already set
-func (s *ExperimentSpec) InitializeHandlers(cfg configuration.Iter8Config) {
-	s.InitializeStartHandler(cfg)
-	s.InitializeFinishHandler(cfg)
-	s.InitializeRollbackHandler(cfg)
-	s.InitializeFailureHandler(cfg)
-	s.InitializeLoopHandler(cfg)
+func (s *ExperimentSpec) InitializeHandlers() {
+	s.InitializeStartHandler()
+	s.InitializeFinishHandler()
+	s.InitializeRollbackHandler()
+	s.InitializeFailureHandler()
+	s.InitializeLoopHandler()
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -390,25 +356,25 @@ func (s *ExperimentSpec) InitializeDuration() {
 //////////////////////////////////////////////////////////////////////
 
 // GetRequestCount returns the requst count metric
-// If there are no criteria specified, this is nil
-func (s *ExperimentSpec) GetRequestCount(cfg configuration.Iter8Config) *string {
+// If there are no criteria specified or no request count specified, this is nil
+func (s *ExperimentSpec) GetRequestCount() *string {
 	if s.Criteria == nil {
 		return nil
 	}
-	if s.Criteria.RequestCount == nil {
-		rc := cfg.RequestCount
-		return &rc
-	}
+	// if s.Criteria.RequestCount == nil {
+	// 	rc := cfg.RequestCount
+	// 	return &rc
+	// }
 	return s.Criteria.RequestCount
 }
 
 // InitializeRequestCount sets the request count metric to the default value if not already set
-func (s *ExperimentSpec) InitializeRequestCount(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeRequestCount() {
 	if s.Criteria == nil {
 		return
 	}
 	if s.Criteria.RequestCount == nil {
-		s.Criteria.RequestCount = s.GetRequestCount(cfg)
+		s.Criteria.RequestCount = s.GetRequestCount()
 	}
 }
 
@@ -443,17 +409,17 @@ func (s *ExperimentSpec) InitializeObjectives() {
 }
 
 // InitializeCriteria initializes any criteria details not already set
-func (s *ExperimentSpec) InitializeCriteria(cfg configuration.Iter8Config) {
+func (s *ExperimentSpec) InitializeCriteria() {
 	if s.Criteria != nil {
-		s.InitializeRequestCount(cfg)
+		s.InitializeRequestCount()
 		s.InitializeObjectives()
 	}
 }
 
 // InitializeSpec initializes values in Spec to default values if not already set
-func (s *ExperimentSpec) InitializeSpec(cfg configuration.Iter8Config) {
-	s.InitializeHandlers(cfg)
+func (s *ExperimentSpec) InitializeSpec() {
+	s.InitializeHandlers()
 	s.InitializeWeights()
 	s.InitializeDuration()
-	s.InitializeCriteria(cfg)
+	s.InitializeCriteria()
 }

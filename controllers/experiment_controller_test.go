@@ -35,7 +35,6 @@ var _ = Describe("Experiment Validation", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 0, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
@@ -50,7 +49,6 @@ var _ = Describe("Experiment Validation", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(10, 1, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
@@ -122,7 +120,6 @@ var _ = Describe("Experiment Validation", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
 				WithReward(*reward, v2alpha2.PreferredDirectionHigher).
 				WithIndicator(*indicator).
@@ -205,7 +202,6 @@ var _ = Describe("Metrics", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*goodObjective, nil, nil, false).
 				Build()
@@ -226,7 +222,6 @@ var _ = Describe("Metrics", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("request-count").
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -246,7 +241,6 @@ var _ = Describe("Metrics", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount("iter8/request-count").
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -268,7 +262,6 @@ var _ = Describe("Metrics", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*badObjective, nil, nil, false).
 				Build()
@@ -292,7 +285,6 @@ var _ = Describe("Metrics", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithRequestCount(metricsNamespace+"/objective-with-good-reference-2").
 				WithObjective(*goodObjective2, nil, nil, false).
 				Build()
@@ -321,7 +313,6 @@ var _ = Describe("Experiment proceeds", func() {
 			experiment := v2alpha2.NewExperiment(testName, testNamespace).
 				WithTarget("early-reconcile-targets").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(initialInterval, expectedIterations, 1).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate", nil).

@@ -17,16 +17,14 @@ limitations under the License.
 package configuration
 
 import (
-	"os"
-
 	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/yaml.v2"
 )
 
 // Iter8Config describes structure of configuration file
 type Iter8Config struct {
-	Analytics `json:"analytics" yaml:"analytics"`
-	Namespace string `envconfig:"ITER8_NAMESPACE"`
+	Analytics   `json:"analytics" yaml:"analytics"`
+	Namespace   string `envconfig:"ITER8_NAMESPACE"`
+	HandlersDir string `envconfig:"HANDLERS_DIR"`
 }
 
 // Analytics captures details of analytics endpoint(s)
@@ -35,19 +33,8 @@ type Analytics struct {
 }
 
 // ReadConfig reads the configuration from a combination of files and the environment
-func ReadConfig(configFile string, cfg *Iter8Config) error {
-	file, err := os.Open(configFile)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	decoder := yaml.NewDecoder(file)
-	if err = decoder.Decode(cfg); err != nil {
-		return err
-	}
-
-	if err = envconfig.Process("", cfg); err != nil {
+func ReadConfig(cfg *Iter8Config) error {
+	if err := envconfig.Process("", cfg); err != nil {
 		return err
 	}
 
@@ -72,6 +59,12 @@ func (b Iter8ConfigBuilder) WithEndpoint(endpoint string) Iter8ConfigBuilder {
 // WithNamespace ..
 func (b Iter8ConfigBuilder) WithNamespace(namespace string) Iter8ConfigBuilder {
 	b.Namespace = namespace
+	return b
+}
+
+// WithHandlersDir ..
+func (b Iter8ConfigBuilder) WithHandlersDir(handlersDir string) Iter8ConfigBuilder {
+	b.HandlersDir = handlersDir
 	return b
 }
 

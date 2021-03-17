@@ -128,7 +128,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	// LATE INITIALIZATION of instance.Spec
 	// Note: we don't actually modify instance; this is in memory only
-	instance.Spec.InitializeSpec(r.Iter8Config)
+	instance.Spec.InitializeSpec()
 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
 	// See IsExperimentValid() for list of validations done

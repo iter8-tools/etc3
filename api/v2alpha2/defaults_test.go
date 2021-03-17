@@ -18,7 +18,6 @@ import (
 	"reflect"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/configuration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -41,7 +40,6 @@ var _ = Describe("Initialization", func() {
 		experiment := v2alpha2.NewExperiment("experiment", "namespace").
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
-			WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 			WithRequestCount("request-count").
 			Build()
 		It("is initialized", func() {
@@ -54,14 +52,7 @@ var _ = Describe("Initialization", func() {
 			Expect(len(experiment.Status.Conditions)).Should(Equal(3))
 
 			By("Initializing Spec")
-			c := configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-				WithTestingPattern(string(v2alpha2.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-				WithTestingPattern(string(v2alpha2.TestingPatternConformance), map[string]string{"start": "start"}).
-				WithRequestCount("request-count").
-				WithEndpoint("http://iter8-analytics:8080").
-				Build()
-			experiment.Spec.InitializeSpec(c)
+			experiment.Spec.InitializeSpec()
 			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha2.DefaultIterationsPerLoop))
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(v2alpha2.DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha2.DefaultIntervalSeconds)))
@@ -69,7 +60,7 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha2.DefaultMaxCandidateWeightIncrement))
 			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha2.DefaultDeploymentPattern))
 			// Expect(len(experiment.Spec.Metrics)).Should(Equal(1))
-			Expect(*experiment.Spec.GetRequestCount(configuration.Iter8Config{})).Should(Equal("request-count"))
+			// removed Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
 		})
 	})
 })
@@ -77,91 +68,27 @@ var _ = Describe("Initialization", func() {
 var _ = Describe("Handler Initialization", func() {
 	var (
 		experiment *v2alpha2.Experiment
-		cfg        configuration.Iter8Config
 	)
-	Context("When hanlders are set in an experiment", func() {
-		BeforeEach(func() {
-			experiment = v2alpha2.NewExperiment("test", "default").
-				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "expStart", "finish": "expFinish"}).
-				Build()
-		})
-
-		It("the value of the start handler should match the value in experiment when a configuration is present", func() {
-			cfg = configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
-				Build()
-
-			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
-			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("expStart"))
-			Expect(experiment.Spec.Strategy.Handlers.Finish).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetFinishHandler(cfg)).Should(Equal("expFinish"))
-			Expect(experiment.Spec.GetRollbackHandler(cfg)).Should(BeNil())
-			Expect(experiment.Spec.GetFailureHandler(cfg)).Should(BeNil())
-		})
-		It("the value of GetStartHandler should should be nil when set to none even if a configuration is present", func() {
-			cfg = configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
-				Build()
-			none := v2alpha2.NoneHandler
-			experiment.Spec.Strategy.Handlers.Start = &none
-
-			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
-			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
-			Expect(experiment.Spec.GetStartHandler(cfg)).Should(BeNil())
-		})
-		It("the value of the start handler should match the value in experiment when ca onfiguration is not present", func() {
-			cfg = configuration.NewIter8Config().
-				Build()
-			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
-			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("expStart"))
-			Expect(experiment.Spec.Strategy.Handlers.Finish).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetFinishHandler(cfg)).Should(Equal("expFinish"))
-			Expect(experiment.Spec.GetRollbackHandler(cfg)).Should(BeNil())
-			Expect(experiment.Spec.GetFailureHandler(cfg)).Should(BeNil())
-		})
-	})
-
 	Context("When handlers are not defined in an experiment", func() {
-		experiment := v2alpha2.NewExperiment("test", "default").
+		experiment = v2alpha2.NewExperiment("test", "default").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			Build()
 
-		It("the value is set by late initialization from the configuration", func() {
-			experiment := v2alpha2.NewExperiment("test", "default").
-				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				Build()
-			cfg := configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
-				Build()
-			experiment.Spec.InitializeHandlers(cfg)
+		It("the value is set by late initialization from defaults", func() {
+			experiment.Spec.InitializeHandlers()
 			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
 			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgStart"))
+			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(v2alpha2.DefaultStartHandler))
+			Expect(experiment.Spec.Strategy.Handlers.Finish).ShouldNot(BeNil())
+			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(v2alpha2.DefaultFinishHandler))
+			Expect(experiment.Spec.Strategy.Handlers.Failure).ShouldNot(BeNil())
+			Expect(*experiment.Spec.GetFailureHandler()).Should(Equal(v2alpha2.DefaultFailureHandler))
+			Expect(experiment.Spec.Strategy.Handlers.Rollback).ShouldNot(BeNil())
+			Expect(*experiment.Spec.GetRollbackHandler()).Should(Equal(v2alpha2.DefaultRollbackHandler))
+			Expect(experiment.Spec.Strategy.Handlers.Loop).ShouldNot(BeNil())
+			Expect(*experiment.Spec.GetLoopHandler()).Should(Equal(v2alpha2.DefaultLoopHandler))
 		})
 
-		It("the value of the start handler shoud match the value im the configuration when it is present", func() {
-			cfg := configuration.NewIter8Config().
-				WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "cfgStart", "finish": "cfgFinish"}).
-				Build()
-			Expect(experiment.Spec.Strategy.Handlers).Should(BeNil())
-			Expect(*experiment.Spec.GetStartHandler(cfg)).Should(Equal("cfgStart"))
-			Expect(*experiment.Spec.GetFinishHandler(cfg)).Should(Equal("cfgFinish"))
-			Expect(experiment.Spec.GetRollbackHandler(cfg)).Should(BeNil())
-			Expect(experiment.Spec.GetFailureHandler(cfg)).Should(BeNil())
-		})
-
-		It("the value of the start handler shoud be nil when when no configuration is present", func() {
-			cfg := configuration.NewIter8Config().
-				Build()
-			Expect(experiment.Spec.Strategy.Handlers).Should(BeNil())
-			Expect(experiment.Spec.GetStartHandler(cfg)).Should(BeNil())
-			Expect(experiment.Spec.GetFinishHandler(cfg)).Should(BeNil())
-			Expect(experiment.Spec.GetRollbackHandler(cfg)).Should(BeNil())
-			Expect(experiment.Spec.GetFailureHandler(cfg)).Should(BeNil())
-		})
 	})
 })
 
@@ -253,7 +180,6 @@ var _ = Describe("Generated Code", func() {
 				WithTarget("copy").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
-				WithHandlers(map[string]string{"start": "st", "finish": "fin", "failure": "fail", "rollback": "back", "loop": "lo"}).
 				WithDuration(3, 2, 1).
 				WithBaselineVersion("baseline", nil).
 				WithBaselineVersion("baseline", &corev1.ObjectReference{
