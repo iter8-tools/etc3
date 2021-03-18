@@ -65,33 +65,6 @@ var _ = Describe("Initialization", func() {
 	})
 })
 
-var _ = Describe("Handler Initialization", func() {
-	var (
-		experiment *v2alpha2.Experiment
-	)
-	Context("When handlers are not defined in an experiment", func() {
-		experiment = v2alpha2.NewExperiment("test", "default").
-			WithTestingPattern(v2alpha2.TestingPatternCanary).
-			Build()
-
-		It("the value is set by late initialization from defaults", func() {
-			experiment.Spec.InitializeHandlers()
-			Expect(experiment.Spec.Strategy.Handlers).ShouldNot(BeNil())
-			Expect(experiment.Spec.Strategy.Handlers.Start).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(v2alpha2.DefaultStartHandler))
-			Expect(experiment.Spec.Strategy.Handlers.Finish).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(v2alpha2.DefaultFinishHandler))
-			Expect(experiment.Spec.Strategy.Handlers.Failure).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetFailureHandler()).Should(Equal(v2alpha2.DefaultFailureHandler))
-			Expect(experiment.Spec.Strategy.Handlers.Rollback).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetRollbackHandler()).Should(Equal(v2alpha2.DefaultRollbackHandler))
-			Expect(experiment.Spec.Strategy.Handlers.Loop).ShouldNot(BeNil())
-			Expect(*experiment.Spec.GetLoopHandler()).Should(Equal(v2alpha2.DefaultLoopHandler))
-		})
-
-	})
-})
-
 var _ = Describe("VersionInfo", func() {
 	Context("When count versions", func() {
 		builder := v2alpha2.NewExperiment("test", "default").WithTarget("target")

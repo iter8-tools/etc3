@@ -104,38 +104,10 @@ func (s *ExperimentSpec) GetStartHandler() *string {
 	return &handler
 }
 
-// InitializeStartHandler iinitializes the start handler (if not already set) to the
-// default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeStartHandler() {
-	if s.Strategy.Handlers == nil {
-		s.Strategy.Handlers = &Handlers{}
-	}
-	if s.Strategy.Handlers.Start == nil {
-		handler := s.GetStartHandler()
-		if handler != nil {
-			s.Strategy.Handlers.Start = handler
-		}
-	}
-}
-
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
 func (s *ExperimentSpec) GetFinishHandler() *string {
 	handler := DefaultFinishHandler
 	return &handler
-}
-
-// InitializeFinishHandler iinitializes the finish handler (if not already set) to the
-// default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeFinishHandler() {
-	if s.Strategy.Handlers == nil {
-		s.Strategy.Handlers = &Handlers{}
-	}
-	if s.Strategy.Handlers.Finish == nil {
-		handler := s.GetFinishHandler()
-		if handler != nil {
-			s.Strategy.Handlers.Finish = handler
-		}
-	}
 }
 
 // GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
@@ -144,65 +116,16 @@ func (s *ExperimentSpec) GetRollbackHandler() *string {
 	return &handler
 }
 
-// InitializeRollbackHandler initializes the rollback handler (if not already set) to the
-// default rollback handler defined by the iter8 config.
-func (s *ExperimentSpec) InitializeRollbackHandler() {
-	if s.Strategy.Handlers == nil {
-		s.Strategy.Handlers = &Handlers{}
-	}
-	if s.Strategy.Handlers.Rollback == nil {
-		handler := s.GetRollbackHandler()
-		if handler != nil {
-			s.Strategy.Handlers.Rollback = handler
-		}
-	}
-}
-
 // GetFailureHandler returns the handler to be called if there is a failure during experiment execution
 func (s *ExperimentSpec) GetFailureHandler() *string {
 	handler := DefaultFailureHandler
 	return &handler
 }
 
-// InitializeFailureHandler initializes the finish handler (if not already set) to the default handler
-func (s *ExperimentSpec) InitializeFailureHandler() {
-	if s.Strategy.Handlers == nil {
-		s.Strategy.Handlers = &Handlers{}
-	}
-	if s.Strategy.Handlers.Failure == nil {
-		handler := s.GetFailureHandler()
-		if handler != nil {
-			s.Strategy.Handlers.Failure = handler
-		}
-	}
-}
-
 // GetLoopHandler returns the handler to be called at the end of each loop (except the last)
 func (s *ExperimentSpec) GetLoopHandler() *string {
 	handler := DefaultLoopHandler
 	return &handler
-}
-
-// InitializeLoopHandler initializes the loop handler (if not already set) to the default handler
-func (s *ExperimentSpec) InitializeLoopHandler() {
-	if s.Strategy.Handlers == nil {
-		s.Strategy.Handlers = &Handlers{}
-	}
-	if s.Strategy.Handlers.Loop == nil {
-		handler := s.GetLoopHandler()
-		if handler != nil {
-			s.Strategy.Handlers.Loop = handler
-		}
-	}
-}
-
-// InitializeHandlers initialize handlers if not already set
-func (s *ExperimentSpec) InitializeHandlers() {
-	s.InitializeStartHandler()
-	s.InitializeFinishHandler()
-	s.InitializeRollbackHandler()
-	s.InitializeFailureHandler()
-	s.InitializeLoopHandler()
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -418,7 +341,6 @@ func (s *ExperimentSpec) InitializeCriteria() {
 
 // InitializeSpec initializes values in Spec to default values if not already set
 func (s *ExperimentSpec) InitializeSpec() {
-	s.InitializeHandlers()
 	s.InitializeWeights()
 	s.InitializeDuration()
 	s.InitializeCriteria()

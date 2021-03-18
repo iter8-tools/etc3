@@ -792,11 +792,6 @@ func (in *Strategy) DeepCopyInto(out *Strategy) {
 		*out = new(DeploymentPatternType)
 		**out = **in
 	}
-	if in.Handlers != nil {
-		in, out := &in.Handlers, &out.Handlers
-		*out = new(Handlers)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.Actions != nil {
 		in, out := &in.Actions, &out.Actions
 		*out = make(ActionMap, len(*in))
