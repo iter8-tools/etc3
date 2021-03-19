@@ -198,7 +198,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 3 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baselinex" &&
+						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
 						exp.Status.CurrentWeightDistribution[0].Value == 10 &&
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate-1" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 5 &&
