@@ -323,6 +323,7 @@ var _ = Describe("Experiment proceeds", func() {
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithHandlers(map[string]string{"start": "none", "finish": "none"}).
 				WithDuration(initialInterval, expectedIterations, 1).
+				WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate", nil).
 				Build()

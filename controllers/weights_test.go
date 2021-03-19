@@ -114,56 +114,10 @@ var _ = Describe("Updating weights from reconcile", func() {
 		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(namespace))
 	})
 
-	Context("When weightObjectRef have errors causes exceptions", func() {
-		Specify("When weightObjectRef are valid, all are read", func() {
-			By("Defining experiment where all versions have an objRef")
-			name := "updateobservedweights-all"
-			objRefb := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.intervalSeconds",
-			}
-			objRef1 := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.iterationsPerLoop",
-			}
-			objRef2 := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.maxLoops",
-			}
-			experiment := v2alpha2.NewExperiment(name, namespace).
-				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternABN).
-				WithBaselineVersion("baseline", objRefb).
-				WithCandidateVersion("candidate-1", objRef1).
-				WithCandidateVersion("candidate-1", objRef2).
-				WithDuration(10, 5, 3).
-				Build()
-			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			By("Checking that current weights are read as expected")
-			Eventually(func() bool {
-				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
-					return len(exp.Status.CurrentWeightDistribution) == 3 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 10 &&
-						exp.Status.CurrentWeightDistribution[1].Name == "candidate-1" &&
-						exp.Status.CurrentWeightDistribution[1].Value == 5 &&
-						exp.Status.CurrentWeightDistribution[2].Name == "candidate-2" &&
-						exp.Status.CurrentWeightDistribution[2].Value == 3
-				})
-			})
-		})
-		Specify("When one weightObjectRef is invalid, the value is computed", func() {
+	Context("When weightObjectRef has errors preventing read", func() {
+		Specify("When one weightObjectRef is invalid, the experiment fails", func() {
 			By("Defining with one invalid weightObjectRef")
-			name := "updateobservedweights-1"
+			name := "badweightref"
 			objRefb := &corev1.ObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
@@ -176,78 +130,20 @@ var _ = Describe("Updating weights from reconcile", func() {
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.iterationsPerLoop",
-			}
-			objRef2 := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
 				FieldPath:  ".spec.Duration.bad",
 			}
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternABN).
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithHandlers(map[string]string{"start": "none"}).
 				WithBaselineVersion("baseline", objRefb).
 				WithCandidateVersion("candidate-1", objRef1).
-				WithCandidateVersion("candidate-1", objRef2).
 				WithDuration(10, 5, 3).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			By("Checking that current weights are read as expected")
-			Eventually(func() bool {
-				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
-					return len(exp.Status.CurrentWeightDistribution) == 3 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 10 &&
-						exp.Status.CurrentWeightDistribution[1].Name == "candidate-1" &&
-						exp.Status.CurrentWeightDistribution[1].Value == 5 &&
-						exp.Status.CurrentWeightDistribution[2].Name == "candidate-2" &&
-						exp.Status.CurrentWeightDistribution[2].Value == 3
-				})
-			})
-		})
-		Specify("When more than one weightObjectRef is invalid, only the valid ones are read", func() {
-			By("Defining an experiment with two invalid weightObjectRef")
-			name := "updateobservedweights-2"
-			objRefb := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.intervalSeconds",
-			}
-			objRef2 := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.bad",
-			}
-			objRef1 := &corev1.ObjectReference{
-				APIVersion: "iter8.tools/v2alpha2",
-				Kind:       "Experiment",
-				Name:       name,
-				Namespace:  namespace,
-				FieldPath:  ".spec.Duration.bad",
-			}
-			experiment := v2alpha2.NewExperiment(name, namespace).
-				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternABN).
-				WithBaselineVersion("baseline", objRefb).
-				WithCandidateVersion("candidate-1", objRef1).
-				WithCandidateVersion("candidate-1", objRef2).
-				WithDuration(10, 5, 3).
-				Build()
-			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			By("Checking that current weights are read as expected")
-			Eventually(func() bool {
-				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
-					return len(exp.Status.CurrentWeightDistribution) == 1 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 10
-				})
-			})
+			By("Checking that the experiment failed and the expected reason is recorded")
+			Eventually(func() bool { return fails(name, namespace) }).Should(BeTrue())
+			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
 		})
 	})
 
@@ -264,6 +160,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithHandlers(map[string]string{"start": "none"}).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", objRef).
@@ -278,7 +175,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 3
 				})
-			})
+			}).Should(BeTrue())
 		})
 	})
 
@@ -295,6 +192,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithHandlers(map[string]string{"start": "none"}).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -309,13 +207,13 @@ var _ = Describe("Updating weights from reconcile", func() {
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 97
 				})
-			})
+			}).Should(BeTrue())
 		})
 	})
 
 	Context("When create an experiment where more than one version does not have a weightRefObj", func() {
 		name := "observe-weights-2"
-		It("should not compute the missing weights", func() {
+		It("should not compute the missing weights; it should fail", func() {
 			objRef := &corev1.ObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
@@ -326,6 +224,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithHandlers(map[string]string{"start": "none"}).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -333,14 +232,8 @@ var _ = Describe("Updating weights from reconcile", func() {
 				Build()
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			Eventually(func() bool {
-				// verifies that only 1 (of 3) weights is present and that its value
-				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
-					return len(exp.Status.CurrentWeightDistribution) == 1 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 3
-				})
-			})
+			Eventually(func() bool { return fails(name, namespace) }).Should(BeTrue())
+			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
 		})
 	})
 

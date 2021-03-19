@@ -239,6 +239,10 @@ func fails(name string, ns string) bool {
 	return completed && failed
 }
 
+func issuedEvent(message string) bool {
+	return containsSubString(events, message)
+}
+
 func isDeleted(name string, ns string) bool {
 	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
