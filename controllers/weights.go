@@ -308,6 +308,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 		log.Error(err, "Unexpected type", "value", out)
 	}
 	int32Value := int32(int64Value)
+	log.Info("observeWeight", "read value", int32Value)
 
 	return &int32Value, nil
 }
@@ -332,9 +333,10 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 		w, err := observeWeight(ctx, b.WeightObjRef, restCfg)
 		// if an error occurs, we ignore it (was logged in observeWeight())
 		// it just means that no weight was observed for this version
-		if err != nil {
+		if err == nil {
 			observedWeights = append(observedWeights, v2alpha2.WeightData{Name: b.Name, Value: *w})
 			total += *w
+			log.Info("updateObservedWeights", "name", b.Name, "weight", *w, "total", total)
 		} else if missing == nil {
 			missing = append(missing, b.Name)
 		}
@@ -346,9 +348,10 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 			w, err := observeWeight(ctx, c.WeightObjRef, restCfg)
 			// if an error occurs, we ignore it (was logged in observeWeight())
 			// it just means that no weight was observed for this version
-			if err != nil {
+			if err == nil {
 				observedWeights = append(observedWeights, v2alpha2.WeightData{Name: c.Name, Value: *w})
 				total += *w
+				log.Info("updateObservedWeights", "name", c.Name, "weight", *w, "total", total)
 			} else if missing == nil {
 				missing = append(missing, c.Name)
 			}
@@ -360,10 +363,12 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 		log.Info("Computing weight", "missing", missing[0])
 		w := int32(100) - total
 		observedWeights = append(observedWeights, v2alpha2.WeightData{Name: missing[0], Value: w})
+		log.Info("updateObservedWeights", "name", missing[0], "weight", w, "total", int32(100))
 	} else if len(missing) > 1 {
 		log.Info("Multiple weights could not be read from cluster", "missing", missing)
 	}
 
 	// assign list of observed weights
 	instance.Status.CurrentWeightDistribution = observedWeights
+	log.Info("updateObservedWeights", "current weight distribution", instance.Status.CurrentWeightDistribution)
 }
