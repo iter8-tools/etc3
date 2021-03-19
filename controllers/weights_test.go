@@ -207,7 +207,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 97
 				})
-			}).Should(BeTrue())
+			}, 5).Should(BeTrue())
 		})
 	})
 
@@ -232,7 +232,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 				Build()
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			Eventually(func() bool { return fails(name, namespace) }).Should(BeTrue())
+			Eventually(func() bool { return fails(name, namespace) }, 5).Should(BeTrue())
 			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
 		})
 	})
