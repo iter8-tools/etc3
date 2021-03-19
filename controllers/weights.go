@@ -301,11 +301,13 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg 
 	buf := new(bytes.Buffer)
 	if err := j.Execute(buf, resultObj); err != nil {
 		log.Error(err, "Unable to find value", "obj", objRef)
+		return nil, err
 	}
 	out := buf.String()
 	int64Value, err := strconv.ParseInt(out, 10, 32)
 	if err != nil {
 		log.Error(err, "Unexpected type", "value", out)
+		return nil, err
 	}
 	int32Value := int32(int64Value)
 	log.Info("observeWeight", "read value", int32Value)
