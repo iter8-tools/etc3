@@ -112,7 +112,10 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	}
 
 	// after weights have been redistributed, update Status.CurrentWeightDistribution
-	updateObservedWeights(ctx, instance, r.RestConfig)
+	if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
+		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Specification weightObjectRef invalid")
+		return r.failExperiment(ctx, instance, nil)
+	}
 
 	// update status.versionRecommendedForPromotion if a new winner identified
 	instance.Status.SetVersionRecommendedForPromotion(instance.Spec.VersionInfo.Baseline.Name)

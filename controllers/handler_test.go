@@ -40,12 +40,12 @@ var _ = Describe("Handlers Run", func() {
 		Specify("the start handler is run", func() {
 			By("Defining an experiment with a start handler")
 			name, target := "has-start-handler", "has-start-handler"
-			handler := "test-handler"
+			handler := "start"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget(target).
 				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithHandlers(map[string]string{"start": handler}).
+				WithAction("start", []v2alpha2.TaskSpec{}).
 				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()
@@ -65,12 +65,12 @@ var _ = Describe("Handlers Run", func() {
 			By("Defining an experiment with a finsih handler")
 			// for simplicity, no start handler
 			name, target := "has-finish-handler", "has-finish-handler"
-			handler := "test-handler"
+			handler := "finish"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget(target).
 				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithHandlers(map[string]string{"start": "none", "finish": handler}).
+				WithAction("finish", []v2alpha2.TaskSpec{}).
 				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()
@@ -90,24 +90,17 @@ var _ = Describe("Handlers Run", func() {
 			}).Should(BeTrue())
 		})
 	})
-	Context("When an experiment with a failure handler fails", func() {
-		Specify("the failure handler runs", func() {
-			By("Defining an experiment with a finish handler")
-			// for simplicity, no start handler
-			By("Checking that the finish handler jobs are created")
-		})
-	})
 	Context("When an experiment with a loop handler passes loop boundry", func() {
 		Specify("the loop handler is started", func() {
 			By("Defining an experiment with a loop handler")
 			name, target := "has-loop-handler", "has-loop-handler"
-			handler := "test-handler"
+			handler := "loop"
 			iterations, loops := int32(1), int32(2)
 			testLoop := 1
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget(target).
 				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithHandlers(map[string]string{"start": "none", "loop": handler}).
+				WithAction("loop", []v2alpha2.TaskSpec{}).
 				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()

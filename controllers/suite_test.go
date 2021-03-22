@@ -117,10 +117,6 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 
 	iter8config := configuration.NewIter8Config().
-		WithTestingPattern(string(v2alpha2.TestingPatternCanary), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-		WithTestingPattern(string(v2alpha2.TestingPatternAB), map[string]string{"start": "start", "finish": "finish", "rollback": "finish", "failure": "finish"}).
-		WithTestingPattern(string(v2alpha2.TestingPatternConformance), map[string]string{"start": "start"}).
-		WithRequestCount("request-count").
 		WithEndpoint("http://iter8-analytics:8080").
 		WithHandlersDir("../test/handlers").
 		WithNamespace("iter8").
@@ -237,6 +233,10 @@ func fails(name string, ns string) bool {
 	failed := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentFailed).IsTrue()
 
 	return completed && failed
+}
+
+func issuedEvent(message string) bool {
+	return containsSubString(events, message)
 }
 
 func isDeleted(name string, ns string) bool {

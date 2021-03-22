@@ -15,8 +15,6 @@ limitations under the License.
 package v2alpha2
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,33 +86,6 @@ func (b *ExperimentBuilder) WithRequestCount(requestCount string) *ExperimentBui
 	}
 
 	b.Spec.Criteria.RequestCount = &requestCount
-
-	return b
-}
-
-// WithHandlers ..
-func (b *ExperimentBuilder) WithHandlers(handlers map[string]string) *ExperimentBuilder {
-
-	if b.Spec.Strategy.Handlers == nil {
-		b.Spec.Strategy.Handlers = &Handlers{}
-	}
-
-	for key, value := range handlers {
-		hdlr := value
-		switch strings.ToLower(key) {
-		case "start":
-			b.Spec.Strategy.Handlers.Start = &hdlr
-		case "finish":
-			b.Spec.Strategy.Handlers.Finish = &hdlr
-		case "failure":
-			b.Spec.Strategy.Handlers.Failure = &hdlr
-		case "rollback":
-			b.Spec.Strategy.Handlers.Rollback = &hdlr
-		case "loop":
-			b.Spec.Strategy.Handlers.Loop = &hdlr
-		default:
-		}
-	}
 
 	return b
 }

@@ -301,25 +301,29 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespac
 	buf := new(bytes.Buffer)
 	if err := j.Execute(buf, resultObj); err != nil {
 		log.Error(err, "Unable to find value", "obj", objRef)
+		return nil, err
 	}
 	out := buf.String()
 	int64Value, err := strconv.ParseInt(out, 10, 32)
 	if err != nil {
 		log.Error(err, "Unexpected type", "value", out)
+		return nil, err
 	}
 	int32Value := int32(int64Value)
+	log.Info("observeWeight", "read value", int32Value)
 
 	return &int32Value, nil
 }
 
-func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) {
+func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) error {
 	log := util.Logger(ctx)
 	log.Info("updateObservedWeights called")
 	defer log.Info("updateObservedWeights  ended")
 
 	// cannot proceed if no version info
+	// this is valid before start actions are executed and validated after
 	if instance.Spec.VersionInfo == nil {
-		return
+		return nil
 	}
 
 	observedWeights := make([]v2alpha2.WeightData, 0)
@@ -330,28 +334,28 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 	b := instance.Spec.VersionInfo.Baseline
 	if b.WeightObjRef != nil {
 		w, err := observeWeight(ctx, b.WeightObjRef, instance.Namespace, restCfg)
-		// if an error occurs, we ignore it (was logged in observeWeight())
-		// it just means that no weight was observed for this version
 		if err != nil {
-			observedWeights = append(observedWeights, v2alpha2.WeightData{Name: b.Name, Value: *w})
-			total += *w
-		} else if missing == nil {
-			missing = append(missing, b.Name)
+			return err
 		}
+		observedWeights = append(observedWeights, v2alpha2.WeightData{Name: b.Name, Value: *w})
+		total += *w
+		log.Info("updateObservedWeights", "name", b.Name, "weight", *w, "total", total)
+	} else {
+		missing = append(missing, b.Name)
 	}
 
 	// candidates
 	for _, c := range instance.Spec.VersionInfo.Candidates {
 		if c.WeightObjRef != nil {
 			w, err := observeWeight(ctx, c.WeightObjRef, instance.Namespace, restCfg)
-			// if an error occurs, we ignore it (was logged in observeWeight())
-			// it just means that no weight was observed for this version
 			if err != nil {
-				observedWeights = append(observedWeights, v2alpha2.WeightData{Name: c.Name, Value: *w})
-				total += *w
-			} else if missing == nil {
-				missing = append(missing, c.Name)
+				return err
 			}
+			observedWeights = append(observedWeights, v2alpha2.WeightData{Name: c.Name, Value: *w})
+			total += *w
+			log.Info("updateObservedWeights", "name", c.Name, "weight", *w, "total", total)
+		} else {
+			missing = append(missing, c.Name)
 		}
 	}
 
@@ -360,10 +364,16 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 		log.Info("Computing weight", "missing", missing[0])
 		w := int32(100) - total
 		observedWeights = append(observedWeights, v2alpha2.WeightData{Name: missing[0], Value: w})
+		log.Info("updateObservedWeights", "name", missing[0], "weight", w, "total", int32(100))
 	} else if len(missing) > 1 {
 		log.Info("Multiple weights could not be read from cluster", "missing", missing)
+		if *instance.Spec.Strategy.DeploymentPattern != v2alpha2.DeploymentPatternFixedSplit {
+			return errors.New("Unable to read version weights; insufficient number of weightObjectRef specified")
+		}
 	}
 
 	// assign list of observed weights
 	instance.Status.CurrentWeightDistribution = observedWeights
+	log.Info("updateObservedWeights", "current weight distribution", instance.Status.CurrentWeightDistribution)
+	return nil
 }

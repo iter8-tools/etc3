@@ -327,43 +327,6 @@ spec:
                     - Progressive
                     - BlueGreen
                     type: string
-                  handlers:
-                    description: Handlers define domain specific behavior and are
-                      called at well defined points in the lifecycle of an experiment.
-                      Specifically at the start (start handler), at the end (finish
-                      handler). A special handler can be specified to handle error
-                      cases.
-                    properties:
-                      failure:
-                        description: Failure handler should implement any domain specific
-                          actions that should take place when an experiment fails.
-                        type: string
-                      finish:
-                        description: Finish handler implements any domain specific
-                          actions that should take place at the end of an experiment.
-                          For now, this includes any promotion logic that is needed
-                          for a winning version. In the future, this function might
-                          be migrated into the controller itself.
-                        type: string
-                      loop:
-                        description: Loop handler should implement any domain specific
-                          actions that should take place when an experiment reaches  a
-                          loop boundary.
-                        type: string
-                      rollback:
-                        description: Rollback handler should implement any domain
-                          specific actions that should take place when an objective
-                          is violated. This behavior is specific to the version with
-                          the failing objective
-                        type: string
-                      start:
-                        description: Start handler implmenents any domain specific
-                          set up for an experiment. It should ensure that any needed
-                          resources are available and in an appropriate state. It
-                          must update the spec.versionInfo field of the experiment
-                          resource.
-                        type: string
-                    type: object
                   testingPattern:
                     description: TestingPattern is the testing pattern of an experiment
                     enum:

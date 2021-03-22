@@ -129,12 +129,6 @@ type Strategy struct {
 	// +optional
 	DeploymentPattern *DeploymentPatternType `json:"deploymentPattern,omitempty" yaml:"deploymentPattern,omitempty"`
 
-	// Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
-	// Specifically at the start (start handler), at the end (finish handler).
-	// A special handler can be specified to handle error cases.
-	// +optional
-	Handlers *Handlers `json:"handlers,omitempty" yaml:"handlers,omitempty"`
-
 	// Actions define the collections of tasks that are executed by handlers.
 	// Specifically, start and finish actions are invoked by start and finish handlers respectively.
 	// +optional

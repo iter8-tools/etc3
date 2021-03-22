@@ -20,11 +20,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -107,11 +105,8 @@ func main() {
 	}
 
 	cfg := configuration.Iter8Config{}
-	if err := configuration.ReadConfig(path.Join(os.Getenv("DEFAULTS_DIR"), "defaults.yaml"), &cfg); err != nil {
-		setupLog.Error(err, "unable to configure manager")
-		os.Exit(1)
-	}
-	if err := validateConfig(cfg); err != nil {
+	// if err := configuration.ReadConfig(path.Join(os.Getenv("DEFAULTS_DIR"), "defaults.yaml"), &cfg); err != nil {
+	if err := configuration.ReadConfig(&cfg); err != nil {
 		setupLog.Error(err, "unable to configure manager")
 		os.Exit(1)
 	}
@@ -137,20 +132,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-func validateConfig(cfg configuration.Iter8Config) error {
-	// validate EnvironmentTypes
-	for _, expType := range cfg.ExperimentTypes {
-		ok := false
-		for _, validValue := range v2alpha2.ValidTestingPatternTypes {
-			if expType.Name == string(validValue) {
-				ok = true
-			}
-		}
-		if !ok {
-			return fmt.Errorf("Invalid experiment type: %s, valid types are: %v", expType.Name, v2alpha2.ValidTestingPatternTypes)
-		}
-	}
-	return nil
 }

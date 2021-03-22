@@ -72,18 +72,29 @@ var terminalHandlerTypes []HandlerType = []HandlerType{
 
 // GetHandler returns handler of a given type
 func (r *ExperimentReconciler) GetHandler(instance *v2alpha2.Experiment, t HandlerType) *string {
+	var hdlr *string
 	switch t {
 	case HandlerTypeStart:
-		return instance.Spec.GetStartHandler(r.Iter8Config)
+		hdlr = instance.Spec.GetStartHandler()
 	case HandlerTypeFinish:
-		return instance.Spec.GetFinishHandler(r.Iter8Config)
+		hdlr = instance.Spec.GetFinishHandler()
 	case HandlerTypeRollback:
-		return instance.Spec.GetRollbackHandler(r.Iter8Config)
+		hdlr = instance.Spec.GetRollbackHandler()
 	case HandlerTypeFailure:
-		return instance.Spec.GetFailureHandler(r.Iter8Config)
+		hdlr = instance.Spec.GetFailureHandler()
 	default: // case HandlerTypeLoop:
-		return instance.Spec.GetLoopHandler(r.Iter8Config)
+		hdlr = instance.Spec.GetLoopHandler()
 	}
+
+	// Before returning, check if there are actually actions to execute.
+	// If not, return nil (no handler). Otherwise, return the handler.
+	// This approach is an optimization (we won't start jobs that do basically nothing).
+	// It also helps writing test cases because we don't fail immediately after the start handler.
+	if _, ok := instance.Spec.Strategy.Actions[*hdlr]; !ok {
+		// no actions for this handler, return nil
+		return nil
+	}
+	return hdlr
 }
 
 // IsHandlerLaunched returns the handler (job) if one has been launched
@@ -113,6 +124,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	log.Info("launchHandler", "jobYaml", handlerJobYaml)
 	job := batchv1.Job{}
 	if err := readJobSpec(handlerJobYaml, &job); err != nil {
+		log.Error(err, "read job spec failed")
 		return err
 	}
 

@@ -105,6 +105,46 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+})
+
+var _ = Describe("Updating weights from reconcile", func() {
+	var namespace string
+	BeforeEach(func() {
+		namespace = "default"
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(namespace))
+	})
+
+	Context("When weightObjectRef has errors preventing read", func() {
+		Specify("When one weightObjectRef is invalid, the experiment fails", func() {
+			By("Defining with one invalid weightObjectRef")
+			name := "badweightref"
+			objRefb := &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha2",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+				FieldPath:  ".spec.Duration.intervalSeconds",
+			}
+			objRef1 := &corev1.ObjectReference{
+				APIVersion: "iter8.tools/v2alpha2",
+				Kind:       "Experiment",
+				Name:       name,
+				Namespace:  namespace,
+				FieldPath:  ".spec.Duration.bad",
+			}
+			experiment := v2alpha2.NewExperiment(name, namespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithBaselineVersion("baseline", objRefb).
+				WithCandidateVersion("candidate-1", objRef1).
+				WithDuration(10, 5, 3).
+				Build()
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			By("Checking that the experiment failed and the expected reason is recorded")
+			Eventually(func() bool { return fails(name, namespace) }, 5).Should(BeTrue())
+			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
+		})
+	})
 
 	Context("When create an experiment where all versions have a weightRefObj", func() {
 		name := "observe-weights-all"
@@ -133,7 +173,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 3
 				})
-			})
+			}, 5).Should(BeTrue())
 		})
 	})
 
@@ -164,13 +204,13 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
 						exp.Status.CurrentWeightDistribution[1].Value == 97
 				})
-			})
+			}, 5).Should(BeTrue())
 		})
 	})
 
 	Context("When create an experiment where more than one version does not have a weightRefObj", func() {
 		name := "observe-weights-2"
-		It("should not compute the missing weights", func() {
+		It("should not compute the missing weights; it should fail", func() {
 			objRef := &corev1.ObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
@@ -188,14 +228,8 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 				Build()
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			Eventually(func() bool {
-				// verifies that only 1 (of 3) weights is present and that its value
-				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
-					return len(exp.Status.CurrentWeightDistribution) == 1 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 3
-				})
-			})
+			Eventually(func() bool { return fails(name, namespace) }, 5).Should(BeTrue())
+			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
 		})
 	})
 
