@@ -135,7 +135,6 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none"}).
 				WithBaselineVersion("baseline", objRefb).
 				WithCandidateVersion("candidate-1", objRef1).
 				WithDuration(10, 5, 3).
@@ -160,7 +159,6 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none"}).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", objRef).
@@ -192,7 +190,6 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none"}).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -224,7 +221,6 @@ var _ = Describe("Updating weights from reconcile", func() {
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
-				WithHandlers(map[string]string{"start": "none"}).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
