@@ -132,6 +132,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	job.Spec.Template.Spec.ServiceAccountName = ServiceAccountForHandlers
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAME", instance.Name)
 	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "EXPERIMENT_NAMESPACE", instance.Namespace)
+	job.Spec.Template.Spec.Containers[0].Env = setEnvVariable(job.Spec.Template.Spec.Containers[0].Env, "ACTION", handler)
 
 	// job := defineJob(jobHandlerConfig{
 	// 	JobName:               jobName(instance, handler),

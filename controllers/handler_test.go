@@ -40,7 +40,7 @@ var _ = Describe("Handlers Run", func() {
 		Specify("the start handler is run", func() {
 			By("Defining an experiment with a start handler")
 			name, target := "has-start-handler", "has-start-handler"
-			handler := "test-handler"
+			handler := "start"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget(target).
@@ -56,7 +56,17 @@ var _ = Describe("Handlers Run", func() {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
-				return err == nil
+				if err != nil {
+					return false
+				}
+				lg.Info("eventually", "job", handlerJob)
+				for _, e := range handlerJob.Spec.Template.Spec.Containers[0].Env {
+					if e.Name == "ACTION" && e.Value == "start" {
+						return true
+					}
+				}
+				return false
+				// return err == nil
 			}, 3).Should(BeTrue())
 		})
 	})
@@ -65,7 +75,7 @@ var _ = Describe("Handlers Run", func() {
 			By("Defining an experiment with a finsih handler")
 			// for simplicity, no start handler
 			name, target := "has-finish-handler", "has-finish-handler"
-			handler := "test-handler"
+			handler := "finish"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2alpha2.NewExperiment(name, namespace).
 				WithTarget(target).
@@ -80,7 +90,16 @@ var _ = Describe("Handlers Run", func() {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
-				return err == nil
+				if err != nil {
+					return false
+				}
+				for _, e := range handlerJob.Spec.Template.Spec.Containers[0].Env {
+					if e.Name == "ACTION" && e.Value == "finish" {
+						return true
+					}
+				}
+				return false
+				// return err == nil
 			}, 10).Should(BeTrue())
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
@@ -101,7 +120,7 @@ var _ = Describe("Handlers Run", func() {
 		Specify("the loop handler is started", func() {
 			By("Defining an experiment with a loop handler")
 			name, target := "has-loop-handler", "has-loop-handler"
-			handler := "test-handler"
+			handler := "loop"
 			iterations, loops := int32(1), int32(2)
 			testLoop := 1
 			experiment := v2alpha2.NewExperiment(name, namespace).
@@ -117,7 +136,16 @@ var _ = Describe("Handlers Run", func() {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, &testLoop)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
-				return err == nil
+				if err != nil {
+					return false
+				}
+				for _, e := range handlerJob.Spec.Template.Spec.Containers[0].Env {
+					if e.Name == "ACTION" && e.Value == "loop" {
+						return true
+					}
+				}
+				return false
+				// return err == nil
 			}, 10).Should(BeTrue())
 		})
 	})
