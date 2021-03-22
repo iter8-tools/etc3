@@ -314,6 +314,7 @@ var _ = Describe("Experiment proceeds", func() {
 				WithTarget("early-reconcile-targets").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(initialInterval, expectedIterations, 1).
+				WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate", nil).
 				Build()
