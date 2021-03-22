@@ -22,9 +22,6 @@ import (
 )
 
 const (
-	// NoneHandler is the keyword users can use to indicate no handler
-	NoneHandler string = "none"
-
 	// DefaultStartHandler is the prefix of the default start handler
 	DefaultStartHandler string = "start"
 
