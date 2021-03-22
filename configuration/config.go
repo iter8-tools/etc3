@@ -17,6 +17,8 @@ limitations under the License.
 package configuration
 
 import (
+	"strings"
+
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -37,6 +39,8 @@ func ReadConfig(cfg *Iter8Config) error {
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
 	}
+
+	cfg.Analytics.Endpoint = strings.Replace(cfg.Analytics.Endpoint, "ITER8_NAMESPACE", cfg.Namespace, 1)
 
 	return nil
 }
