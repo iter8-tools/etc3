@@ -56,7 +56,17 @@ var _ = Describe("Handlers Run", func() {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
-				return err == nil
+				if err != nil {
+					return false
+				}
+				lg.Info("eventually", "job", handlerJob)
+				for _, e := range handlerJob.Spec.Template.Spec.Containers[0].Env {
+					if e.Name == "ACTION" && e.Value == "start" {
+						return true
+					}
+				}
+				return false
+				// return err == nil
 			}, 3).Should(BeTrue())
 		})
 	})
@@ -80,7 +90,16 @@ var _ = Describe("Handlers Run", func() {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
-				return err == nil
+				if err != nil {
+					return false
+				}
+				for _, e := range handlerJob.Spec.Template.Spec.Containers[0].Env {
+					if e.Name == "ACTION" && e.Value == "finish" {
+						return true
+					}
+				}
+				return false
+				// return err == nil
 			}, 10).Should(BeTrue())
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
@@ -110,7 +129,16 @@ var _ = Describe("Handlers Run", func() {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, &testLoop)
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
-				return err == nil
+				if err != nil {
+					return false
+				}
+				for _, e := range handlerJob.Spec.Template.Spec.Containers[0].Env {
+					if e.Name == "ACTION" && e.Value == "loop" {
+						return true
+					}
+				}
+				return false
+				// return err == nil
 			}, 10).Should(BeTrue())
 		})
 	})
