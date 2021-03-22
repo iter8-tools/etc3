@@ -83,7 +83,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, rest
 
 	// go through map and apply the list of patches to the objects
 	for obj, p := range patches {
-		_, err := patchWeight(ctx, &obj, p, restCfg)
+		_, err := patchWeight(ctx, &obj, p, instance.Namespace, restCfg)
 		log.Info("redistributeWeight", "err", err)
 		if err != nil {
 			log.Error(err, "Unable to patch", "object", obj, "patch", p)
@@ -182,7 +182,7 @@ func getCurrentWeight(version string, weights []v2alpha2.WeightData) *int32 {
 	return &zero
 }
 
-func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
+func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReference, defaultNamespace string) (dynamic.ResourceInterface, error) {
 	// 1. Prepare a RESTMapper to find GVR
 	dc, err := discovery.NewDiscoveryClientForConfig(cfg)
 	if err != nil {
@@ -207,7 +207,7 @@ func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReferenc
 	// 4. Obtain REST interface for the GVR
 	namespace := objRef.Namespace
 	if namespace == "" {
-		namespace = "default"
+		namespace = defaultNamespace
 	}
 	var dr dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
@@ -227,7 +227,7 @@ type patchIntValue struct {
 	Value int32  `json:"value"`
 }
 
-func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue, restCfg *rest.Config) (*unstructured.Unstructured, error) {
+func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue, namespace string, restCfg *rest.Config) (*unstructured.Unstructured, error) {
 	log := util.Logger(ctx)
 	log.Info("patchWeight called")
 	defer log.Info("patchWeight ended")
@@ -239,7 +239,7 @@ func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []
 	}
 	log.Info("patchWeight", "marshalled patch", string(data))
 
-	dr, err := getDynamicResourceInterface(restCfg, objRef)
+	dr, err := getDynamicResourceInterface(restCfg, objRef, namespace)
 	if err != nil {
 		log.Error(err, "Unable to get dynamic resource interface")
 		return nil, err
@@ -248,12 +248,12 @@ func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []
 	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 }
 
-func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, restCfg *rest.Config) (*int32, error) {
+func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespace string, restCfg *rest.Config) (*int32, error) {
 	log := util.Logger(ctx)
 	log.Info("observeWeight called", "objRef", objRef)
 	defer log.Info("observeWeight ended")
 
-	dr, err := getDynamicResourceInterface(restCfg, objRef)
+	dr, err := getDynamicResourceInterface(restCfg, objRef, namespace)
 	if err != nil {
 		log.Error(err, "Unable to get dynamic resource interface")
 		return nil, err
@@ -329,7 +329,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 	// baseline
 	b := instance.Spec.VersionInfo.Baseline
 	if b.WeightObjRef != nil {
-		w, err := observeWeight(ctx, b.WeightObjRef, restCfg)
+		w, err := observeWeight(ctx, b.WeightObjRef, instance.Namespace, restCfg)
 		// if an error occurs, we ignore it (was logged in observeWeight())
 		// it just means that no weight was observed for this version
 		if err != nil {
@@ -343,7 +343,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 	// candidates
 	for _, c := range instance.Spec.VersionInfo.Candidates {
 		if c.WeightObjRef != nil {
-			w, err := observeWeight(ctx, c.WeightObjRef, restCfg)
+			w, err := observeWeight(ctx, c.WeightObjRef, instance.Namespace, restCfg)
 			// if an error occurs, we ignore it (was logged in observeWeight())
 			// it just means that no weight was observed for this version
 			if err != nil {
