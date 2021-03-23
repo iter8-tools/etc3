@@ -50,6 +50,9 @@ const (
 	// HandlerTypeLoop is the type of a loop handler
 	HandlerTypeLoop HandlerType = "Loop"
 
+	// HandlerYaml is the name of the job spec used for handlers
+	HandlerYaml = "handler.yaml"
+
 	// LabelExperimentName is key of label to be added to handler jobs for experiment name
 	LabelExperimentName = "iter8/experimentName"
 	// LabelExperimentNamespace is key of label to be added to handler jobs for experiment namespace
@@ -120,7 +123,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2al
 	log.Info("LaunchHandler called", "handler", handler)
 	defer log.Info("LaunchHandler completed", "handler", handler)
 
-	handlerJobYaml := path.Join(r.Iter8Config.HandlersDir, fmt.Sprintf("%s.yaml", handler))
+	handlerJobYaml := path.Join(r.Iter8Config.HandlersDir, HandlerYaml)
 	log.Info("launchHandler", "jobYaml", handlerJobYaml)
 	job := batchv1.Job{}
 	if err := readJobSpec(handlerJobYaml, &job); err != nil {
