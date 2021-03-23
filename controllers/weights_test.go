@@ -67,33 +67,33 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 				{Name: "v4", Value: 40},
 			}
 			Expect(k8sClient.Status().Update(ctx(), &exp)).Should(Succeed())
-			value, _ := observeWeight(ctx(), objRef, cfg)
+			value, _ := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(*value).To(Equal(int32(30)))
 		})
 		It("A FieldPath returns a valid value", func() {
 			objRef.FieldPath = ".spec.duration.maxLoops"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			value, _ := observeWeight(ctx(), objRef, cfg)
+			value, _ := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(*value).To(Equal(int32(3)))
 		})
 		It("No FieldPath returns an error", func() {
 			experiment.Name = "no-fieldpath"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			_, err := observeWeight(ctx(), objRef, cfg)
+			_, err := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(err).To(HaveOccurred())
 		})
 		It("Invalid FieldPath returns an error", func() {
 			experiment.Name = "invalid-fieldpath"
 			objRef.FieldPath = ".invalid.path"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			_, err := observeWeight(ctx(), objRef, cfg)
+			_, err := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(err).To(HaveOccurred())
 		})
 		It("Valid path to non int returns an error", func() {
 			experiment.Name = "non-int-fieldpath"
 			objRef.FieldPath = ".spec.target"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			_, err := observeWeight(ctx(), objRef, cfg)
+			_, err := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(err).To(HaveOccurred())
 		})
 		It("Reference to invalid object returns an error", func() {
@@ -101,7 +101,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 			objRef.Name = "no-such-object"
 			objRef.FieldPath = ".spec.duration.maxLoops"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			_, err := observeWeight(ctx(), objRef, cfg)
+			_, err := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -287,7 +287,7 @@ var _ = Describe("patch", func() {
 			Expect(shouldRedistribute(&exp)).Should(BeTrue())
 			Expect(redistributeWeight(ctx(), &exp, reconciler.RestConfig)).Should(Succeed())
 			By("verifying that the weight was changed")
-			value, _ := observeWeight(ctx(), objRef, cfg)
+			value, _ := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(*value).To(Equal(int32(16)))
 		})
 	})
