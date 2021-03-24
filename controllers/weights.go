@@ -153,7 +153,7 @@ func addPatch(ctx context.Context, instance *v2alpha2.Experiment, version v2alph
 }
 
 // key is just the obj without the FieldPath
-func getKey(obj corev1.ObjectReference) corev1.ObjectReference {
+func getKey(obj v2alpha2.WeightObjectReference) corev1.ObjectReference {
 	return corev1.ObjectReference{
 		APIVersion: obj.APIVersion,
 		Kind:       obj.Kind,
@@ -248,10 +248,18 @@ func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []
 	return dr.Patch(ctx, objRef.Name, types.JSONPatchType, data, metav1.PatchOptions{})
 }
 
-func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespace string, restCfg *rest.Config) (*int32, error) {
+func observeWeight(ctx context.Context, weightObjRef *v2alpha2.WeightObjectReference, namespace string, restCfg *rest.Config) (*int32, error) {
 	log := util.Logger(ctx)
-	log.Info("observeWeight called", "objRef", objRef)
+	log.Info("observeWeight called", "objRef", weightObjRef)
 	defer log.Info("observeWeight ended")
+
+	objRef := &corev1.ObjectReference{
+		APIVersion: weightObjRef.APIVersion,
+		Kind:       weightObjRef.Kind,
+		Namespace:  weightObjRef.Namespace,
+		Name:       weightObjRef.Name,
+		FieldPath:  weightObjRef.FieldPath,
+	}
 
 	dr, err := getDynamicResourceInterface(restCfg, objRef, namespace)
 	if err != nil {

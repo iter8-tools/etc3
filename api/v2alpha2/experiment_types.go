@@ -114,7 +114,39 @@ type VersionDetail struct {
 
 	// WeightObjRef is a reference to another kubernetes object
 	// +optional
-	WeightObjRef *corev1.ObjectReference `json:"weightObjRef,omitempty" yaml:"weightObjRef,omitempty"`
+	WeightObjRef *WeightObjectReference `json:"weightObjRef,omitempty" yaml:"weightObjRef,omitempty"`
+}
+
+// WeightObjectReference is a reference to another object. It is derived from corev1.ObjectReference
+type WeightObjectReference struct {
+	// API version of the referent.
+	// +kubebuilder:validation:MinLength:=1
+	APIVersion string `json:"apiVersion" yaml:"apiVersion"`
+
+	// Kind of the referent.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	// +kubebuilder:validation:MinLength:=1
+	Kind string `json:"kind" yaml:"kind"`
+
+	// Namespace of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+	// +optional
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+
+	// Name of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	// +kubebuilder:validation:MinLength:=1
+	Name string `json:"name" yaml:"name"`
+
+	// If referring to a piece of an object instead of an entire object, this string
+	// should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+	// For example, if the object reference is to a container within a pod, this would take on a value like:
+	// "spec.containers{name}" (where "name" refers to the name of the container that triggered
+	// the event) or if no container name is specified "spec.containers[2]" (container with
+	// index 2 in this pod). This syntax is chosen only to have some well-defined way of
+	// referencing a part of an object.
+	// TODO: this design is not final and this field is subject to change in the future.
+	FieldPath string `json:"fieldPath" yaml:"fieldPath"`
 }
 
 // Strategy identifies the type of experiment and its properties

@@ -52,7 +52,6 @@ type MetricSpec struct {
 
 	// Type of the metric
 	// +kubebuilder:default:="gauge"
-	// +optional
 	Type MetricType `json:"type" yaml:"type"`
 
 	// SampleSize is a reference to a counter metric resource.
@@ -63,13 +62,11 @@ type MetricSpec struct {
 
 	// Provider identifies the metric backend including its authentication properties and its unmarshaller
 	// +kubebuilder:validation:MinLength:=1
-	// +optional
 	Provider string `json:"provider" yaml:"provider"`
 
 	// JQExpression defines how the value of the metric should be extracted from the metric value
 	// returned by a query to the backend metrics server
 	// +kubebuilder:validation:MinLength:=1
-	// +optional
 	JQExpression string `json:"jqExpression" yaml:"jqExpression"`
 
 	// SecretRef the name of a kubernetes Secret containing authentication details for the metrics backend

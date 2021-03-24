@@ -126,6 +126,9 @@ spec:
                   is used.
                 type: string
             required:
+            - jqExpression
+            - provider
+            - type
             - urlTemplate
             type: object
         type: object

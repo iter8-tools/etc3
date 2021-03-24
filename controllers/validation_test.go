@@ -19,7 +19,6 @@ import (
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/util"
-	v1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	. "github.com/onsi/ginkgo"
@@ -295,7 +294,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternConformance)
 		It("Should reject the experiment if fieldpath starts without '.'", func() {
-			experiment := bldr.WithBaselineVersion("baseline", &v1.ObjectReference{
+			experiment := bldr.WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				Name:      "object",
 				Namespace: "ns",
 				FieldPath: "foo",
@@ -304,7 +303,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 			Expect(containsSubString(events, "Fieldpaths must start with '.'")).Should(BeTrue())
 		})
 		It("Should accept the experiment if fieldpath starts with '.'", func() {
-			experiment := bldr.WithBaselineVersion("baseline", &v1.ObjectReference{
+			experiment := bldr.WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				Name:      "object",
 				Namespace: "ns",
 				FieldPath: ".foo",

@@ -155,7 +155,7 @@ var _ = Describe("Generated Code", func() {
 				WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
 				WithDuration(3, 2, 1).
 				WithBaselineVersion("baseline", nil).
-				WithBaselineVersion("baseline", &corev1.ObjectReference{
+				WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 					Kind:       "kind",
 					Namespace:  "namespace",
 					Name:       "name",

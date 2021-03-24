@@ -40,14 +40,14 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 	Context("When try to read field from object", func() {
 		name := "read"
 		var experiment *v2alpha2.Experiment
-		var objRef *corev1.ObjectReference
+		var objRef *v2alpha2.WeightObjectReference
 		JustBeforeEach(func() {
 			experiment = v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				Build()
-			objRef = &corev1.ObjectReference{
+			objRef = &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
@@ -118,14 +118,14 @@ var _ = Describe("Updating weights from reconcile", func() {
 		Specify("When one weightObjectRef is invalid, the experiment fails", func() {
 			By("Defining with one invalid weightObjectRef")
 			name := "badweightref"
-			objRefb := &corev1.ObjectReference{
+			objRefb := &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
 				Namespace:  namespace,
 				FieldPath:  ".spec.Duration.intervalSeconds",
 			}
-			objRef1 := &corev1.ObjectReference{
+			objRef1 := &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
@@ -149,7 +149,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 	Context("When create an experiment where all versions have a weightRefObj", func() {
 		name := "observe-weights-all"
 		It("should read all the weights", func() {
-			objRef := &corev1.ObjectReference{
+			objRef := &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
@@ -180,7 +180,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 	Context("When create an experiment where 1 version does not have a weightRefObj", func() {
 		name := "observe-weights-1"
 		It("should compute the missing weight", func() {
-			objRef := &corev1.ObjectReference{
+			objRef := &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
@@ -211,7 +211,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 	Context("When create an experiment where more than one version does not have a weightRefObj", func() {
 		name := "observe-weights-2"
 		It("should not compute the missing weights; it should fail", func() {
-			objRef := &corev1.ObjectReference{
+			objRef := &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
@@ -244,14 +244,14 @@ var _ = Describe("patch", func() {
 	Context("path gets updated", func() {
 		name := "write"
 		var bldr *v2alpha2.ExperimentBuilder
-		var objRef *corev1.ObjectReference
+		var objRef *v2alpha2.WeightObjectReference
 		JustBeforeEach(func() {
 			bldr = v2alpha2.NewExperiment(name, namespace).
 				WithTarget("target").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithDuration(10, 5, 3)
 
-			objRef = &corev1.ObjectReference{
+			objRef = &v2alpha2.WeightObjectReference{
 				APIVersion: "iter8.tools/v2alpha2",
 				Kind:       "Experiment",
 				Name:       name,
@@ -352,7 +352,7 @@ var _ = Describe("Weight Patching", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
-			WithBaselineVersion("baseline", &corev1.ObjectReference{
+			WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
@@ -372,7 +372,7 @@ var _ = Describe("Weight Patching", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
-			WithBaselineVersion("baseline", &corev1.ObjectReference{
+			WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
@@ -393,7 +393,7 @@ var _ = Describe("Weight Patching", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
-			WithBaselineVersion("baseline", &corev1.ObjectReference{
+			WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
@@ -415,7 +415,7 @@ var _ = Describe("Weight Patching", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
-			WithBaselineVersion("baseline", &corev1.ObjectReference{
+			WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
@@ -437,14 +437,14 @@ var _ = Describe("Weight Patching", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
-			WithBaselineVersion("baseline", &corev1.ObjectReference{
+			WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
 				Namespace:  namespace,
 				FieldPath:  ".path.to.weight[0]",
 			}).
-			WithCandidateVersion("candidate", &corev1.ObjectReference{
+			WithCandidateVersion("candidate", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs",
@@ -477,14 +477,14 @@ var _ = Describe("Weight Patching", func() {
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
 			WithDuration(10, 0, 1).
-			WithBaselineVersion("baseline", &corev1.ObjectReference{
+			WithBaselineVersion("baseline", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs0",
 				Namespace:  namespace,
 				FieldPath:  ".path.to.weight[0]",
 			}).
-			WithCandidateVersion("candidate", &corev1.ObjectReference{
+			WithCandidateVersion("candidate", &v2alpha2.WeightObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
 				Kind:       "VirtualService",
 				Name:       "vs1",

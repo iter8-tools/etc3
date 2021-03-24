@@ -275,6 +275,9 @@ spec:
                                 "$name" is used.
                               type: string
                           required:
+                          - jqExpression
+                          - provider
+                          - type
                           - urlTemplate
                           type: object
                       type: object
@@ -397,6 +400,7 @@ spec:
                         properties:
                           apiVersion:
                             description: API version of the referent.
+                            minLength: 1
                             type: string
                           fieldPath:
                             description: 'If referring to a piece of an object instead
@@ -414,20 +418,20 @@ spec:
                             type: string
                           kind:
                             description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                            minLength: 1
                             type: string
                           name:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            minLength: 1
                             type: string
                           namespace:
                             description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
                             type: string
-                          resourceVersion:
-                            description: 'Specific resourceVersion to which this reference
-                              is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
-                            type: string
-                          uid:
-                            description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
-                            type: string
+                        required:
+                        - apiVersion
+                        - fieldPath
+                        - kind
+                        - name
                         type: object
                     required:
                     - name
@@ -464,6 +468,7 @@ spec:
                           properties:
                             apiVersion:
                               description: API version of the referent.
+                              minLength: 1
                               type: string
                             fieldPath:
                               description: 'If referring to a piece of an object instead
@@ -481,21 +486,21 @@ spec:
                               type: string
                             kind:
                               description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                              minLength: 1
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                              minLength: 1
                               type: string
                             namespace:
                               description: 'Namespace of the referent. More info:
                                 https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
                               type: string
-                            resourceVersion:
-                              description: 'Specific resourceVersion to which this
-                                reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
-                              type: string
-                            uid:
-                              description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
-                              type: string
+                          required:
+                          - apiVersion
+                          - fieldPath
+                          - kind
+                          - name
                           type: object
                       required:
                       - name

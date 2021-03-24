@@ -91,7 +91,7 @@ func (b *ExperimentBuilder) WithRequestCount(requestCount string) *ExperimentBui
 }
 
 // WithBaselineVersion ..
-func (b *ExperimentBuilder) WithBaselineVersion(name string, objRef *corev1.ObjectReference) *ExperimentBuilder {
+func (b *ExperimentBuilder) WithBaselineVersion(name string, objRef *WeightObjectReference) *ExperimentBuilder {
 
 	if b.Spec.VersionInfo == nil {
 		b.Spec.VersionInfo = &VersionInfo{
@@ -116,7 +116,7 @@ func (b *ExperimentBuilder) WithBaselineVersion(name string, objRef *corev1.Obje
 
 // WithCandidateVersion ..
 // Expects VersionInfo to be defined already via WithBaselineVersion()
-func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *corev1.ObjectReference) *ExperimentBuilder {
+func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *WeightObjectReference) *ExperimentBuilder {
 
 	candidate := VersionDetail{
 		Name: name,
