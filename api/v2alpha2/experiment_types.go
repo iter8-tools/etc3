@@ -74,12 +74,6 @@ type ExperimentSpec struct {
 	// Duration describes how long the experiment will last.
 	// +optional
 	Duration *Duration `json:"duration,omitempty" yaml:"duration,omitempty"`
-
-	// Metrics is a list of all the metrics used in the experiment
-	// It is inserted by the controller from the references in spec.criteria
-	// Key is the name as referenced in spec.criteria
-	// +optional
-	Metrics []MetricInfo `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
 // MetricInfo is name/value pair; entry for list of metrics
@@ -332,6 +326,12 @@ type ExperimentStatus struct {
 	// Message specifies message to show in the kubectl printer
 	// +optional
 	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
+
+	// Metrics is a list of all the metrics used in the experiment
+	// It is inserted by the controller from the references in spec.criteria
+	// Key is the name as referenced in spec.criteria
+	// +optional
+	Metrics []MetricInfo `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
 // ExperimentCondition describes a condition of an experiment

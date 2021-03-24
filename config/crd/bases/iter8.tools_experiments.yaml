@@ -162,132 +162,6 @@ spec:
                     minimum: 1
                     type: integer
                 type: object
-              metrics:
-                description: Metrics is a list of all the metrics used in the experiment
-                  It is inserted by the controller from the references in spec.criteria
-                  Key is the name as referenced in spec.criteria
-                items:
-                  description: MetricInfo is name/value pair; entry for list of metrics
-                  properties:
-                    metricObj:
-                      description: MetricObj is the referenced metric
-                      properties:
-                        apiVersion:
-                          description: 'APIVersion defines the versioned schema of
-                            this representation of an object. Servers should convert
-                            recognized schemas to the latest internal value, and may
-                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-                          type: string
-                        kind:
-                          description: 'Kind is a string value representing the REST
-                            resource this object represents. Servers may infer this
-                            from the endpoint the client submits requests to. Cannot
-                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                          type: string
-                        metadata:
-                          type: object
-                        spec:
-                          description: MetricSpec defines the desired state of Metric
-                          properties:
-                            description:
-                              description: Text description of the metric
-                              type: string
-                            headerTemplates:
-                              description: HeaderTemplates are templates for headers
-                                that should be passed to the metrics backend. Typically
-                                these are authentication headers. Any fields of the
-                                form '$name' are treated as variables whose value
-                                is looked up in the secret referred to by spec.secretRef.
-                                If the secret does not contain the variable as a key,
-                                the full string "$name" is used.
-                              items:
-                                description: NamedValue name/value to be used in constructing
-                                  a REST query to backend metrics server
-                                properties:
-                                  name:
-                                    description: Name of parameter
-                                    type: string
-                                  value:
-                                    description: Value of parameter
-                                    type: string
-                                required:
-                                - name
-                                - value
-                                type: object
-                              type: array
-                            jqExpression:
-                              description: JQExpression defines how the value of the
-                                metric should be extracted from the metric value returned
-                                by a query to the backend metrics server
-                              minLength: 1
-                              type: string
-                            params:
-                              description: Params are key/value pairs used to construct
-                                a REST query to the metrics backend
-                              items:
-                                description: NamedValue name/value to be used in constructing
-                                  a REST query to backend metrics server
-                                properties:
-                                  name:
-                                    description: Name of parameter
-                                    type: string
-                                  value:
-                                    description: Value of parameter
-                                    type: string
-                                required:
-                                - name
-                                - value
-                                type: object
-                              type: array
-                            provider:
-                              description: Provider identifies the metric backend
-                                including its authentication properties and its unmarshaller
-                              minLength: 1
-                              type: string
-                            sampleSize:
-                              description: SampleSize is a reference to a counter
-                                metric resource. It needs to indicte the number of
-                                data points over which this metric is computed.
-                              minLength: 1
-                              type: string
-                            secret:
-                              description: SecretRef the name of a kubernetes Secret
-                                containing authentication details for the metrics
-                                backend
-                              minLength: 1
-                              type: string
-                            type:
-                              default: gauge
-                              description: Type of the metric
-                              enum:
-                              - counter
-                              - gauge
-                              type: string
-                            units:
-                              description: Units used for display only
-                              type: string
-                            urlTemplate:
-                              description: URLTemplate is a template of the url of
-                                metrics backend. Any fields pf the form '$name' are
-                                treated as variables whose value is looked up in the
-                                secret referred to by spec.secretRef. If the secret
-                                does not contain the variable as a key, the full string
-                                "$name" is used.
-                              type: string
-                          required:
-                          - urlTemplate
-                          type: object
-                      type: object
-                      x-kubernetes-embedded-resource: true
-                    name:
-                      description: Name is identifier for metric.  Can be of the form
-                        "name" or "namespace/name"
-                      type: string
-                  required:
-                  - metricObj
-                  - name
-                  type: object
-                type: array
               strategy:
                 description: Strategy identifies the type of experiment and its properties
                 properties:
@@ -764,6 +638,132 @@ spec:
               message:
                 description: Message specifies message to show in the kubectl printer
                 type: string
+              metrics:
+                description: Metrics is a list of all the metrics used in the experiment
+                  It is inserted by the controller from the references in spec.criteria
+                  Key is the name as referenced in spec.criteria
+                items:
+                  description: MetricInfo is name/value pair; entry for list of metrics
+                  properties:
+                    metricObj:
+                      description: MetricObj is the referenced metric
+                      properties:
+                        apiVersion:
+                          description: 'APIVersion defines the versioned schema of
+                            this representation of an object. Servers should convert
+                            recognized schemas to the latest internal value, and may
+                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                          type: string
+                        kind:
+                          description: 'Kind is a string value representing the REST
+                            resource this object represents. Servers may infer this
+                            from the endpoint the client submits requests to. Cannot
+                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          type: string
+                        metadata:
+                          type: object
+                        spec:
+                          description: MetricSpec defines the desired state of Metric
+                          properties:
+                            description:
+                              description: Text description of the metric
+                              type: string
+                            headerTemplates:
+                              description: HeaderTemplates are templates for headers
+                                that should be passed to the metrics backend. Typically
+                                these are authentication headers. Any fields of the
+                                form '$name' are treated as variables whose value
+                                is looked up in the secret referred to by spec.secretRef.
+                                If the secret does not contain the variable as a key,
+                                the full string "$name" is used.
+                              items:
+                                description: NamedValue name/value to be used in constructing
+                                  a REST query to backend metrics server
+                                properties:
+                                  name:
+                                    description: Name of parameter
+                                    type: string
+                                  value:
+                                    description: Value of parameter
+                                    type: string
+                                required:
+                                - name
+                                - value
+                                type: object
+                              type: array
+                            jqExpression:
+                              description: JQExpression defines how the value of the
+                                metric should be extracted from the metric value returned
+                                by a query to the backend metrics server
+                              minLength: 1
+                              type: string
+                            params:
+                              description: Params are key/value pairs used to construct
+                                a REST query to the metrics backend
+                              items:
+                                description: NamedValue name/value to be used in constructing
+                                  a REST query to backend metrics server
+                                properties:
+                                  name:
+                                    description: Name of parameter
+                                    type: string
+                                  value:
+                                    description: Value of parameter
+                                    type: string
+                                required:
+                                - name
+                                - value
+                                type: object
+                              type: array
+                            provider:
+                              description: Provider identifies the metric backend
+                                including its authentication properties and its unmarshaller
+                              minLength: 1
+                              type: string
+                            sampleSize:
+                              description: SampleSize is a reference to a counter
+                                metric resource. It needs to indicte the number of
+                                data points over which this metric is computed.
+                              minLength: 1
+                              type: string
+                            secret:
+                              description: SecretRef the name of a kubernetes Secret
+                                containing authentication details for the metrics
+                                backend
+                              minLength: 1
+                              type: string
+                            type:
+                              default: gauge
+                              description: Type of the metric
+                              enum:
+                              - counter
+                              - gauge
+                              type: string
+                            units:
+                              description: Units used for display only
+                              type: string
+                            urlTemplate:
+                              description: URLTemplate is a template of the url of
+                                metrics backend. Any fields pf the form '$name' are
+                                treated as variables whose value is looked up in the
+                                secret referred to by spec.secretRef. If the secret
+                                does not contain the variable as a key, the full string
+                                "$name" is used.
+                              type: string
+                          required:
+                          - urlTemplate
+                          type: object
+                      type: object
+                      x-kubernetes-embedded-resource: true
+                    name:
+                      description: Name is identifier for metric.  Can be of the form
+                        "name" or "namespace/name"
+                      type: string
+                  required:
+                  - metricObj
+                  - name
+                  type: object
+                type: array
               stage:
                 description: Stage indicates where the experiment is in its process
                   of execution
