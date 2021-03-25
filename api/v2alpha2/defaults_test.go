@@ -59,7 +59,7 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha2.DefaultMaxCandidateWeight))
 			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha2.DefaultMaxCandidateWeightIncrement))
 			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha2.DefaultDeploymentPattern))
-			// Expect(len(experiment.Spec.Metrics)).Should(Equal(1))
+			// Expect(len(experiment.Status.Metrics)).Should(Equal(1))
 			// removed Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
 		})
 	})
