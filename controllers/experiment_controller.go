@@ -166,10 +166,12 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	log.Info("Start Handling Complete")
 
 	// using spec.criteria, read the metrics objects into spec.metrics
-	if !metricsRead(instance) {
+	if shouldReadMetrics(instance) {
 		if ok := r.ReadMetrics(ctx, instance); !ok {
 			return r.failExperiment(ctx, instance, nil)
 		}
+		// we updated status if we read metrics
+		// endRequest writes the change the to cluster and retriggers reconcile
 		return r.endRequest(ctx, instance)
 	}
 

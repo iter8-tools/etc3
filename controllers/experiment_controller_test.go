@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"path"
 	"time"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
@@ -338,4 +339,23 @@ var _ = Describe("Experiment proceeds", func() {
 
 		})
 	})
+})
+
+var _ = Describe("Empty Criteria section", func() {
+	var dataDir string = "../test/data"
+
+	Context("When the Criteria section has empty lists", func() {
+		var testName string = "norealcriteria.yaml"
+		experiment := v2alpha2.Experiment{}
+		readExperimentFromFile(path.Join(dataDir, testName), &experiment)
+
+		Specify("The experiment should read the (non-existent) metrics", func() {
+			Expect(k8sClient.Create(ctx(), &experiment)).Should(Succeed())
+			// will fail after this point because there is no versionInfo is present
+			Eventually(func() bool {
+				return containsSubString(events, v2alpha2.ReasonInvalidExperiment)
+			}, 5).Should(BeTrue())
+		})
+	})
+
 })

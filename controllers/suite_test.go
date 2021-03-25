@@ -20,10 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/ghodss/yaml"
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -275,4 +277,17 @@ func containsSubString(slice []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func readExperimentFromFile(templateFile string, experiment *v2alpha2.Experiment) error {
+	yamlFile, err := ioutil.ReadFile(templateFile)
+	if err != nil {
+		return err
+	}
+
+	if err := yaml.Unmarshal(yamlFile, experiment); err == nil {
+		return err
+	}
+
+	return nil
 }

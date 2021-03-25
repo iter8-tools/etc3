@@ -70,8 +70,22 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 }
 
 // MeticsRead checks if the metrics have already been read and stored in status
-func metricsRead(instance *v2alpha2.Experiment) bool {
-	return len(instance.Status.Metrics) > 0 || instance.Spec.Criteria == nil
+func shouldReadMetrics(instance *v2alpha2.Experiment) bool {
+	if len(instance.Status.Metrics) > 0 {
+		return false
+	}
+	if instance.Spec.Criteria == nil {
+		return false
+	}
+
+	if instance.Spec.Criteria.RequestCount == nil &&
+		len(instance.Spec.Criteria.Indicators) == 0 &&
+		len(instance.Spec.Criteria.Objectives) == 0 &&
+		len(instance.Spec.Criteria.Rewards) == 0 {
+		return false
+	}
+
+	return true
 }
 
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
