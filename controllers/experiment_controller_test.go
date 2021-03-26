@@ -359,3 +359,32 @@ var _ = Describe("Empty Criteria section", func() {
 	})
 
 })
+
+var _ = Describe("Missing criteria.requestCount", func() {
+	var testNamespace string = "default"
+	Context("When there is no criteria.requestCount", func() {
+		Specify("The controller should read the other metrics", func() {
+			var testName string = "norequestcount"
+			By("Defining a gauge metric that references a requestcount")
+			metric := v2alpha2.NewMetric("referencesrequestcount", "default").
+				WithType("gauge").
+				WithProvider("provider").
+				WithURLTemplate("url").
+				WithJQExpression("jqExpression").
+				WithSampleSize("requestcount").
+				Build()
+			Expect(k8sClient.Create(ctx(), metric)).Should(Succeed())
+			By("Defining an experiment with no request count")
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternType(v2alpha2.TestingPatternConformance)).
+				WithIndicator(*metric).
+				Build()
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			// will fail because samplesize reference is not available
+			Eventually(func() bool {
+				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
+			}, 5).Should(BeTrue())
+		})
+	})
+})

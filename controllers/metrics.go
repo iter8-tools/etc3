@@ -101,9 +101,10 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 	metricsCache := make(map[string]*v2alpha2.Metric)
 
 	// name of request counter
-	requestCount := instance.Spec.GetRequestCount()
-	if ok := r.ReadMetric(ctx, instance, namespace, *requestCount, metricsCache); !ok {
-		return ok
+	if requestCount := instance.Spec.GetRequestCount(); requestCount != nil {
+		if ok := r.ReadMetric(ctx, instance, namespace, *requestCount, metricsCache); !ok {
+			return ok
+		}
 	}
 
 	// rewards
