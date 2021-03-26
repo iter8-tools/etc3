@@ -173,7 +173,6 @@ func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, target
 		log.Info("triggerNextExperiment", "name", next.Name, "namespace", next.Namespace)
 		// found one
 		r.ReleaseEvents <- event.GenericEvent{
-			Meta:   next,
 			Object: next,
 		}
 	}
