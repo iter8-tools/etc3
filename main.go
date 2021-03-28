@@ -80,24 +80,12 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
+	flag.BoolVar(&enableLeaderElection, "enable-leader-election", true,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
-
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "4715d5e4.iter8.tools",
-	})
-	if err != nil {
-		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
-	}
 
 	restCfg, err := config.GetConfig()
 	if err != nil {
@@ -105,12 +93,25 @@ func main() {
 	}
 
 	cfg := configuration.Iter8Config{}
-	// if err := configuration.ReadConfig(path.Join(os.Getenv("DEFAULTS_DIR"), "defaults.yaml"), &cfg); err != nil {
 	if err := configuration.ReadConfig(&cfg); err != nil {
 		setupLog.Error(err, "unable to configure manager")
 		os.Exit(1)
 	}
 	setupLog.Info("read config", "cfg", cfg)
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Scheme:                     scheme,
+		MetricsBindAddress:         metricsAddr,
+		Port:                       9443,
+		LeaderElection:             enableLeaderElection,
+		LeaderElectionResourceLock: "leases",
+		LeaderElectionNamespace:    cfg.Namespace,
+		LeaderElectionID:           "leader-election-helper",
+	})
+	if err != nil {
+		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
 
 	if err = (&controllers.ExperimentReconciler{
 		Client:        mgr.GetClient(),
