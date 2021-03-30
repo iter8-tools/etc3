@@ -108,7 +108,7 @@ var _ = Describe("Handlers Run", func() {
 			}).Should(BeTrue())
 		})
 	})
-	Context("When an experiment with a loop handler passes loop boundry", func() {
+	Context("When an experiment with a loop handler passes loop boundary", func() {
 		Specify("the loop handler is started", func() {
 			By("Defining an experiment with a loop handler")
 			name, target := "has-loop-handler", "has-loop-handler"

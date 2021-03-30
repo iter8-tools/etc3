@@ -11,8 +11,6 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var cfg *rest.Config
@@ -25,9 +23,6 @@ func TestAPI(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	log.SetLogger(zap.LoggerTo(GinkgoWriter, true))
-	// testLogger = logf.NewDelegatingLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter)))
-
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{filepath.Join("../..", "config", "crd", "bases")},

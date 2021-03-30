@@ -65,8 +65,7 @@ type ExperimentReconciler struct {
 */
 
 // Reconcile attempts to align the resource with the spec
-func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("experiment", req.NamespacedName)
 	ctx = context.WithValue(ctx, util.LoggerKey, log)
 
@@ -206,7 +205,7 @@ func (r *ExperimentReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	return r.doIteration(ctx, instance)
 }
 
-// SetupWithManager ..
+// SetupWithManager is the method called when setting up the experiment reconciler with the controller manager.
 func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	jobPredicateFuncs := predicate.Funcs{
@@ -214,7 +213,7 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			return false
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			namespace := e.MetaNew.GetNamespace()
+			namespace := e.ObjectNew.GetNamespace()
 			return namespace == r.Iter8Config.Namespace
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
@@ -222,32 +221,33 @@ func (r *ExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	jobToExperiment := handler.ToRequestsFunc(
-		func(a handler.MapObject) []ctrl.Request {
-			lbls := a.Meta.GetLabels()
-			experimentName, ok := lbls["iter8/experimentName"]
-			if !ok {
-				return nil
-			}
-			experimentNamespace, ok := lbls["iter8/experimentNamespace"]
-			if !ok {
-				return nil
-			}
-			return []ctrl.Request{
-				{
-					NamespacedName: types.NamespacedName{
-						Name:      experimentName,
-						Namespace: experimentNamespace,
-					},
+	// Enque requests from map func, which we will use for mapping jobs to reconcile requests, requires a func with this signature
+	jobToExperiment := func(a client.Object) []ctrl.Request {
+		// jobToExperiment := handler.ToRequestsFunc(
+		// 	func(a handler.MapObject) []ctrl.Request {
+		lbls := a.GetLabels()
+		experimentName, ok := lbls["iter8/experimentName"]
+		if !ok {
+			return nil
+		}
+		experimentNamespace, ok := lbls["iter8/experimentNamespace"]
+		if !ok {
+			return nil
+		}
+		return []ctrl.Request{
+			{
+				NamespacedName: types.NamespacedName{
+					Name:      experimentName,
+					Namespace: experimentNamespace,
 				},
-			}
-		},
-	)
+			},
+		}
+	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v2alpha2.Experiment{}).
 		Watches(&source.Kind{Type: &batchv1.Job{}},
-			&handler.EnqueueRequestsFromMapFunc{ToRequests: jobToExperiment},
+			handler.EnqueueRequestsFromMapFunc(jobToExperiment),
 			builder.WithPredicates(jobPredicateFuncs)).
 		Watches(&source.Channel{Source: r.ReleaseEvents}, &handler.EnqueueRequestForObject{}).
 		Complete(r)

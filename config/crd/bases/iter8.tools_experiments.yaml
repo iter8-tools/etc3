@@ -134,10 +134,10 @@ spec:
                       - preferredDirection
                       type: object
                     type: array
-                  support:
-                    description: Support identifies the required degree of support
-                      the analytics must provide before the analytics engine will
-                      assert success for an objective.
+                  strength:
+                    description: Strength identifies the required degree of support
+                      the analytics must provide before it will assert success for
+                      an objective.
                     x-kubernetes-preserve-unknown-fields: true
                 type: object
               duration:

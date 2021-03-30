@@ -151,36 +151,6 @@ type TaskSpec struct {
 	With map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
 }
 
-// Handlers define domain specific behavior and are called at well defined points in the lifecycle of an experiment.
-// Specifically at the start (start handler), at the end (finish handler).
-// A special handler can be specified to handle error cases.
-type Handlers struct {
-	// Start handler implmenents any domain specific set up for an experiment.
-	// It should ensure that any needed resources are available and in an appropriate state.
-	// It must update the spec.versionInfo field of the experiment resource.
-	// +optional
-	Start *string `json:"start,omitempty" yaml:"start,omitempty"`
-
-	// Finish handler implements any domain specific actions that should take place at the end of an experiment.
-	// For now, this includes any promotion logic that is needed for a winning version.
-	// In the future, this function might be migrated into the controller itself.
-	// +optional
-	Finish *string `json:"finish,omitempty" yaml:"finish,omitempty"`
-
-	// Rollback handler should implement any domain specific actions that should take place when an objective is violated.
-	// This behavior is specific to the version with the failing objective
-	// +optional
-	Rollback *string `json:"rollback,omitempty" yaml:"rollback,omitempty"`
-
-	// Failure handler should implement any domain specific actions that should take place when an experiment fails.
-	// +optional
-	Failure *string `json:"failure,omitempty" yaml:"failure,omitempty"`
-
-	// Loop handler should implement any domain specific actions that should take place when an experiment reaches  a loop boundary.
-	// +optional
-	Loop *string `json:"loop,omitempty" yaml:"loop,omitempty"`
-}
-
 // Weights modify the behavior of the traffic split algorithm.
 type Weights struct {
 	// MaxCandidateWeight is the maximum percent of traffic that should be sent to the
@@ -219,10 +189,10 @@ type Criteria struct {
 	// +optional
 	Objectives []Objective `json:"objectives,omitempty" yaml:"objectives,omitempty"`
 
-	// Support identifies the required degree of support the analytics must provide before the analytics engine
-	// will assert success for an objective.
+	// Strength identifies the required degree of support the analytics must provide before it will
+	// assert success for an objective.
 	// +optional
-	Support apiextensionsv1.JSON `json:"support,omitempty" yaml:"support,omitempty"`
+	Strength apiextensionsv1.JSON `json:"strength,omitempty" yaml:"strength,omitempty"`
 }
 
 // Reward ..
