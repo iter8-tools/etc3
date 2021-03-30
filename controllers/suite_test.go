@@ -109,16 +109,22 @@ var _ = BeforeSuite(func(done Done) {
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme: scheme.Scheme,
-	})
-	Expect(err).ToNot(HaveOccurred())
-
 	iter8config := configuration.NewIter8Config().
 		WithEndpoint("http://iter8-analytics:8080").
 		WithHandlersDir("../test/handlers").
 		WithNamespace("iter8").
 		Build()
+
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme:                     scheme.Scheme,
+		MetricsBindAddress:         ":8080",
+		Port:                       9443,
+		LeaderElection:             true,
+		LeaderElectionResourceLock: "leases",
+		LeaderElectionNamespace:    iter8config.Namespace,
+		LeaderElectionID:           "leader.iter8.tools",
+	})
+	Expect(err).ToNot(HaveOccurred())
 
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).ToNot(BeNil())
