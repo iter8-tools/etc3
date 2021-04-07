@@ -2,7 +2,7 @@
 name: "Documentation issue"
 about: The documentation is unclear, missing informations, or could be improved
 labels: documentation
-assignees: 'sriumcp'
+assignees: ''
 ---
 
 <!--
