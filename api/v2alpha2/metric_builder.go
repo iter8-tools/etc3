@@ -50,7 +50,7 @@ func (b *MetricBuilder) WithParams(params map[string]string) *MetricBuilder {
 	for name, value := range params {
 		paramsList = append(paramsList, NamedValue{Name: name, Value: value})
 	}
-	b.Spec.Params = &paramsList
+	b.Spec.Params = paramsList
 	return b
 }
 
@@ -62,13 +62,13 @@ func (b *MetricBuilder) WithUnits(units string) *MetricBuilder {
 
 // WithType ..
 func (b *MetricBuilder) WithType(t MetricType) *MetricBuilder {
-	b.Spec.Type = t
+	b.Spec.Type = &t
 	return b
 }
 
 // WithProvider ..
 func (b *MetricBuilder) WithProvider(provider string) *MetricBuilder {
-	b.Spec.Provider = provider
+	b.Spec.Provider = &provider
 	return b
 }
 
@@ -90,7 +90,7 @@ func (b *MetricBuilder) WithHeaderTemplates(params map[string]string) *MetricBui
 	for name, value := range params {
 		paramsList = append(paramsList, NamedValue{Name: name, Value: value})
 	}
-	b.Spec.HeaderTemplates = &paramsList
+	b.Spec.HeaderTemplates = paramsList
 	return b
 }
 

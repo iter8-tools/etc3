@@ -14,7 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// metric_types.go - go model for metric CRD
+// metric_types.go - go model for Iter8 metric resource.
+// Iter8 uses HTTP requests to query metric databases during experiments. An Iter8 metric contains the data needed by Iter8 to construct the HTTP request and extract the metric value from the (JSON) response provided by the metric database.
+// Iter8 metrics are intended to enable metric queries to *any* REST API.
+// Metric type definitions in this file strictly adhere to K8s API conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
+// In particular, enumeration fields follow https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#constants;
+// optional fields follow https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#optional-vs-required
 
 package v2alpha2
 
@@ -22,83 +27,119 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// MetricType identifies the type of the metric
-// +kubebuilder:validation:Enum=counter;gauge
+// MetricType identifies the type of the metric.
+// +kubebuilder:validation:Enum=Counter;Gauge
 type MetricType string
 
 const (
-	// CounterMetricType corresponds to Prometheus counter metric type
-	CounterMetricType MetricType = "counter"
+	// CounterMetricType corresponds to Prometheus Counter metric type
+	CounterMetricType MetricType = "Counter"
 
-	// GaugeMetricType is an enhancement of Prometheus gauge metric type
-	GaugeMetricType MetricType = "gauge"
+	// GaugeMetricType is an enhancement of Prometheus Gauge metric type
+	GaugeMetricType MetricType = "Gauge"
 )
 
-// MetricSpec defines the desired state of Metric
+// AuthType identifies the type of authentication used in the HTTP request
+// +kubebuilder:validation:Enum=Basic;Bearer;APIKey
+type AuthType string
+
+const (
+	// BasicAuthType corresponds to authentication with basic auth
+	BasicAuthType AuthType = "Basic"
+
+	// BearerAuthType corresponds to authentication with bearer token
+	BearerAuthType AuthType = "Bearer"
+
+	// APIKeyAuthType corresponds to authentication with API keys
+	APIKeyAuthType AuthType = "APIKey"
+)
+
+// MethodType identifies the HTTP request method (aka verb) used in the HTTP request
+// +kubebuilder:validation:Enum=GET;POST
+type MethodType string
+
+const (
+	// GETMethodType corresponds to HTTP GET method
+	GETMethodType MethodType = "GET"
+
+	// POSTMethodType corresponds to HTTP POST method
+	POSTMethodType MethodType = "POST"
+)
+
+// MetricSpec defines the attributes of the Metric
 type MetricSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Params are key/value pairs used to construct a REST query to the metrics backend
+	// Params are key/value pairs corresponding to HTTP request parameters
+	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
 	// +optional
-	Params *[]NamedValue `json:"params,omitempty" yaml:"params,omitempty"`
+	Params []NamedValue `json:"params,omitempty" yaml:"params,omitempty"`
 
 	// Text description of the metric
 	// +optional
 	Description *string `json:"description,omitempty" yaml:"description,omitempty"`
 
-	// Units used for display only
+	// Units of the metric. Used for informational purposes.
 	// +optional
 	Units *string `json:"units,omitempty" yaml:"units,omitempty"`
 
 	// Type of the metric
-	// +kubebuilder:default:="gauge"
+	// +kubebuilder:default:="Gauge"
 	// +optional
-	Type MetricType `json:"type" yaml:"type"`
+	Type *MetricType `json:"type,omitempty" yaml:"type,omitempty"`
 
 	// SampleSize is a reference to a counter metric resource.
-	// It needs to indicte the number of data points over which this metric is computed.
-	// +kubebuilder:validation:MinLength:=1
+	// The value of the SampleSize metric denotes the number of data points over which this metric is computed.
+	// This field is relevant only when Type == Gauge
 	// +optional
 	SampleSize *string `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 
-	// Provider identifies the metric backend including its authentication properties and its unmarshaller
-	// +kubebuilder:validation:MinLength:=1
+	// AuthType is the type of authentication used in the HTTP request
 	// +optional
-	Provider string `json:"provider" yaml:"provider"`
+	AuthType *AuthType `json:"authType,omitempty" yaml:"authType,omitempty"`
 
-	// JQExpression defines how the value of the metric should be extracted from the metric value
-	// returned by a query to the backend metrics server
-	// +kubebuilder:validation:MinLength:=1
+	// Method is the HTTP method used in the HTTP request
+	// +kubebuilder:default:="GET"
 	// +optional
+	Method *MethodType `json:"method,omitempty" yaml:"method,omitempty"`
+
+	// Body is the string used to construct the (json) body of the HTTP request
+	// Body may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
+	// This field is relevant only when Method == POST
+	// +optional
+	Body *string `json:"body,omitempty" yaml:"body,omitempty"`
+
+	// Provider identifies the type of metric database. Used for informational purposes.
+	// +optional
+	Provider *string `json:"provider,omitempty" yaml:"provider,omitempty"`
+
+	// JQExpression defines the jq expression used by Iter8 to extract the metric value from the (JSON) response returned by the HTTP URL queried by Iter8.
+	// An empty string is a valid jq expression.
 	JQExpression string `json:"jqExpression" yaml:"jqExpression"`
 
-	// SecretRef the name of a kubernetes Secret containing authentication details for the metrics backend
-	// +kubebuilder:validation:MinLength:=1
+	// Secret is a reference to the Kubernetes secret.
+	// Secret contains data used for HTTP authentication.
+	// Secret may also contain data used for placeholder substitution in HeaderTemplates and URLTemplate.
 	// +optional
 	Secret *string `json:"secret,omitempty" yaml:"secret,omitempty"`
 
-	// HeaderTemplates are templates for headers that should be passed to the metrics backend.
-	// Typically these are authentication headers. Any fields of the form '$name' are treated as
-	// variables whose value is looked up in the secret referred to by spec.secretRef. If the
-	// secret does not contain the variable as a key, the full string "$name" is used.
+	// HeaderTemplates are key/value pairs corresponding to HTTP request headers and their values.
+	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using Secret.
+	// Placeholder substitution will be attempted only when Secret != nil.
 	// +optional
-	HeaderTemplates *[]NamedValue `json:"headerTemplates,omitempty" yaml:"headerTemplates,omitempty"`
+	HeaderTemplates []NamedValue `json:"headerTemplates,omitempty" yaml:"headerTemplates,omitempty"`
 
-	// URLTemplate is a template of the url of metrics backend. Any fields pf the form '$name' are
-	// treated as variables whose value is looked up in the secret referred to by spec.secretRef.
-	// If the secret does not contain the variable as a key, the full string "$name" is used.
+	// URLTemplate is a template for the URL queried during the HTTP request.
+	// Typically, URLTemplate is expected to be the actual URL without any placeholders.
+	// However, as indicated by its name, URLTemplate may be templated.
+	// In this case, Iter8 will attempt to substitute placeholders in the URLTemplate at query time using Secret.
+	// Placeholder substitution will be attempted only when Secret != nil.
 	URLTemplate string `json:"urlTemplate" yaml:"urlTemplate"`
-}
-
-// MetricStatus defines the observed state of Metric
-type MetricStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
 
-// Metric is the Schema for the metrics API
+// Metric is the Schema for the Iter8 metric resource.
 // +k8s:openapi-gen=true
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.type"
 // +kubebuilder:printcolumn:name="description",type="string",JSONPath=".spec.description"
@@ -110,7 +151,6 @@ type Metric struct {
 	// metrics are fixed; there is no need for a status
 	// cf. https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
 	// See section: Objects > Spec and Status
-	// Status MetricStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
