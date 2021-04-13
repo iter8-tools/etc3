@@ -26,7 +26,7 @@ spec:
     name: v2alpha2
     schema:
       openAPIV3Schema:
-        description: Metric is the Schema for the Iter8 metric resource.
+        description: Metric is the schema for Iter8 metrics API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

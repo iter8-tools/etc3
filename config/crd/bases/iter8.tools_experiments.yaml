@@ -416,9 +416,9 @@ spec:
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     x-kubernetes-int-or-string: true
                                   sampleSize:
-                                    description: SampleSize is the  size of the sample
+                                    description: SampleSize is the size of the sample
                                       used for computing this metric. This field is
-                                      applicable only to gauge metrics
+                                      applicable only to Gauge metrics
                                     format: int32
                                     minimum: 0
                                     type: integer
