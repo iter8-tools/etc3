@@ -68,6 +68,24 @@ func (b *MetricBuilder) WithProvider(provider string) *MetricBuilder {
 	return b
 }
 
+// WithMethod ..
+func (b *MetricBuilder) WithMethod(method MethodType) *MetricBuilder {
+	b.Spec.Method = &method
+	return b
+}
+
+// WithAuthType ..
+func (b *MetricBuilder) WithAuthType(authType AuthType) *MetricBuilder {
+	b.Spec.AuthType = &authType
+	return b
+}
+
+// WithBody ..
+func (b *MetricBuilder) WithBody(body string) *MetricBuilder {
+	b.Spec.Body = &body
+	return b
+}
+
 // WithSampleSize ..
 func (b *MetricBuilder) WithSampleSize(name string) *MetricBuilder {
 	b.Spec.SampleSize = &name
