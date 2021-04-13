@@ -365,7 +365,7 @@ var _ = Describe("Missing criteria.requestCount", func() {
 	Context("When there is no criteria.requestCount", func() {
 		Specify("The controller should read the other metrics", func() {
 			var testName string = "norequestcount"
-			By("Defining a gauge metric that references a requestcount")
+			By("Defining a Gauge metric that references requestcount")
 			metric := v2alpha2.NewMetric("referencesrequestcount", "default").
 				WithType("Gauge").
 				WithProvider("provider").

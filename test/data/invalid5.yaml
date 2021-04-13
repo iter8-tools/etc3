@@ -6,7 +6,7 @@ spec:
   description: Invalid metric - extra field
   params:
     foo: bar
-  type: gauge
+  type: Gauge
   provider: prometheus
   jqExpression: ".data.result[0].value[1] | tonumber"
   foo: bar

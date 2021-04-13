@@ -6,5 +6,5 @@ spec:
   description: Invalid metric - no provider
   params:
     foo: bar
-  type: gauge
+  type: Gauge
   url: url

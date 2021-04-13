@@ -437,8 +437,8 @@ type AggregatedMetricsVersionData struct {
 	// +optional
 	Value *resource.Quantity `json:"value,omitempty" yaml:"value,omitempty"`
 
-	// SampleSize is the  size of the sample used for computing this metric.
-	// This field is applicable only to gauge metrics
+	// SampleSize is the size of the sample used for computing this metric.
+	// This field is applicable only to Gauge metrics
 	// +kubebuilder:validation:Minimum:=0
 	SampleSize *int32 `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 }

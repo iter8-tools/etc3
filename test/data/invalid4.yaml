@@ -6,6 +6,6 @@ spec:
   description: Invalid metric - empty provider
   params:
     foo: bar
-  type: gauge
+  type: Gauge
   jqExpression: ""
   url: url
