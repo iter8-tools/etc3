@@ -20,6 +20,7 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
@@ -39,6 +40,8 @@ var _ = Describe("Metrics Not Created When Invalid", func() {
 		"invalid3.yaml": "spec.jqExpression is not set",
 		"invalid4.yaml": "spec.jqExpression is \"\"",
 		"invalid5.yaml": "spec has an extra field",
+		"invalid6.yaml": "spec.method is not GET/POST",
+		"invalid7.yaml": "spec.authType is not Basic/Bearer/APIKey",
 	} {
 		Context("When "+feature, func() {
 			metric := v2alpha2.Metric{}
@@ -71,6 +74,122 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 
 		It("should be created", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
+			k8sClient.Delete(ctx, metric) // cleanup
+		})
+	})
+})
+
+var _ = Describe("Metrics with method", func() {
+	ctx := context.Background()
+
+	Context("When a metric is created with the method field", func() {
+		metric := v2alpha2.NewMetric("test", "default").
+			WithDescription("valid metric").
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "foo",
+				Value: "bar",
+			}}).
+			WithType(v2alpha2.GaugeMetricType).
+			WithMethod(v2alpha2.POSTMethodType).
+			WithSampleSize("namespace/name").
+			WithProvider("provider").
+			WithJQExpression("expr").
+			WithURLTemplate("url").
+			Build()
+
+		It("the method field is preserved", func() {
+			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
+			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: "default",
+				Name:      "test",
+			}, fetchedMetric)
+			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2alpha2.POSTMethodType))
+			k8sClient.Delete(ctx, metric) // cleanup
+		})
+	})
+
+	Context("When a metric is created without the method field", func() {
+		metric := v2alpha2.NewMetric("test", "default").
+			WithDescription("valid metric").
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "foo",
+				Value: "bar",
+			}}).
+			WithType(v2alpha2.GaugeMetricType).
+			WithSampleSize("namespace/name").
+			WithProvider("provider").
+			WithJQExpression("expr").
+			WithURLTemplate("url").
+			Build()
+
+		It("the method field is defaulted to GET", func() {
+			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
+			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: "default",
+				Name:      "test",
+			}, fetchedMetric)
+			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2alpha2.GETMethodType))
+			k8sClient.Delete(ctx, metric) // cleanup
+		})
+	})
+})
+
+var _ = Describe("Metrics with authtype", func() {
+	ctx := context.Background()
+
+	Context("When a metric is created with the authType field", func() {
+		metric := v2alpha2.NewMetric("test", "default").
+			WithDescription("valid metric").
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "foo",
+				Value: "bar",
+			}}).
+			WithType(v2alpha2.GaugeMetricType).
+			WithMethod(v2alpha2.POSTMethodType).
+			WithAuthType(v2alpha2.BasicAuthType).
+			WithSampleSize("namespace/name").
+			WithProvider("provider").
+			WithJQExpression("expr").
+			WithURLTemplate("url").
+			Build()
+
+		It("the authtype field is preserved", func() {
+			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
+			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: "default",
+				Name:      "test",
+			}, fetchedMetric)
+			Expect(*fetchedMetric.Spec.AuthType).Should(Equal(v2alpha2.BasicAuthType))
+			k8sClient.Delete(ctx, metric) // cleanup
+		})
+	})
+
+	Context("When a metric is created without AuthType field", func() {
+		metric := v2alpha2.NewMetric("test", "default").
+			WithDescription("valid metric").
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "foo",
+				Value: "bar",
+			}}).
+			WithType(v2alpha2.GaugeMetricType).
+			WithSampleSize("namespace/name").
+			WithProvider("provider").
+			WithJQExpression("expr").
+			WithURLTemplate("url").
+			Build()
+
+		It("the AuthType field is not defaulted", func() {
+			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
+			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: "default",
+				Name:      "test",
+			}, fetchedMetric)
+			Expect(fetchedMetric.Spec.AuthType).Should(BeNil())
+			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
 })
