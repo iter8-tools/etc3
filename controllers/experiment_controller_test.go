@@ -367,7 +367,7 @@ var _ = Describe("Missing criteria.requestCount", func() {
 			var testName string = "norequestcount"
 			By("Defining a gauge metric that references a requestcount")
 			metric := v2alpha2.NewMetric("referencesrequestcount", "default").
-				WithType("gauge").
+				WithType("Gauge").
 				WithProvider("provider").
 				WithURLTemplate("url").
 				WithJQExpression("jqExpression").
