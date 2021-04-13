@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// metric_types.go - go model for Iter8 metric resource.
+// metric_types.go - go type definitions for Iter8 metrics API.
 // Iter8 uses HTTP requests to query metric databases during experiments. An Iter8 metric contains the data needed by Iter8 to construct the HTTP request and extract the metric value from the (JSON) response provided by the metric database.
 // Iter8 metrics are intended to enable metric queries to *any* REST API.
 // Metric type definitions in this file strictly adhere to K8s API conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
@@ -139,7 +139,7 @@ type MetricSpec struct {
 
 // +kubebuilder:object:root=true
 
-// Metric is the Schema for the Iter8 metric resource.
+// Metric is the schema for Iter8 metrics API.
 // +k8s:openapi-gen=true
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.type"
 // +kubebuilder:printcolumn:name="description",type="string",JSONPath=".spec.description"
