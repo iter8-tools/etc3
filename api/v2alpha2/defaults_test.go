@@ -130,7 +130,10 @@ var _ = Describe("Generated Code", func() {
 		Specify("the copy should be the same as the original", func() {
 			metricBuilder := v2alpha2.NewMetric("reward", "default").
 				WithDescription("reward metric").
-				WithParams(map[string]string{"query": "query"}).
+				WithParams([]v2alpha2.NamedValue{{
+					Name:  "query",
+					Value: "query",
+				}}).
 				WithProvider("prometheus").
 				WithJQExpression("expr").
 				WithType(v2alpha2.CounterMetricType).

@@ -58,7 +58,10 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 	Context("When metric is valid", func() {
 		metric := v2alpha2.NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams(map[string]string{"foo": "bar"}).
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "foo",
+				Value: "bar",
+			}}).
 			WithType(v2alpha2.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").

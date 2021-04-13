@@ -45,12 +45,8 @@ func (b *MetricBuilder) WithDescription(description string) *MetricBuilder {
 }
 
 // WithParams ..
-func (b *MetricBuilder) WithParams(params map[string]string) *MetricBuilder {
-	paramsList := make([]NamedValue, 0)
-	for name, value := range params {
-		paramsList = append(paramsList, NamedValue{Name: name, Value: value})
-	}
-	b.Spec.Params = paramsList
+func (b *MetricBuilder) WithParams(params []NamedValue) *MetricBuilder {
+	b.Spec.Params = params
 	return b
 }
 
@@ -85,12 +81,8 @@ func (b *MetricBuilder) WithSecret(name string) *MetricBuilder {
 }
 
 // WithHeaders ..
-func (b *MetricBuilder) WithHeaderTemplates(params map[string]string) *MetricBuilder {
-	paramsList := make([]NamedValue, 0)
-	for name, value := range params {
-		paramsList = append(paramsList, NamedValue{Name: name, Value: value})
-	}
-	b.Spec.HeaderTemplates = paramsList
+func (b *MetricBuilder) WithHeaderTemplates(headerTemplates []NamedValue) *MetricBuilder {
+	b.Spec.HeaderTemplates = headerTemplates
 	return b
 }
 

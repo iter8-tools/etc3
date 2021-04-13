@@ -61,7 +61,10 @@ var _ = Describe("Experiment Validation", func() {
 			By("Providing a request-count metric")
 			m := v2alpha2.NewMetric("request-count", "iter8").
 				WithType(v2alpha2.CounterMetricType).
-				WithParams(map[string]string{"param": "value"}).
+				WithParams([]v2alpha2.NamedValue{{
+					Name:  "param",
+					Value: "value",
+				}}).
 				WithProvider("prometheus").
 				WithJQExpression("expr").
 				WithURLTemplate("url").
@@ -82,7 +85,10 @@ var _ = Describe("Experiment Validation", func() {
 			By("creating a reward metric")
 			reward := v2alpha2.NewMetric("reward", "default").
 				WithType(v2alpha2.CounterMetricType).
-				WithParams(map[string]string{"param": "value"}).
+				WithParams([]v2alpha2.NamedValue{{
+					Name:  "param",
+					Value: "value",
+				}}).
 				WithProvider("prometheus").
 				WithJQExpression("expr").
 				WithURLTemplate("url").
@@ -91,7 +97,10 @@ var _ = Describe("Experiment Validation", func() {
 			By("creating an indicator")
 			indicator := v2alpha2.NewMetric("indicataor", "default").
 				WithType(v2alpha2.CounterMetricType).
-				WithParams(map[string]string{"param": "value"}).
+				WithParams([]v2alpha2.NamedValue{{
+					Name:  "param",
+					Value: "value",
+				}}).
 				WithProvider("prometheus").
 				WithJQExpression("expr").
 				WithURLTemplate("url").
@@ -100,7 +109,10 @@ var _ = Describe("Experiment Validation", func() {
 			By("creating an objective")
 			objective := v2alpha2.NewMetric("objective", "default").
 				WithType(v2alpha2.CounterMetricType).
-				WithParams(map[string]string{"param": "value"}).
+				WithParams([]v2alpha2.NamedValue{{
+					Name:  "param",
+					Value: "value",
+				}}).
 				WithProvider("prometheus").
 				WithJQExpression("expr").
 				WithURLTemplate("url").
@@ -109,7 +121,10 @@ var _ = Describe("Experiment Validation", func() {
 			By("creating an objective that is not in the cluster")
 			fake := v2alpha2.NewMetric("fake", "default").
 				WithType(v2alpha2.CounterMetricType).
-				WithParams(map[string]string{"param": "value"}).
+				WithParams([]v2alpha2.NamedValue{{
+					Name:  "param",
+					Value: "value",
+				}}).
 				WithProvider("prometheus").
 				WithJQExpression("expr").
 				WithURLTemplate("url").
@@ -157,7 +172,10 @@ var _ = Describe("Metrics", func() {
 		By("Providing a request-count metric")
 		m := v2alpha2.NewMetric("request-count", metricsNamespace).
 			WithType(v2alpha2.CounterMetricType).
-			WithParams(map[string]string{"param": "value"}).
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "param",
+				Value: "value",
+			}}).
 			WithProvider("prometheus").
 			WithJQExpression("expr").
 			WithURLTemplate("url").
@@ -165,7 +183,10 @@ var _ = Describe("Metrics", func() {
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
 		goodObjective2 = v2alpha2.NewMetric("objective-with-good-reference-2", metricsNamespace).
 			WithType(v2alpha2.CounterMetricType).
-			WithParams(map[string]string{"param": "value"}).
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "param",
+				Value: "value",
+			}}).
 			WithProvider("prometheus").
 			WithJQExpression("expr").
 			WithURLTemplate("url").
@@ -175,7 +196,10 @@ var _ = Describe("Metrics", func() {
 		By("creating an objective that does not reference the request-count")
 		goodObjective = v2alpha2.NewMetric("objective-with-good-reference", "default").
 			WithType(v2alpha2.CounterMetricType).
-			WithParams(map[string]string{"param": "value"}).
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "param",
+				Value: "value",
+			}}).
 			WithProvider("prometheus").
 			WithJQExpression("expr").
 			WithURLTemplate("url").
@@ -185,7 +209,10 @@ var _ = Describe("Metrics", func() {
 		By("creating an objective that references request-count")
 		badObjective = v2alpha2.NewMetric("objective-with-bad-reference", "default").
 			WithType(v2alpha2.CounterMetricType).
-			WithParams(map[string]string{"param": "value"}).
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "param",
+				Value: "value",
+			}}).
 			WithProvider("prometheus").
 			WithJQExpression("expr").
 			WithURLTemplate("url").
