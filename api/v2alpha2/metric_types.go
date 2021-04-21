@@ -105,7 +105,6 @@ type MetricSpec struct {
 
 	// Body is the string used to construct the (json) body of the HTTP request
 	// Body may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
-	// This field is relevant only when Method == POST
 	// +optional
 	Body *string `json:"body,omitempty" yaml:"body,omitempty"`
 
