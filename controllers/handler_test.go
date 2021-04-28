@@ -15,6 +15,8 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
+
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -55,6 +57,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
+				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s", experiment.GetName(), handler)))
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				if err != nil {
 					return false
@@ -88,6 +91,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
+				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s", experiment.GetName(), handler)))
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				if err != nil {
 					return false
@@ -127,6 +131,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, &testLoop)
+				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s-%d", experiment.GetName(), handler, testLoop)))
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				if err != nil {
 					return false

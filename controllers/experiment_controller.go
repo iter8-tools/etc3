@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -466,7 +467,7 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 		}
 	case HandlerStatusFailed:
 		// a failure handler failed; don't call it again; just stop
-		result, err := r.endExperiment(ctx, instance, "Failure handler failed")
+		result, err := r.endExperiment(ctx, instance, fmt.Sprintf("%s actions failed", handlerType))
 		return stop, result, err
 	default: // HandlerStatusNotLaunched, HandlerStatusNoHandler:
 		return !stop, dummyResult, nil

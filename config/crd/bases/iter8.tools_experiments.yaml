@@ -678,7 +678,6 @@ spec:
                                 (json) body of the HTTP request Body may be templated,
                                 in which Iter8 will attempt to substitute placeholders
                                 in the template at query time using version information.
-                                This field is relevant only when Method == POST
                               type: string
                             description:
                               description: Text description of the metric

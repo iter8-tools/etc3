@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/iter8-tools/etc3/api/v2alpha2"
@@ -288,8 +287,7 @@ func HandlerJobFailed(handlerJob *batchv1.Job) bool {
 
 // generate job name
 func jobName(instance *v2alpha2.Experiment, handler string, handlerInstance *int) string {
-	uid := string(instance.UID)
-	name := fmt.Sprintf("%s-handler-%s-%s", handler, instance.Name, uid[strings.LastIndex(uid, "-")+1:])
+	name := fmt.Sprintf("%s-%s", instance.Name, handler)
 	if handlerInstance != nil {
 		name = fmt.Sprintf("%s-%d", name, *handlerInstance)
 	}
