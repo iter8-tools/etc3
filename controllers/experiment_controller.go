@@ -365,11 +365,12 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2a
 		log.Error(err, err.Error())
 	}
 
-	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
-		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha2.ExperimentStageFinishing) }},
-	); stop {
-		return result, err
-	}
+	// For context see: https://github.com/iter8-tools/etc3/issues/201
+	// if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
+	// 	handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2alpha2.ExperimentStageFinishing) }},
+	// ); stop {
+	// 	return result, err
+	// }
 
 	return r.endExperiment(ctx, instance, "Experiment failed")
 }
