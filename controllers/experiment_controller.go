@@ -467,7 +467,7 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 			return !stop, dummyResult, nil
 		}
 	case HandlerStatusFailed:
-		// a failure handler failed; don't call it again; just stop
+		// a handler failed; don't call a failure handler; just stop
 		msg := fmt.Sprintf("%s actions failed", handlerType)
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonHandlerFailed, msg)
 		result, err := r.endExperiment(ctx, instance, msg)
