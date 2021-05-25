@@ -16,10 +16,7 @@ package v2alpha2_test
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
-
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/ghodss/yaml"
 	"github.com/iter8-tools/etc3/api/v2alpha2"
@@ -31,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Experiment with actions", func() {
+var _ = Describe("Experiment", func() {
 	ctx := context.Background()
 
 	type testcase struct {
@@ -46,27 +43,28 @@ var _ = Describe("Experiment with actions", func() {
 			feature:   "with strategy containing actions",
 			fieldPath: []string{"spec", "strategy", "actions", "start"},
 		},
+		{
+			file:      "expwithbuiltins.yaml",
+			feature:   "with status containing builtin data",
+			fieldPath: []string{"status", "analysis", "aggregatedBuiltinHists", "data", "DurationHistogram", "Avg"},
+		},
 	}
 
 	for _, tc := range testcases {
+		tc := tc
 		Context(tc.feature, func() {
-			It("should deal with actions with tasks with inputs", func() {
+			It("should deal "+tc.feature, func() {
 				By("reading experiment")
 				s := v2alpha2.Experiment{}
 				Expect(readExperimentFromFile(util.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
 
-				testMap := make(map[string]interface{})
-				withBytes, err := json.Marshal(s.Spec.Strategy.Actions["finish"][0].With)
-				Expect(err).ToNot(HaveOccurred())
-				err = json.Unmarshal(withBytes, &testMap)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(testMap["args"]).To(Equal([]interface{}{"apply", "-k", "https://github.com/my-org/my-repo/path/to/overlays/{{ Status.VersionRecommendedForPromotion }}"}))
-				Expect(testMap["cmd"]).To(Equal("kubectl"))
-
 				By("creating the experiment")
 				Expect(k8sClient.Create(ctx, &s)).Should(Succeed())
 
-				By("fetching the experiment with unknown fields")
+				By("updating status...")
+				Expect(k8sClient.Status().Update(ctx, &s)).Should(Succeed())
+
+				By("fetching the experiment with json fields")
 				exp2 := &unstructured.Unstructured{}
 				exp2.SetGroupVersionKind(schema.GroupVersionKind{
 					Group:   v2alpha2.GroupVersion.Group,
@@ -74,10 +72,11 @@ var _ = Describe("Experiment with actions", func() {
 					Kind:    "Experiment",
 				})
 				Expect(k8sClient.Get(ctx, types.NamespacedName{
-					Namespace: "default",
-					Name:      "exp"}, exp2)).Should(Succeed())
-				log.Log.Info("fetched", "experiment", exp2)
+					Namespace: s.Namespace,
+					Name:      s.Name}, exp2)).Should(Succeed())
+
 				_, found, err := unstructured.NestedFieldCopy(exp2.Object, tc.fieldPath...)
+
 				Expect(found).To(BeTrue())
 				Expect(err).To(BeNil())
 
