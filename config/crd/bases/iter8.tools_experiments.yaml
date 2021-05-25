@@ -388,6 +388,32 @@ spec:
               analysis:
                 description: Analysis returned by the last analyis
                 properties:
+                  aggregatedBuiltinHists:
+                    description: AggregatedBuiltinHistograms -- aggregated builtin
+                      metrics will be derived from this data structure
+                    properties:
+                      data:
+                        description: This field needs leeway to evolve. At the moment,
+                          it would look like DurationHists from fortio output, but
+                          further experimentation is needed. Hence, `apiextensionsv1.JSON`
+                          is a safe starting point.
+                        x-kubernetes-preserve-unknown-fields: true
+                      message:
+                        description: Message optional messsage for user
+                        type: string
+                      provenance:
+                        description: Provenance is source of data
+                        type: string
+                      timestamp:
+                        description: Timestamp is the timestamp when the controller
+                          got its data from an analytics engine
+                        format: date-time
+                        type: string
+                    required:
+                    - data
+                    - provenance
+                    - timestamp
+                    type: object
                   aggregatedMetrics:
                     description: AggregatedMetrics
                     properties:

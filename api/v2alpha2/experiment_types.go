@@ -327,6 +327,9 @@ type ExperimentCondition struct {
 
 // Analysis is data from an analytics provider
 type Analysis struct {
+	// AggregatedBuiltinHistograms -- aggregated builtin metrics will be derived from this data structure
+	AggregatedBuiltinHists *AggregatedBuiltinHists `json:"aggregatedBuiltinHists,omitempty" yaml:"aggregatedBuiltinHists,omitempty"`
+
 	// AggregatedMetrics
 	AggregatedMetrics *AggregatedMetricsAnalysis `json:"aggregatedMetrics,omitempty" yaml:"aggregatedMetrics,omitempty"`
 
@@ -351,6 +354,13 @@ type AnalysisMetaData struct {
 	// Message optional messsage for user
 	// +optional
 	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
+}
+
+// AggregatedBuiltinHists ..
+type AggregatedBuiltinHists struct {
+	AnalysisMetaData `json:",inline" yaml:",inline"`
+	// This field needs leeway to evolve. At the moment, it would look like DurationHists from fortio output, but further experimentation is needed. Hence, `apiextensionsv1.JSON` is a safe starting point.
+	Data apiextensionsv1.JSON `json:"data" yaml:"data"`
 }
 
 // WinnerAssessmentAnalysis ..
