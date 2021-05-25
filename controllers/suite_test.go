@@ -29,10 +29,12 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -42,6 +44,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/configuration"
@@ -55,7 +58,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
-var lg logr.Logger = ctrl.Log.WithName("etc3").WithName("test")
+var lg logr.Logger = zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)).WithName("etc3").WithName("test")
 var recorder record.EventRecorder
 var reconciler *ExperimentReconciler
 var events []string
@@ -83,6 +86,22 @@ func (r testRecorder) Eventf(object runtime.Object, eventtype, reason, messageFm
 }
 func (r testRecorder) AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
 	events = append(events, fmt.Sprintf("%s (%s): %s\n", eventtype, reason, fmt.Sprintf(messageFmt, args...)))
+}
+
+type testJobManager struct {
+	jobs map[string]*batchv1.Job
+}
+
+func (j testJobManager) Get(ctx context.Context, ref types.NamespacedName, job *batchv1.Job) error {
+	lg.Info("testJobManager.Get called", "ref", ref, "jobs", j.jobs)
+
+	v, ok := j.jobs[ref.Namespace+"/"+ref.Name]
+	if !ok {
+		return errors.NewNotFound(schema.GroupResource{Group: "batch", Resource: "Job"}, ref.Name)
+	}
+	v.DeepCopyInto(job)
+	lg.Info("testJobManager.Get", "job", *job)
+	return nil
 }
 
 func TestAPIs(t *testing.T) {
@@ -160,6 +179,14 @@ var _ = BeforeSuite(func(done Done) {
 
 	recorder = testRecorder{}
 
+	path := filepath.Join("..", "test", "data", "failedjob.yaml")
+	data, err := ioutil.ReadFile(path)
+	Expect(err).Should(BeNil())
+	job := &batchv1.Job{}
+	Expect(yaml.Unmarshal(data, job)).Should(Succeed())
+	jobMgr := testJobManager{jobs: map[string]*batchv1.Job{}}
+	jobMgr.jobs["iter8/has-failing-handler-start"] = job
+
 	reconciler = &ExperimentReconciler{
 		Client:        k8sClient,
 		Log:           lg,
@@ -169,6 +196,7 @@ var _ = BeforeSuite(func(done Done) {
 		Iter8Config:   iter8config,
 		HTTP:          testTransport,
 		ReleaseEvents: make(chan event.GenericEvent),
+		JobManager:    jobMgr,
 	}
 
 	Expect(reconciler.SetupWithManager(k8sManager)).Should(Succeed())

@@ -99,6 +99,10 @@ func (r *ExperimentReconciler) GetHandler(instance *v2alpha2.Experiment, t Handl
 	return hdlr
 }
 
+type JobManager interface {
+	Get(ctx context.Context, ref types.NamespacedName, job *batchv1.Job) error
+}
+
 // IsHandlerLaunched returns the handler (job) if one has been launched
 // Otherwise it returns nil
 func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *v2alpha2.Experiment, handler string, handlerInstance *int) (*batchv1.Job, error) {
@@ -107,12 +111,13 @@ func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *
 
 	job := &batchv1.Job{}
 	ref := types.NamespacedName{Namespace: r.Iter8Config.Namespace, Name: jobName(instance, handler, handlerInstance)}
-	err := r.Get(ctx, ref, job)
+	// err := r.Get(ctx, ref, job)
+	err := r.JobManager.Get(ctx, ref, job)
 	if err != nil {
 		log.Info("IsHandlerLaunched returning", "handler", handler, "launched", false)
 		return nil, err
 	}
-	log.Info("IsHandlerLaunched returning", "handler", handler, "launched", true)
+	log.Info("IsHandlerLaunched returning", "handler", handler, "launched", true, "job", *job)
 	return job, nil
 }
 

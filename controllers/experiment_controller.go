@@ -56,6 +56,7 @@ type ExperimentReconciler struct {
 	Iter8Config   configuration.Iter8Config
 	HTTP          analytics.HTTP
 	ReleaseEvents chan event.GenericEvent
+	JobManager    JobManager
 }
 
 /* RBAC roles are handwritten in config/rbac-iter8 so that different roles can be assigned

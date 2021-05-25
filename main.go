@@ -18,6 +18,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
@@ -25,10 +26,12 @@ import (
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -36,6 +39,7 @@ import (
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/controllers"
+	batchv1 "k8s.io/api/batch/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -74,6 +78,14 @@ func (m *iter8Http) Post(url, contentType string, body []byte) (resp []byte, sta
 	setupLog.Info("reading Body")
 	b, err := ioutil.ReadAll(raw.Body)
 	return b, raw.StatusCode, err
+}
+
+type iter8JobManager struct {
+	Client client.Client
+}
+
+func (j iter8JobManager) Get(ctx context.Context, ref types.NamespacedName, job *batchv1.Job) error {
+	return j.Client.Get(ctx, ref, job)
 }
 
 func main() {
@@ -122,6 +134,9 @@ func main() {
 		Iter8Config:   cfg,
 		HTTP:          &iter8Http{},
 		ReleaseEvents: make(chan event.GenericEvent),
+		JobManager: iter8JobManager{
+			Client: mgr.GetClient(),
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Experiment")
 		os.Exit(1)

@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    iter8/experimentName: has-failing-handler
+    iter8/experimentNamespace: default
+    job-name: has-failing-handler-start
+  name: has-failing-handler-start
+  namespace: iter8
+spec:
+  activeDeadlineSeconds: 300
+  backoffLimit: 1
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        iter8/experimentName: has-failing-handler
+        iter8/experimentNamespace: default
+        job-name: has-failing-handler-start
+    spec:
+      containers:
+      - args:
+        - run
+        - -a
+        - $(ACTION)
+        command:
+        - handler
+        env:
+        - name: ACTION
+          value: start
+        - name: EXPERIMENT_NAMESPACE
+          value: default
+        - name: EXPERIMENT_NAME
+          value: has-failing-handler
+        image: kalantar/iter8-handlers:20210521-0852
+        imagePullPolicy: IfNotPresent
+        name: iter8-handler
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: iter8-handlers
+      serviceAccountName: iter8-handlers
+      terminationGracePeriodSeconds: 30
+status:
+  conditions:
+  - lastProbeTime: "2021-05-21T15:12:53Z"
+    lastTransitionTime: "2021-05-21T15:12:53Z"
+    message: Job has reached the specified backoff limit
+    reason: BackoffLimitExceeded
+    status: "True"
+    type: Failed
+  failed: 2
+  startTime: "2021-05-21T15:12:41Z"
