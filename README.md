@@ -3,12 +3,6 @@
 
 # etc3: Extensible Thin Controller with Composable CRD
 
-## Welcome to Iter8
-
-> **SLO validation, A/B testing and progressive delivery**
-
-> Iter8 makes it easy to optimize business metrics and validate SLOs when you release new versions of applications and ML models on Kubernetes.
-
-> This repo implements Iter8's experiment controller, and provides the experiment and metric CRD specs.
+> This repo implements Iter8's experiment controller (etc3), and provides the experiment and metric custom resource types.
 
 For Iter8 project documentation, please visit [https://iter8.tools](https://iter8.tools).
