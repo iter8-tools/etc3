@@ -62,16 +62,16 @@ func init() {
 
 type iter8Http struct{}
 
-func (m *iter8Http) Post(url, contentType string, body []byte) (resp []byte, statuscocode int, err error) {
+func (m *iter8Http) Post(url, contentType string, payload []byte) (resp []byte, statusCode int, err error) {
 	var prettyJSON bytes.Buffer
-	json.Indent(&prettyJSON, body, "", "  ")
+	json.Indent(&prettyJSON, payload, "", "  ")
 	setupLog.Info("post request", "URL", url)
 	setupLog.Info(string(prettyJSON.Bytes()))
-	raw, err := http.Post(url, contentType, bytes.NewBuffer(body))
+	raw, err := http.Post(url, contentType, bytes.NewBuffer(payload))
 	setupLog.Info("post result", "raw", raw)
 	setupLog.Info("post error", "err", err)
 	if err != nil {
-		return nil, 500, err
+		return nil, raw.StatusCode, err
 	}
 
 	defer raw.Body.Close()
