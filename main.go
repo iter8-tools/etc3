@@ -68,7 +68,7 @@ func (m *iter8Http) Post(url, contentType string, payload []byte) (resp []byte, 
 	setupLog.Info("post request", "URL", url)
 	setupLog.Info(string(prettyJSON.Bytes()))
 	raw, err := http.Post(url, contentType, bytes.NewBuffer(payload))
-	setupLog.Info("post result", "raw", raw)
+	// setupLog.Info("post result", "raw", raw)
 	setupLog.Info("post error", "err", err)
 	if err != nil {
 		return nil, raw.StatusCode, err
