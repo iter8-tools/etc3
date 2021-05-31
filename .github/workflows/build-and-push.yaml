@@ -40,6 +40,13 @@ jobs:
       uses: actions/checkout@v2
     - name: Test
       run: make test
+    - name: Get golint
+      run: go get -u golang.org/x/lint/golint
+    - name: Run Vet & Lint
+      run: |
+        go vet ./...
+        echo $(go list -f {{.Target}} golang.org/x/lint/golint)
+        $(go list -f {{.Target}} golang.org/x/lint/golint) -set_exit_status=1 ./...
 
   # Compute and upload code coverage
   code-coverage:
