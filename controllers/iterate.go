@@ -98,6 +98,10 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// If not valid: return r.failExperiment(context, instance)
 
 	// update analytics in instance.status
+	// analytics must not overwrite builtin hists
+	// however, we don't want to rely on analytics for this guarantee
+	// etc3 will guarantee it as follows
+	analysis.AggregatedBuiltinHists = instance.Status.Analysis.AggregatedBuiltinHists
 	instance.Status.Analysis = analysis
 
 	// Handle failure of objective (possibly rollback)
