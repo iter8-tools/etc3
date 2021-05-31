@@ -40,6 +40,16 @@ jobs:
       uses: actions/checkout@v2
     - name: Test
       run: make test
+    - name: Enforce coverage
+       run: |
+         export COVERAGE=$(go tool cover -func cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+         echo "code coverage is at ${COVERAGE}"
+         if [ 1 -eq "$(echo "${COVERAGE} > 73.0" | bc)" ]; then \
+           echo "all good... coverage is at or above 73.0%"; 
+         else \
+           echo "not good... coverage is not at 73.0% or above";
+           exit 1
+         fi       
     - name: Get golint
       run: go get -u golang.org/x/lint/golint
     - name: Run Vet & Lint
