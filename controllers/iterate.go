@@ -97,11 +97,13 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// 3. weights has entry for each version
 	// If not valid: return r.failExperiment(context, instance)
 
-	// update analytics in instance.status
-	// analytics must not overwrite builtin hists
-	// however, we don't want to rely on analytics for this guarantee
-	// etc3 will guarantee it as follows
-	analysis.AggregatedBuiltinHists = instance.Status.Analysis.AggregatedBuiltinHists
+	// update analysis in instance.status
+	// iter8-analytics must not overwrite builtin hists
+	// however, we don't want to rely on iter8-analytics for this guarantee
+	// etc3 will guarantee it in the following way
+	if instance.Status.Analysis != nil {
+		analysis.AggregatedBuiltinHists = instance.Status.Analysis.AggregatedBuiltinHists
+	}
 	instance.Status.Analysis = analysis
 
 	// Handle failure of objective (possibly rollback)
