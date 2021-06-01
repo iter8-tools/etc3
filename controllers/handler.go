@@ -99,6 +99,7 @@ func (r *ExperimentReconciler) GetHandler(instance *v2alpha2.Experiment, t Handl
 	return hdlr
 }
 
+// JobManager enables mocking of handler jobs during tests
 type JobManager interface {
 	Get(ctx context.Context, ref types.NamespacedName, job *batchv1.Job) error
 }

@@ -13,12 +13,15 @@ import (
 	"github.com/iter8-tools/etc3/api/v2alpha2"
 )
 
+// ContextKey variables can be used to retrieve values from context object
+type ContextKey string
+
 const (
 	// LoggerKey is the key used to extract logger from context
-	LoggerKey = "logger"
+	LoggerKey ContextKey = "logger"
 
 	// OriginalStatusKey is the key used to extract the original status from the context
-	OriginalStatusKey = "originalStatus"
+	OriginalStatusKey ContextKey = "originalStatus"
 )
 
 // Logger gets the logger from the context.

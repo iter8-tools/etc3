@@ -98,7 +98,7 @@ func (b *MetricBuilder) WithSecret(name string) *MetricBuilder {
 	return b
 }
 
-// WithHeaders ..
+// WithHeaderTemplates ..
 func (b *MetricBuilder) WithHeaderTemplates(headerTemplates []NamedValue) *MetricBuilder {
 	b.Spec.HeaderTemplates = headerTemplates
 	return b
