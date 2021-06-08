@@ -74,7 +74,7 @@ var _ = Describe("Handlers Run", func() {
 	})
 	Context("When an experiment with a finish handler finishes", func() {
 		Specify("the finish handler is run", func() {
-			By("Defining an experiment with a finsih handler")
+			By("Defining an experiment with a finish handler")
 			// for simplicity, no start handler
 			name, target := "has-finish-handler", "has-finish-handler"
 			handler := "finish"
@@ -103,13 +103,13 @@ var _ = Describe("Handlers Run", func() {
 					}
 				}
 				return false
-			}, 10).Should(BeTrue())
+			}, 20).Should(BeTrue())
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
 					return exp.Status.GetCompletedIterations() == iterations*loops
 				})
-			}).Should(BeTrue())
+			}, 20).Should(BeTrue())
 		})
 	})
 	Context("When an experiment with a loop handler passes loop boundary", func() {
