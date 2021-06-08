@@ -20,6 +20,7 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/iter8-tools/etc3/api/v2alpha2"
@@ -70,6 +71,16 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 			WithProvider("provider").
 			WithJQExpression("expr").
 			WithURLTemplate("url").
+			WithSynthetic([]v2alpha2.NamedLevel{
+				{
+					Name:  "sample-app-v1",
+					Level: resource.MustParse("2.5"),
+				},
+				{
+					Name:  "sample-app-v2",
+					Level: resource.MustParse("3.5"),
+				},
+			}).
 			Build()
 
 		It("should be created", func() {

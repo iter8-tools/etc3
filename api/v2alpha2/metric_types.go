@@ -24,6 +24,7 @@ limitations under the License.
 package v2alpha2
 
 import (
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -65,6 +66,15 @@ const (
 	// POSTMethodType corresponds to HTTP POST method
 	POSTMethodType MethodType = "POST"
 )
+
+// NamedLevel contains the name of a version and the level of the version to be used in synthetic metric generation
+type NamedLevel struct {
+	// Name of the version
+	Name string `json:"name" yaml:"name"`
+
+	// Level of the version
+	Level resource.Quantity `json:"level" yaml:"level"`
+}
 
 // MetricSpec defines the attributes of the Metric
 type MetricSpec struct {
@@ -134,6 +144,14 @@ type MetricSpec struct {
 	// In this case, Iter8 will attempt to substitute placeholders in the URLTemplate at query time using Secret.
 	// Placeholder substitution will be attempted only when Secret != nil.
 	URLTemplate string `json:"urlTemplate" yaml:"urlTemplate"`
+
+	// Synthetic enables generation of synthetic metrics, which is useful in tests and tutorial/documentation.
+	// For a counter metric, the level is used as a rate. Roughly speaking,
+	// the counter value of a version will be proportional to the time elapsed since the start of the experiment X its level.
+	// For a gauge metric, the value will approximately equal the level. Roughly speaking,
+	// the gauge value will converge to the level over time.
+	// +optional
+	Synthetic []NamedLevel `json:"synthetic,omitempty" yaml:"synthetic,omitempty"`
 }
 
 // +kubebuilder:object:root=true

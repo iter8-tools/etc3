@@ -116,6 +116,12 @@ func (b *MetricBuilder) WithJQExpression(jqExpression string) *MetricBuilder {
 	return b
 }
 
+// WithSynthetic ...
+func (b *MetricBuilder) WithSynthetic(synthetic []NamedLevel) *MetricBuilder {
+	b.Spec.Synthetic = synthetic
+	return b
+}
+
 // Build ..
 func (b *MetricBuilder) Build() *Metric {
 	return (*Metric)(b)
