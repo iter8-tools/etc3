@@ -17,7 +17,10 @@ package controllers
 import (
 	"context"
 	"path"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
@@ -25,6 +28,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func TestRemoveString(t *testing.T) {
+	sl := []string{"hello", "world", "goodbye", "everyone"}
+	res := removeString(sl, "world")
+	assert.Equal(t, []string{"hello", "goodbye", "everyone"}, res)
+}
 
 var _ = Describe("Experiment Validation", func() {
 	ctx := context.Background()
