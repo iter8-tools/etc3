@@ -128,6 +128,33 @@ spec:
                   contains data used for HTTP authentication. Secret may also contain
                   data used for placeholder substitution in HeaderTemplates and URLTemplate.
                 type: string
+              synthetic:
+                description: Synthetic enables generation of synthetic metrics, which
+                  is useful in tests and tutorial/documentation. For a counter metric,
+                  the level is used as a rate. Roughly speaking, the counter value
+                  of a version will be proportional to the time elapsed since the
+                  start of the experiment X its level. For a gauge metric, the value
+                  will approximately equal the level. Roughly speaking, the gauge
+                  value will converge to the level over time.
+                items:
+                  description: NamedLevel contains the name of a version and the level
+                    of the version to be used in synthetic metric generation
+                  properties:
+                    level:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      description: Level of the version
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    name:
+                      description: Name of the version
+                      type: string
+                  required:
+                  - level
+                  - name
+                  type: object
+                type: array
               type:
                 default: Gauge
                 description: Type of the metric
