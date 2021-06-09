@@ -141,6 +141,8 @@ var _ = Describe("VersionInfo", func() {
 })
 
 var _ = Describe("Criteria", func() {
+	var jqe string = "expr"
+
 	Context("Criteria", func() {
 		builder := v2alpha2.NewExperiment("test", "default").WithTarget("target")
 		It("", func() {
@@ -154,7 +156,7 @@ var _ = Describe("Criteria", func() {
 			Expect(experiment.Spec.Criteria.Rewards).Should(BeEmpty())
 
 			experiment = builder.DeepCopy().
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
 			Expect(experiment.Spec.Criteria.Rewards).ShouldNot(BeEmpty())
@@ -163,6 +165,8 @@ var _ = Describe("Criteria", func() {
 })
 
 var _ = Describe("Generated Code", func() {
+	var jqe string = "expr"
+
 	Context("When a Metric object is copied", func() {
 		Specify("the copy should be the same as the original", func() {
 			metricBuilder := v2alpha2.NewMetric("reward", "default").
@@ -172,7 +176,7 @@ var _ = Describe("Generated Code", func() {
 					Value: "query",
 				}}).
 				WithProvider("prometheus").
-				WithJQExpression("expr").
+				WithJQExpression(&jqe).
 				WithType(v2alpha2.CounterMetricType).
 				WithUnits("ms").
 				WithSampleSize("sample/default")
@@ -209,9 +213,9 @@ var _ = Describe("Generated Code", func() {
 				WithCondition(v2alpha2.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha2.ReasonHandlerFailed, "foo %s", "bar").
 				WithAction("start", []v2alpha2.TaskSpec{{Task: "task"}}).
 				WithRequestCount("request-count").
-				WithReward(*v2alpha2.NewMetric("reward", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
-				WithIndicator(*v2alpha2.NewMetric("indicator", "default").WithJQExpression("expr").Build()).
-				WithObjective(*v2alpha2.NewMetric("reward", "default").WithJQExpression("expr").Build(), nil, nil, false)
+				WithReward(*v2alpha2.NewMetric("reward", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithIndicator(*v2alpha2.NewMetric("indicator", "default").WithJQExpression(&jqe).Build()).
+				WithObjective(*v2alpha2.NewMetric("reward", "default").WithJQExpression(&jqe).Build(), nil, nil, false)
 			experiment := experimentBuilder.Build()
 			experiment.InitializeStatus()
 			now := metav1.Now()

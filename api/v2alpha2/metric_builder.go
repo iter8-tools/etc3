@@ -105,20 +105,20 @@ func (b *MetricBuilder) WithHeaderTemplates(headerTemplates []NamedValue) *Metri
 }
 
 // WithURLTemplate ..
-func (b *MetricBuilder) WithURLTemplate(urlTemplate string) *MetricBuilder {
+func (b *MetricBuilder) WithURLTemplate(urlTemplate *string) *MetricBuilder {
 	b.Spec.URLTemplate = urlTemplate
 	return b
 }
 
 // WithJQExpression ...
-func (b *MetricBuilder) WithJQExpression(jqExpression string) *MetricBuilder {
+func (b *MetricBuilder) WithJQExpression(jqExpression *string) *MetricBuilder {
 	b.Spec.JQExpression = jqExpression
 	return b
 }
 
-// WithSynthetic ...
-func (b *MetricBuilder) WithSynthetic(synthetic []NamedLevel) *MetricBuilder {
-	b.Spec.Synthetic = synthetic
+// WithMock ...
+func (b *MetricBuilder) WithMock(mock []NamedLevel) *MetricBuilder {
+	b.Spec.Mock = mock
 	return b
 }
 

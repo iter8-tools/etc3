@@ -30,6 +30,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
 	testNamespace := "default"
+	var jqe string = "expr"
 
 	// The first test validates when no VersionInfo is present (all strategies)
 	// The way to have no versions is to have no VersionInfo
@@ -72,7 +73,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 		It("should be invalid when there is a reward", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
@@ -87,14 +88,14 @@ var _ = Describe("Validation of VersionInfo", func() {
 		})
 		It("should be invalid when no versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 
 		It("should be invalid when exactly 1 version is specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
@@ -102,7 +103,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when exactly 2 versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				Build()
@@ -111,7 +112,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be invalid when more than 2 version are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
@@ -131,7 +132,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
@@ -139,8 +140,8 @@ var _ = Describe("Validation of VersionInfo", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
-				WithReward(*v2alpha2.NewMetric("metric-1", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
-				WithReward(*v2alpha2.NewMetric("metric-2", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
@@ -196,7 +197,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
@@ -212,14 +213,14 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be invalid when no versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 
 		It("should be invalid when exactly 1 version is specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
@@ -227,7 +228,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when exactly 2 versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				Build()
@@ -236,7 +237,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when more than 2 version are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
@@ -258,7 +259,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
@@ -268,8 +269,8 @@ var _ = Describe("Validation of VersionInfo", func() {
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
-				WithReward(*v2alpha2.NewMetric("metric-1", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
-				WithReward(*v2alpha2.NewMetric("metric-2", "default").WithJQExpression("expr").Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha2.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})

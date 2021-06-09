@@ -67,7 +67,7 @@ const (
 	POSTMethodType MethodType = "POST"
 )
 
-// NamedLevel contains the name of a version and the level of the version to be used in synthetic metric generation
+// NamedLevel contains the name of a version and the level of the version to be used in mock metric generation
 type NamedLevel struct {
 	// Name of the version
 	Name string `json:"name" yaml:"name"`
@@ -124,7 +124,8 @@ type MetricSpec struct {
 
 	// JQExpression defines the jq expression used by Iter8 to extract the metric value from the (JSON) response returned by the HTTP URL queried by Iter8.
 	// An empty string is a valid jq expression.
-	JQExpression string `json:"jqExpression" yaml:"jqExpression"`
+	// +optional
+	JQExpression *string `json:"jqExpression,omitempty" yaml:"jqExpression,omitempty"`
 
 	// Secret is a reference to the Kubernetes secret.
 	// Secret contains data used for HTTP authentication.
@@ -143,15 +144,16 @@ type MetricSpec struct {
 	// However, as indicated by its name, URLTemplate may be templated.
 	// In this case, Iter8 will attempt to substitute placeholders in the URLTemplate at query time using Secret.
 	// Placeholder substitution will be attempted only when Secret != nil.
-	URLTemplate string `json:"urlTemplate" yaml:"urlTemplate"`
+	// +optional
+	URLTemplate *string `json:"urlTemplate,omitempty" yaml:"urlTemplate,omitempty"`
 
-	// Synthetic enables generation of synthetic metrics, which is useful in tests and tutorial/documentation.
+	// Mock enables mocking of metric values, which is useful in tests and tutorial/documentation.
 	// For a counter metric, the level is used as a rate. Roughly speaking,
 	// the counter value of a version will be proportional to the time elapsed since the start of the experiment X its level.
 	// For a gauge metric, the value will approximately equal the level. Roughly speaking,
 	// the gauge value will converge to the level over time.
 	// +optional
-	Synthetic []NamedLevel `json:"synthetic,omitempty" yaml:"synthetic,omitempty"`
+	Mock []NamedLevel `json:"mock,omitempty" yaml:"mock,omitempty"`
 }
 
 // +kubebuilder:object:root=true

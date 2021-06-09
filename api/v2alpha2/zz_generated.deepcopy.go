@@ -686,6 +686,11 @@ func (in *MetricSpec) DeepCopyInto(out *MetricSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.JQExpression != nil {
+		in, out := &in.JQExpression, &out.JQExpression
+		*out = new(string)
+		**out = **in
+	}
 	if in.Secret != nil {
 		in, out := &in.Secret, &out.Secret
 		*out = new(string)
@@ -696,8 +701,13 @@ func (in *MetricSpec) DeepCopyInto(out *MetricSpec) {
 		*out = make([]NamedValue, len(*in))
 		copy(*out, *in)
 	}
-	if in.Synthetic != nil {
-		in, out := &in.Synthetic, &out.Synthetic
+	if in.URLTemplate != nil {
+		in, out := &in.URLTemplate, &out.URLTemplate
+		*out = new(string)
+		**out = **in
+	}
+	if in.Mock != nil {
+		in, out := &in.Mock, &out.Mock
 		*out = make([]NamedLevel, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

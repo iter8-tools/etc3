@@ -36,6 +36,9 @@ func TestRemoveString(t *testing.T) {
 }
 
 var _ = Describe("Experiment Validation", func() {
+	var jqe string = "expr"
+	var url string = "url"
+
 	ctx := context.Background()
 
 	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
@@ -75,8 +78,8 @@ var _ = Describe("Experiment Validation", func() {
 					Value: "value",
 				}}).
 				WithProvider("prometheus").
-				WithJQExpression("expr").
-				WithURLTemplate("url").
+				WithJQExpression(&jqe).
+				WithURLTemplate(&url).
 				Build()
 			// ns := &corev1.Namespace{
 			// 	ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
@@ -99,8 +102,8 @@ var _ = Describe("Experiment Validation", func() {
 					Value: "value",
 				}}).
 				WithProvider("prometheus").
-				WithJQExpression("expr").
-				WithURLTemplate("url").
+				WithJQExpression(&jqe).
+				WithURLTemplate(&url).
 				Build()
 			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
 			By("creating an indicator")
@@ -111,8 +114,8 @@ var _ = Describe("Experiment Validation", func() {
 					Value: "value",
 				}}).
 				WithProvider("prometheus").
-				WithJQExpression("expr").
-				WithURLTemplate("url").
+				WithJQExpression(&jqe).
+				WithURLTemplate(&url).
 				Build()
 			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
 			By("creating an objective")
@@ -123,8 +126,8 @@ var _ = Describe("Experiment Validation", func() {
 					Value: "value",
 				}}).
 				WithProvider("prometheus").
-				WithJQExpression("expr").
-				WithURLTemplate("url").
+				WithJQExpression(&jqe).
+				WithURLTemplate(&url).
 				Build()
 			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
 			By("creating an objective that is not in the cluster")
@@ -135,8 +138,8 @@ var _ = Describe("Experiment Validation", func() {
 					Value: "value",
 				}}).
 				WithProvider("prometheus").
-				WithJQExpression("expr").
-				WithURLTemplate("url").
+				WithJQExpression(&jqe).
+				WithURLTemplate(&url).
 				Build()
 
 			By("Creating a new Experiment")
@@ -167,6 +170,9 @@ var _ = Describe("Experiment Validation", func() {
 })
 
 var _ = Describe("Metrics", func() {
+	var jqe string = "expr"
+	var url string = "url"
+
 	var testName string
 	var testNamespace, metricsNamespace string
 	var goodObjective, goodObjective2, badObjective, reward *v2alpha2.Metric
@@ -186,8 +192,8 @@ var _ = Describe("Metrics", func() {
 				Value: "value",
 			}}).
 			WithProvider("prometheus").
-			WithJQExpression("expr").
-			WithURLTemplate("url").
+			WithJQExpression(&jqe).
+			WithURLTemplate(&url).
 			Build()
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
 		goodObjective2 = v2alpha2.NewMetric("objective-with-good-reference-2", metricsNamespace).
@@ -197,8 +203,8 @@ var _ = Describe("Metrics", func() {
 				Value: "value",
 			}}).
 			WithProvider("prometheus").
-			WithJQExpression("expr").
-			WithURLTemplate("url").
+			WithJQExpression(&jqe).
+			WithURLTemplate(&url).
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjective2)).Should(Succeed())
@@ -210,8 +216,8 @@ var _ = Describe("Metrics", func() {
 				Value: "value",
 			}}).
 			WithProvider("prometheus").
-			WithJQExpression("expr").
-			WithURLTemplate("url").
+			WithJQExpression(&jqe).
+			WithURLTemplate(&url).
 			WithSampleSize(metricsNamespace + "/request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjective)).Should(Succeed())
@@ -223,8 +229,8 @@ var _ = Describe("Metrics", func() {
 				Value: "value",
 			}}).
 			WithProvider("prometheus").
-			WithJQExpression("expr").
-			WithURLTemplate("url").
+			WithJQExpression(&jqe).
+			WithURLTemplate(&url).
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), badObjective)).Should(Succeed())
@@ -448,6 +454,9 @@ var _ = Describe("Empty Criteria section", func() {
 })
 
 var _ = Describe("Missing criteria.requestCount", func() {
+	var jqe string = "expr"
+	var url string = "url"
+
 	var testNamespace string = "default"
 	Context("When there is no criteria.requestCount", func() {
 		Specify("The controller should read the other metrics", func() {
@@ -456,8 +465,8 @@ var _ = Describe("Missing criteria.requestCount", func() {
 			metric := v2alpha2.NewMetric("referencesrequestcount", "default").
 				WithType("Gauge").
 				WithProvider("provider").
-				WithURLTemplate("url").
-				WithJQExpression("jqExpression").
+				WithJQExpression(&jqe).
+				WithURLTemplate(&url).
 				WithSampleSize("requestcount").
 				Build()
 			Expect(k8sClient.Create(ctx(), metric)).Should(Succeed())
