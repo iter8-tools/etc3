@@ -79,3 +79,7 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
+coverage:
+	@echo "test coverage: $(shell go tool cover -func cover.out | grep total | awk '{print substr($$3, 1, length($$3)-1)}')"
+

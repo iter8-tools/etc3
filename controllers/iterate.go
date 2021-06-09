@@ -76,6 +76,12 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 		return ctrl.Result{}, err
 	}
 
+	// If we've already executed as many iterations as requested, we  should finish the experiment
+	// Check here since may have executed a loop handler
+	if !moreIterationsNeeded(instance) {
+		return r.finishExperiment(ctx, instance)
+	}
+
 	if !r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
 		// not enough time has passed since the last iteration, wait
 		return ctrl.Result{}, errors.New("Insufficient time has passed since previous iteration")
@@ -129,12 +135,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)
 	r.recordExperimentProgress(ctx, instance, v2alpha2.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
-
-	// if there are no more iterations to execute, finishExperiment
-	// otherwise, just endRequest (and requeue for later)
-	if !moreIterationsNeeded(instance) {
-		return r.finishExperiment(ctx, instance)
-	}
 
 	// if we are at the end of a loop (we've executed Duration.IterationsPerLoop iterations)
 	// then call a loop handler if one is defined.
