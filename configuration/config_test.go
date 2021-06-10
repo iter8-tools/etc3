@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/iter8-tools/etc3/configuration"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNoInterpolation(t *testing.T) {
@@ -65,4 +66,15 @@ func TestInterpolation(t *testing.T) {
 	if cfg.Analytics.Endpoint != "namespace/endpoint" {
 		t.Errorf("cfg.Analytics.Endpoint incorrect. Expected: %s, got: %s", "namespace/endpoint", cfg.Analytics.Endpoint)
 	}
+}
+
+func TestIter8Config(t *testing.T) {
+	config := configuration.NewIter8Config().
+		WithEndpoint("endpoint").
+		WithNamespace("namespace").
+		WithHandlersDir("hDir").
+		Build()
+	assert.Equal(t, "endpoint", config.Analytics.Endpoint)
+	assert.Equal(t, "namespace", config.Namespace)
+	assert.Equal(t, "hDir", config.HandlersDir)
 }

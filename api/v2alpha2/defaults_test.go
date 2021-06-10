@@ -16,6 +16,7 @@ package v2alpha2_test
 
 import (
 	"reflect"
+	"time"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
@@ -36,7 +37,35 @@ var _ = Describe("Stages", func() {
 })
 
 var _ = Describe("Initialization", func() {
-	Context("When initialize", func() {
+	Context("Before Initialization", func() {
+		experiment := v2alpha2.NewExperiment("experiment", "namespace").
+			WithTarget("target").
+			WithTestingPattern(v2alpha2.TestingPatternCanary).
+			Build()
+		Specify("status values should be unset", func() {
+			Expect(experiment.Status.InitTime).Should(BeNil())
+			Expect(experiment.Status.LastUpdateTime).Should(BeNil())
+			Expect(experiment.Status.CompletedIterations).Should(BeNil())
+			Expect(len(experiment.Status.Conditions)).Should(Equal(0))
+		})
+		Specify("methods on spec should handle nil gracefully", func() {
+			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha2.DefaultIterationsPerLoop))
+			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(v2alpha2.DefaultMaxLoops))
+			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha2.DefaultIntervalSeconds)))
+			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
+			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha2.DefaultMaxCandidateWeight))
+			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha2.DefaultMaxCandidateWeightIncrement))
+			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha2.DefaultDeploymentPattern))
+			Expect(experiment.Spec.GetRequestCount()).Should(BeNil())
+			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(v2alpha2.DefaultStartHandler))
+			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(v2alpha2.DefaultFinishHandler))
+			Expect(*experiment.Spec.GetRollbackHandler()).Should(Equal(v2alpha2.DefaultRollbackHandler))
+			Expect(*experiment.Spec.GetFailureHandler()).Should(Equal(v2alpha2.DefaultFailureHandler))
+			Expect(*experiment.Spec.GetLoopHandler()).Should(Equal(v2alpha2.DefaultLoopHandler))
+		})
+	})
+
+	Context("After Initialization", func() {
 		experiment := v2alpha2.NewExperiment("experiment", "namespace").
 			WithTarget("target").
 			WithTestingPattern(v2alpha2.TestingPatternCanary).
@@ -50,17 +79,25 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Status.LastUpdateTime).ShouldNot(BeNil())
 			Expect(experiment.Status.CompletedIterations).ShouldNot(BeNil())
 			Expect(len(experiment.Status.Conditions)).Should(Equal(3))
+			Expect(experiment.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue()).Should(Equal(false))
+			Expect(experiment.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsFalse()).Should(Equal(true))
+			Expect(experiment.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsUnknown()).Should(Equal(false))
 
 			By("Initializing Spec")
 			experiment.Spec.InitializeSpec()
 			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(v2alpha2.DefaultIterationsPerLoop))
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(v2alpha2.DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(v2alpha2.DefaultIntervalSeconds)))
+			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
 			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(v2alpha2.DefaultMaxCandidateWeight))
 			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(v2alpha2.DefaultMaxCandidateWeightIncrement))
 			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(v2alpha2.DefaultDeploymentPattern))
-			// Expect(len(experiment.Status.Metrics)).Should(Equal(1))
-			// removed Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
+			Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
+			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(v2alpha2.DefaultStartHandler))
+			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(v2alpha2.DefaultFinishHandler))
+			Expect(*experiment.Spec.GetRollbackHandler()).Should(Equal(v2alpha2.DefaultRollbackHandler))
+			Expect(*experiment.Spec.GetFailureHandler()).Should(Equal(v2alpha2.DefaultFailureHandler))
+			Expect(*experiment.Spec.GetLoopHandler()).Should(Equal(v2alpha2.DefaultLoopHandler))
 		})
 	})
 })
@@ -176,6 +213,7 @@ var _ = Describe("Generated Code", func() {
 				WithIndicator(*v2alpha2.NewMetric("indicator", "default").WithJQExpression("expr").Build()).
 				WithObjective(*v2alpha2.NewMetric("reward", "default").WithJQExpression("expr").Build(), nil, nil, false)
 			experiment := experimentBuilder.Build()
+			experiment.InitializeStatus()
 			now := metav1.Now()
 			message := "message"
 			winner := "winner"
@@ -231,7 +269,28 @@ var _ = Describe("Generated Code", func() {
 
 			Expect(reflect.DeepEqual(experimentBuilder, experimentBuilder.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment, experiment.DeepCopyObject())).Should(BeTrue())
+			// Expect(reflect.DeepEqual(experimentList, experimentList.DeepCopyObject())).Should(BeTrue())
 			Expect(len(experimentList.Items)).Should(Equal(len(experimentList.DeepCopy().Items)))
+
+			// Expect(reflect.DeepEqual(experiment.Spec, experiment.Spec.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Criteria, experiment.Spec.Criteria.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Duration, experiment.Spec.Duration.DeepCopy())).Should(BeTrue())
+			// Expect(reflect.DeepEqual(experiment.Spec.Strategy, experiment.Spec.Strategy.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Weights, experiment.Spec.Strategy.Weights.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Actions, experiment.Spec.Strategy.Actions.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Actions["start"], experiment.Spec.Strategy.Actions["start"].DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.VersionInfo, experiment.Spec.VersionInfo.DeepCopy())).Should(BeTrue())
+			// Expect(reflect.DeepEqual(experiment.Spec.VersionInfo.Baseline, experiment.Spec.VersionInfo.Baseline.DeepCopy())).Should(BeTrue())
+
+			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedBuiltinHists, experiment.Status.Analysis.AggregatedBuiltinHists.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedMetrics, experiment.Status.Analysis.AggregatedMetrics.DeepCopy())).Should(BeTrue())
+			// Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedMetrics.AnalysisMetaData, experiment.Status.Analysis.AggregatedMetrics.AnalysisMetaData.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments, experiment.Status.Analysis.VersionAssessments.DeepCopy())).Should(BeTrue())
+			// Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments, experiment.Status.Analysis.Weights.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Analysis.WinnerAssessment, experiment.Status.Analysis.WinnerAssessment.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Conditions[0], experiment.Status.Conditions[0].DeepCopy())).Should(BeTrue())
 		})
 	})
 })
