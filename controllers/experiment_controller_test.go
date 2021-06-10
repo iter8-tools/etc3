@@ -219,7 +219,7 @@ var _ = Describe("Metrics", func() {
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), badObjective)).Should(Succeed())
-		reward = v2alpha2.NewMetric("reward", "default").
+		reward = v2alpha2.NewMetric("rwrd", "default").
 			WithType(v2alpha2.CounterMetricType).
 			WithParams([]v2alpha2.NamedValue{{
 				Name:  "param",
