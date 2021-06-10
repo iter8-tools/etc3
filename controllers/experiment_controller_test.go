@@ -435,3 +435,39 @@ var _ = Describe("Missing criteria.requestCount", func() {
 		})
 	})
 })
+
+var _ = Describe("Loop Execution", func() {
+	var testName string
+	var testNamespace string = "default"
+	BeforeEach(func() {
+		testNamespace = "default"
+
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
+	})
+	AfterEach(func() {
+		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
+	})
+	Context("When creating an experiment with 3 loops", func() {
+		// experiment (in default namespace) refers to metric "objective-with-good-reference"
+		// which has a sampleSize "metricNamespace/request-count" which is correct
+		It("Should successfully execute three times", func() {
+			By("Creating experiment")
+			testName = "loops"
+			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+				WithTarget("target").
+				WithTestingPattern(v2alpha2.TestingPatternConformance).
+				WithBaselineVersion("baseline", nil).
+				WithDuration(1, 1, 3).
+				Build()
+			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
+			By("Checking that it loops exactly 3 times")
+			Eventually(func() bool {
+				return containsSubString(events, "Completed Loop 3")
+			}, 5).Should(BeTrue())
+			Eventually(func() bool {
+				return containsSubString(events, "Completed Loop 4")
+			}, 1).Should(BeFalse())
+
+		})
+	})
+})
