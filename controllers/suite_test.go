@@ -135,13 +135,10 @@ var _ = BeforeSuite(func(done Done) {
 		Build()
 
 	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme:                     scheme.Scheme,
-		MetricsBindAddress:         ":8080",
-		Port:                       9443,
-		LeaderElection:             true,
-		LeaderElectionResourceLock: "leases",
-		LeaderElectionNamespace:    iter8config.Namespace,
-		LeaderElectionID:           "leader.iter8.tools",
+		Scheme:             scheme.Scheme,
+		MetricsBindAddress: "0",
+		Port:               9443,
+		LeaderElection:     false,
 	})
 	Expect(err).ToNot(HaveOccurred())
 

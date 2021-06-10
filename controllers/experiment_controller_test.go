@@ -160,7 +160,7 @@ var _ = Describe("Experiment Validation", func() {
 var _ = Describe("Metrics", func() {
 	var testName string
 	var testNamespace, metricsNamespace string
-	var goodObjective, goodObjective2, badObjective *v2alpha2.Metric
+	var goodObjective, goodObjective2, badObjective, reward *v2alpha2.Metric
 	BeforeEach(func() {
 		testNamespace = "default"
 		metricsNamespace = "metric-namespace"
@@ -219,6 +219,17 @@ var _ = Describe("Metrics", func() {
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), badObjective)).Should(Succeed())
+		reward = v2alpha2.NewMetric("reward", "default").
+			WithType(v2alpha2.CounterMetricType).
+			WithParams([]v2alpha2.NamedValue{{
+				Name:  "param",
+				Value: "value",
+			}}).
+			WithProvider("prometheus").
+			WithJQExpression("expr").
+			WithURLTemplate("url").
+			Build()
+		Expect(k8sClient.Create(ctx(), reward)).Should(Succeed())
 	})
 
 	Context("When creating an experiment referencing valid metrics", func() {
@@ -232,12 +243,13 @@ var _ = Describe("Metrics", func() {
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*goodObjective, nil, nil, false).
+				WithReward(*reward, v2alpha2.PreferredDirectionHigher).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it starts Running")
 			// this assumes that it runs for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha2.ReasonStageAdvanced)
+				return containsSubString(events, "Advanced to Running") //v2alpha2.ReasonStageAdvanced)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -344,7 +356,26 @@ var _ = Describe("Metrics", func() {
 			}, 5).Should(BeTrue())
 		})
 	})
-
+	Context("When converting a namespacedname", func() {
+		var ns *string
+		var nm string
+		It("Should return nil, '' on input ''", func() {
+			ns, nm = namespaceName("")
+			Expect(ns).To(BeNil())
+			Expect(nm).To(Equal(""))
+		})
+		It("Should return nil, 'name' on input 'name'", func() {
+			ns, nm = namespaceName("name")
+			Expect(ns).To(BeNil())
+			Expect(nm).To(Equal("name"))
+		})
+		It("Should return 'namespace', 'name' on input 'namespace/name", func() {
+			ns, nm = namespaceName("namespace/name")
+			Expect(ns).ToNot(BeNil())
+			Expect(*ns).To(Equal("namespace"))
+			Expect(nm).To(Equal("name"))
+		})
+	})
 })
 
 var _ = Describe("Experiment proceeds", func() {
