@@ -241,8 +241,8 @@ var _ = Describe("Metrics", func() {
 				Value: "value",
 			}}).
 			WithProvider("prometheus").
-			WithJQExpression("expr").
-			WithURLTemplate("url").
+			WithJQExpression(&jqe).
+			WithURLTemplate(&url).
 			Build()
 		Expect(k8sClient.Create(ctx(), reward)).Should(Succeed())
 	})
