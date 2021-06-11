@@ -67,7 +67,12 @@ const (
 	POSTMethodType MethodType = "POST"
 )
 
-// NamedLevel contains the name of a version and the level of the version to be used in mock metric generation
+// NamedLevel contains the name of a version and the level of the version to be used in mock metric generation.
+// The semantics of level are the following:
+// If the metric is a counter, if level is x, and time elapsed since the start of the experiment is y, then x*y is the metric value.
+// Note: this will keep increasing over time as counters do.
+// If the metric is gauge, if level is x, the metric value is a random value with mean x.
+// Note: due to randomness, this stay around x but can go up or down as a gauges do.
 type NamedLevel struct {
 	// Name of the version
 	Name string `json:"name" yaml:"name"`
@@ -148,10 +153,8 @@ type MetricSpec struct {
 	URLTemplate *string `json:"urlTemplate,omitempty" yaml:"urlTemplate,omitempty"`
 
 	// Mock enables mocking of metric values, which is useful in tests and tutorial/documentation.
-	// For a counter metric, the level is used as a rate. Roughly speaking,
-	// the counter value of a version will be proportional to the time elapsed since the start of the experiment X its level.
-	// For a gauge metric, the value will approximately equal the level. Roughly speaking,
-	// the gauge value will converge to the level over time.
+	// Iter8 metrics can be either counter (which keep increasing over time) or gauge (which can increase or decrease over time).
+	// Mock enables mocking of both.
 	// +optional
 	Mock []NamedLevel `json:"mock,omitempty" yaml:"mock,omitempty"`
 }
