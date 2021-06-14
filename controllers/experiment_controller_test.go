@@ -303,7 +303,8 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
+				return containsSubString(events, v2alpha2.ReasonMetricUnavailable) &&
+					containsSubString(events, "default/request-count")
 			}, 5).Should(BeTrue())
 			Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})

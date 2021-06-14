@@ -50,9 +50,9 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 	if err != nil {
 		// could not read metric; record the problem and indicate that the read did not succeed
 		if errors.IsNotFound(err) {
-			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonMetricUnavailable, "Unable to find metric %s", name)
+			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonMetricUnavailable, "Unable to find metric %s/%s", namespace, name)
 		} else {
-			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonMetricsUnreadable, "Unable to load metric %s", name)
+			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonMetricsUnreadable, "Unable to load metric %s/%s", namespace, name)
 		}
 		return false // not ok
 	}
