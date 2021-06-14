@@ -297,9 +297,9 @@ func ctx() context.Context {
 }
 
 // Helper functions to check and remove string from a slice of strings.
-func containsSubString(slice []string, s string) bool {
-	for _, item := range slice {
-		if strings.Contains(item, s) {
+func containsSubString(slice []string, substring string) bool {
+	for _, str := range slice {
+		if strings.Contains(str, substring) {
 			return true
 		}
 	}

@@ -183,7 +183,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if ok := r.advanceStage(ctx, instance, v2alpha2.ExperimentStageRunning); ok {
 		log.Info("Updating stage advance to: Running")
 		if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
-			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Specification weightObjectRef invalid")
+			r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
 			return r.failExperiment(ctx, instance, nil)
 		}
 		return r.endRequest(ctx, instance)
@@ -459,7 +459,7 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 		case HandlerTypeLoop:
 			// we update Status.CurrentWeightDistribution then allow reconcile to continue
 			if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
-				r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Specification weightObjectRef invalid")
+				r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
 				return stop, dummyResult, err
 			}
 			return !stop, dummyResult, nil

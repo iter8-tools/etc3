@@ -142,7 +142,9 @@ var _ = Describe("Updating weights from reconcile", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the experiment failed and the expected reason is recorded")
 			Eventually(func() bool { return fails(name, namespace) }, 5).Should(BeTrue())
-			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
+			Eventually(func() bool {
+				return issuedEvent("Specification of version weightObjectRef invalid: Duration is not found")
+			}).Should(BeTrue())
 		})
 	})
 
@@ -229,7 +231,9 @@ var _ = Describe("Updating weights from reconcile", func() {
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool { return fails(name, namespace) }, 5).Should(BeTrue())
-			Eventually(func() bool { return issuedEvent("Specification weightObjectRef invalid") }).Should(BeTrue())
+			Eventually(func() bool {
+				return issuedEvent("Specification of version weightObjectRef invalid: Unable to read version weights")
+			}).Should(BeTrue())
 		})
 	})
 
