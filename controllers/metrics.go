@@ -31,7 +31,9 @@ import (
 // Otherwise look for name. If not found, look in util.Iter8InstallNamespace() for name.
 // If not found return NotFound error
 func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha2.Experiment, namespace string, name string, metricMap map[string]*v2alpha2.Metric) bool {
-	key := name
+	log := util.Logger(ctx)
+	log.Info("ReadMetric called", "namespace", namespace, "name", name)
+	defer log.Info("ReadMetric completed", "namespace", namespace, "name", name)
 
 	// If the metric name includes a "/" then use the prefix as the namespace
 	splt := strings.Split(name, "/")
@@ -40,8 +42,12 @@ func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha
 		name = splt[1]
 	}
 
+	key := namespace + "/" + name
+	log.Info("ReadMetric", "key", key)
+
 	// if we've already read the metric, then we don't need to proceed; just return true
 	if _, ok := metricMap[key]; ok {
+		log.Info("Already read metric", "key", key)
 		return true
 	}
 
@@ -133,22 +139,10 @@ func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alph
 		}
 	}
 
-	// found all metrics; copy into instance.Spec
+	// found all metrics; copy into instance.Status.Metrics
 	for name, obj := range metricsCache {
 		instance.Status.Metrics = append(instance.Status.Metrics,
 			v2alpha2.MetricInfo{Name: name, MetricObj: *obj})
 	}
 	return true
-}
-
-func namespaceName(name string) (*string, string) {
-	var namespace *string
-	splt := strings.Split(name, "/")
-	if len(splt) == 2 {
-		namespace = &splt[0]
-		name = splt[1]
-	} else {
-		namespace = nil
-	}
-	return namespace, name
 }
