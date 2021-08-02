@@ -121,9 +121,6 @@ var _ = Describe("Metrics", func() {
 			Eventually(func() bool {
 				return containsSubString(events, "Advanced to Running") //v2alpha2.ReasonStageAdvanced)
 			}, 5).Should(BeTrue())
-			exp := v2alpha2.Experiment{}
-			Expect(k8sClient.Get(ctx(), types.NamespacedName{Namespace: testNamespace, Name: testName}, &exp)).Should(Succeed())
-			////			// Expect(len(exp.Status.Metrics)).To(Equal(3))
 		})
 	})
 
