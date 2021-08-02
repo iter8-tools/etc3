@@ -1,5 +1,5 @@
 /*
-
+Copyright 2021.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -81,8 +81,12 @@ type NamedLevel struct {
 	Level resource.Quantity `json:"level" yaml:"level"`
 }
 
-// MetricSpec defines the attributes of the Metric
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// MetricSpec defines the desired state of Metric
 type MetricSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Params are key/value pairs corresponding to HTTP request parameters
@@ -159,10 +163,8 @@ type MetricSpec struct {
 	Mock []NamedLevel `json:"mock,omitempty" yaml:"mock,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-
-// Metric is the schema for Iter8 metrics API.
-// +k8s:openapi-gen=true
+// Metric is the Schema for the metrics API
+//+kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.type"
 // +kubebuilder:printcolumn:name="description",type="string",JSONPath=".spec.description"
 type Metric struct {
@@ -173,11 +175,11 @@ type Metric struct {
 	// metrics are fixed; there is no need for a status
 	// cf. https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
 	// See section: Objects > Spec and Status
+	// Status MetricStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-
 // MetricList contains a list of Metric
+//+kubebuilder:object:root=true
 type MetricList struct {
 	metav1.TypeMeta `json:",inline" yaml:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`

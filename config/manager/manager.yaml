@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
-  name: iter8-system
+  name: system
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -22,26 +22,29 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
-      serviceAccountName: controller
+      securityContext:
+        runAsNonRoot: true
       containers:
       - command:
         - /manager
         args:
-        - --enable-leader-election
-        image: iter8/etc3:latest
-        imagePullPolicy: Always
+        - --leader-elect
+        image: controller:latest
         name: manager
-        env:
-          - name: ITER8_ANALYTICS_ENDPOINT
-            value: http://iter8-analytics.iter8-system:8080/v2/analytics_results
-          - name: ITER8_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: DEFAULTS_DIR
-            value: /defaults
-          - name: HANDLERS_DIR
-            value: /handlers
+        securityContext:
+          allowPrivilegeEscalation: false
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
         resources:
           limits:
             cpu: 100m
@@ -49,16 +52,5 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-        volumeMounts:
-          - mountPath: /defaults
-            name: defaults-volume
-          - mountPath: /handlers
-            name: handlers-volume
-      volumes:
-        - name: defaults-volume
-          configMap: 
-            name: iter8-defaults
-        - name: handlers-volume
-          configMap: 
-            name: iter8-handlers
+      serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

@@ -1,4 +1,6 @@
 /*
+Copyright 2021.
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -23,11 +25,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
 // Experiment is the Schema for the experiments API
-// +k8s:openapi-gen=true
-// +kubebuilder:object:root=true
-// +groupName=iter8.tools
-// +kubebuilder:subresource:status
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.testingPattern"
 // +kubebuilder:printcolumn:name="target",type="string",JSONPath=".spec.target"
 // +kubebuilder:printcolumn:name="stage",type="string",JSONPath=".status.stage"
@@ -42,7 +45,7 @@ type Experiment struct {
 }
 
 // ExperimentList contains a list of Experiment
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
 type ExperimentList struct {
 	metav1.TypeMeta `json:",inline" yaml:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
@@ -252,6 +255,9 @@ type Duration struct {
 
 // ExperimentStatus defines the observed state of Experiment
 type ExperimentStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
 	// List of conditions
 	// +optional
 	Conditions []*ExperimentCondition `json:"conditions,omitempty" yaml:"conditions,omitempty"`

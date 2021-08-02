@@ -1,10 +1,22 @@
 domain: iter8.tools
+layout:
+- go.kubebuilder.io/v3
+projectName: etc3
 repo: github.com/iter8-tools/etc3
 resources:
-- group: 
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: iter8.tools
   kind: Experiment
+  path: github.com/iter8-tools/etc3/api/v2alpha2
   version: v2alpha2
-- group: 
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: iter8.tools
   kind: Metric
+  path: github.com/iter8-tools/etc3/api/v2alpha2
   version: v2alpha2
-version: "2"
+version: "3"
