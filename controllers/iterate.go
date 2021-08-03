@@ -23,9 +23,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/iter8-tools/etc3/analytics"
 	"github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -45,7 +43,7 @@ func completedLoop(instance *v2alpha2.Experiment) (int, bool) {
 }
 
 func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx context.Context, instance *v2alpha2.Experiment) bool {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 
 	// Is this the first iteration or has enough time passed since last iteration?
 	if *instance.Status.CompletedIterations == 0 || instance.Status.LastUpdateTime == nil {
@@ -67,7 +65,7 @@ func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx co
 }
 
 func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alpha2.Experiment) (ctrl.Result, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("doIteration called")
 	defer log.Info("doIteration completed")
 
@@ -90,7 +88,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	// TODO  GET CURRENT WEIGHTS (from cluster)
 
 	analyticsEndpoint := r.Iter8Config.Endpoint //r.GetAnalyticsService()
-	analysis, err := analytics.Invoke(log, analyticsEndpoint, *instance, r.HTTP)
+	analysis, err := Invoke(log, analyticsEndpoint, *instance, r.HTTP)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
 		r.recordExperimentFailed(ctx, instance, v2alpha2.ReasonAnalyticsServiceError, "Call to analytics engine failed")
@@ -158,7 +156,7 @@ func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instanc
 		instance.Status.StartTime = &now
 
 		if err := r.Status().Update(ctx, instance); err != nil {
-			util.Logger(ctx).Info("Failed to update when initializing status: " + err.Error())
+			Logger(ctx).Info("Failed to update when initializing status: " + err.Error())
 			return err
 		}
 	}
@@ -187,7 +185,7 @@ func (r *ExperimentReconciler) mustRollback(ctx context.Context, instance *v2alp
 // Returns list of versions that failed an objective
 // Assumes the analysis has already been added to status.analysis (avoids another input parameter)
 func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instance *v2alpha2.Experiment) []string {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("mustRollbackVersions() called")
 	defer log.Info("mustRollbackVersions() ended")
 

@@ -21,17 +21,16 @@ import (
 	"strings"
 
 	"github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 // ReadMetric reads a metric from the cluster using the name as the key
 // If the name is of the form "namespace/name", look in namespace for name.
-// Otherwise look for name. If not found, look in util.Iter8InstallNamespace() for name.
+// Otherwise look for name. If not found, look in namespace for name.
 // If not found return NotFound error
 func (r *ExperimentReconciler) ReadMetric(ctx context.Context, instance *v2alpha2.Experiment, namespace string, name string, metricMap map[string]*v2alpha2.Metric) bool {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("ReadMetric called", "namespace", namespace, "name", name)
 	defer log.Info("ReadMetric completed", "namespace", namespace, "name", name)
 
@@ -97,7 +96,7 @@ func shouldReadMetrics(instance *v2alpha2.Experiment) bool {
 // ReadMetrics reads needed metrics from cluster and caches them in the experiment
 // result is false if an error occurred reading metrics
 func (r *ExperimentReconciler) ReadMetrics(ctx context.Context, instance *v2alpha2.Experiment) bool {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("ReadMetrics called")
 	defer log.Info("ReadMetrics completed")
 

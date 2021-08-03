@@ -18,7 +18,6 @@ import (
 	"context"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	v1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -28,7 +27,7 @@ import (
 
 var _ = Describe("Validation of VersionInfo", func() {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
+	ctx = context.WithValue(ctx, LoggerKey, ctrl.Log)
 	testNamespace := "default"
 	var jqe string = "expr"
 

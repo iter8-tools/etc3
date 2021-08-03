@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,7 +53,7 @@ func shouldRedistribute(instance *v2alpha2.Experiment) bool {
 }
 
 func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) error {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("redistributeWeight called")
 	defer log.Info("redistributeWeight ended")
 
@@ -94,7 +93,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, rest
 }
 
 func addPatch(ctx context.Context, instance *v2alpha2.Experiment, version v2alpha2.VersionDetail, patcheMap *map[corev1.ObjectReference][]patchIntValue) error {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	//log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
 	defer log.Info("addPatch completed")
 
@@ -228,7 +227,7 @@ type patchIntValue struct {
 }
 
 func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []patchIntValue, namespace string, restCfg *rest.Config) (*unstructured.Unstructured, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("patchWeight called")
 	defer log.Info("patchWeight ended")
 
@@ -249,7 +248,7 @@ func patchWeight(ctx context.Context, objRef *corev1.ObjectReference, patches []
 }
 
 func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespace string, restCfg *rest.Config) (*int32, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("observeWeight called", "objRef", objRef)
 	defer log.Info("observeWeight ended")
 
@@ -316,7 +315,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespac
 }
 
 func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) error {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("updateObservedWeights called")
 	defer log.Info("updateObservedWeights  ended")
 

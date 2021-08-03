@@ -36,10 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/iter8-tools/etc3/analytics"
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/configuration"
-	"github.com/iter8-tools/etc3/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,8 +50,8 @@ type ExperimentReconciler struct {
 	Scheme        *runtime.Scheme
 	RestConfig    *rest.Config
 	EventRecorder record.EventRecorder
-	Iter8Config   configuration.Iter8Config
-	HTTP          analytics.HTTP
+	Iter8Config   Iter8Config
+	HTTP          HTTPTransport
 	ReleaseEvents chan event.GenericEvent
 	JobManager    JobManager
 }
@@ -69,7 +66,7 @@ type ExperimentReconciler struct {
 // Reconcile attempts to align the resource with the spec
 func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("experiment", req.NamespacedName)
-	ctx = context.WithValue(ctx, util.LoggerKey, log)
+	ctx = context.WithValue(ctx, LoggerKey, log)
 
 	log.Info("Reconcile called")
 	defer log.Info("Reconcile completed")
@@ -92,7 +89,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	log.Info("Reconcile", "instance", instance)
-	ctx = context.WithValue(ctx, util.OriginalStatusKey, instance.Status.DeepCopy())
+	ctx = context.WithValue(ctx, OriginalStatusKey, instance.Status.DeepCopy())
 
 	// // check that there aren't any orphaned handler jobs
 	// // or experiments stuck waiting to acquire a target
@@ -278,7 +275,7 @@ func removeString(slice []string, s string) (result []string) {
 // Helper functions for maintaining stages
 
 func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alpha2.Experiment, to v2alpha2.ExperimentStageType) bool {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("advanceStage called", "current stage", *instance.Status.Stage, "to", to)
 	defer log.Info("advanceStage completed")
 
@@ -296,7 +293,7 @@ func (r *ExperimentReconciler) advanceStage(ctx context.Context, instance *v2alp
 
 // endRequest writes any changes (if needed) in preparation for ending processing of this reconcile request
 func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha2.Experiment, interval ...time.Duration) (ctrl.Result, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("endRequest called")
 	defer log.Info("endRequest completed")
 
@@ -311,7 +308,7 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2alpha
 
 // endExperiment is called to mark an experiment as completed and triggers next experiment object
 func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2alpha2.Experiment, msg string) (ctrl.Result, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("endExperiment called")
 	defer log.Info("endExperiment completed")
 
@@ -330,7 +327,7 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2al
 }
 
 func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v2alpha2.Experiment) (ctrl.Result, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("finishExperiment called")
 	defer log.Info("finishExperiment completed")
 
@@ -344,7 +341,7 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 }
 
 func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2alpha2.Experiment) (ctrl.Result, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("rollbackExperiment called")
 	defer log.Info("rollbackExperiment ended")
 
@@ -358,7 +355,7 @@ func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance 
 }
 
 func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2alpha2.Experiment, err error) (ctrl.Result, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("failExperiment called")
 	defer log.Info("failExperiment completed")
 
@@ -385,8 +382,8 @@ func validUpdateErr(err error) bool {
 }
 
 func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alpha2.Experiment) error {
-	log := util.Logger(ctx)
-	originalStatus := util.OriginalStatus(ctx)
+	log := Logger(ctx)
+	originalStatus := OriginalStatus(ctx)
 
 	// log.Info("updateStatus", "original status", *originalStatus)
 	log.Info("updateStatus", "status", instance.Status)
@@ -406,7 +403,7 @@ func (r *ExperimentReconciler) updateStatus(ctx context.Context, instance *v2alp
 func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance *v2alpha2.Experiment,
 	handlerTypes []HandlerType) (bool, ctrl.Result, error) {
 
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("checkHandlersStatus called", "handlerTypes", handlerTypes)
 	defer log.Info("checkHandlersStatus completed")
 
@@ -438,7 +435,7 @@ func (r *ExperimentReconciler) checkHandlersStatus(ctx context.Context, instance
 func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance *v2alpha2.Experiment,
 	handlerType HandlerType, handler *string, handlerInstance *int) (bool, ctrl.Result, error) {
 
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("checkHandlerStatus called", "handlerType", handlerType, "handler", handler)
 	defer log.Info("checkHandlerStatus completed")
 
@@ -510,7 +507,7 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 	ctx context.Context, instance *v2alpha2.Experiment, handlerType HandlerType,
 	modifier handlerLaunchModifier) (bool, ctrl.Result, error) {
 
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("launchHandlerWrapper called", "handlerType", handlerType)
 	defer log.Info("launchHandlerWrapper completed", "handlerType", handlerType)
 
@@ -552,7 +549,7 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 }
 
 func (r *ExperimentReconciler) cleanupDeletedExperiments(ctx context.Context, instance *v2alpha2.Experiment) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("cleanupDeletedExperiments called")
 	defer log.Info("cleanupDeletedExperiments completed")
 
@@ -570,7 +567,7 @@ func (r *ExperimentReconciler) cleanupDeletedExperiments(ctx context.Context, in
 }
 
 func (r *ExperimentReconciler) identifyExperimentsFromHandlers(ctx context.Context) map[string][]batchv1.Job {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("identifyExperimentsFromHandlers called")
 	defer log.Info("identifyExperimentsFromHandlers completed")
 
@@ -604,7 +601,7 @@ func (r *ExperimentReconciler) identifyExperimentsFromHandlers(ctx context.Conte
 }
 
 func (r *ExperimentReconciler) identifyDeletedExperiments(ctx context.Context, experimentToJobs map[string][]batchv1.Job) map[string][]batchv1.Job {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("identifyDeletedExperiments called")
 	defer log.Info("identifyDeletedExperiments completed")
 

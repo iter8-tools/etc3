@@ -20,13 +20,12 @@ import (
 	"context"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
 func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2alpha2.Experiment) bool {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("acquireTarget called")
 	defer log.Info("acquireTarget completed")
 
@@ -69,7 +68,7 @@ func (r *ExperimentReconciler) acquireTarget(ctx context.Context, instance *v2al
 }
 
 func (r *ExperimentReconciler) activeContendersForTarget(ctx context.Context, target string) []*v2alpha2.Experiment {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("activeContendersForTarget called")
 	defer log.Info("activeContendersForTarget completed")
 
@@ -102,7 +101,7 @@ func sameInstance(instance1 *v2alpha2.Experiment, instance2 *v2alpha2.Experiment
 //    (b) the next active experiment for the target is this instance (because acquireTarget will
 //        be called soon -- when endExperiment() is called)
 func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, instance *v2alpha2.Experiment) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("triggerWaitingExperiments called")
 	defer log.Info("triggerWaitingExperiments completed")
 
@@ -129,7 +128,7 @@ func (r *ExperimentReconciler) triggerWaitingExperiments(ctx context.Context, in
 // or because the target is already in use), nil is returned.
 // If instance is specified (blacklisted), it will not be returned.
 func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target string, instance *v2alpha2.Experiment) *v2alpha2.Experiment {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("nextWaitingExperiment called")
 	defer log.Info("nextWaitingExperiment completed")
 
@@ -164,7 +163,7 @@ func (r *ExperimentReconciler) nextWaitingExperiment(ctx context.Context, target
 
 // triggerNextExperiment finds the next experiment to trigger. If there is one, it is triggered.
 func (r *ExperimentReconciler) triggerNextExperiment(ctx context.Context, target string, instance *v2alpha2.Experiment) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("triggerNextExperiment called", "target", target)
 	defer log.Info("triggerNextExperiment completed")
 

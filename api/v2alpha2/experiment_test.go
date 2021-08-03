@@ -20,7 +20,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
+	"github.com/iter8-tools/etc3/controllers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -56,7 +56,7 @@ var _ = Describe("Experiment", func() {
 			It("should deal "+tc.feature, func() {
 				By("reading experiment")
 				s := v2alpha2.Experiment{}
-				Expect(readExperimentFromFile(util.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
+				Expect(readExperimentFromFile(controllers.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
 
 				By("creating the experiment")
 				Expect(k8sClient.Create(ctx, &s)).Should(Succeed())

@@ -1,4 +1,4 @@
-package util
+package controllers
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 func TestCompletePath(t *testing.T) {
 	p1 := CompletePath("", "a")
-	p2 := CompletePath("../", "util/a")
+	p2 := CompletePath("../", "controllers/a")
 	p3 := CompletePath("", "b")
 	assert.Equal(t, p1, p2)
 	assert.NotEqual(t, p2, p3)

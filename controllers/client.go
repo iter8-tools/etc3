@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package analytics
+package controllers
 
 import (
 	"bytes"
@@ -24,13 +24,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// HTTP ..
-type HTTP interface {
+// HTTPTransport ..
+type HTTPTransport interface {
 	Post(url, contentType string, body []byte) ([]byte, int, error)
 }
 
 // Invoke sends payload to endpoint and gets response back
-func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTTP) (*v2alpha2.Analysis, error) {
+func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTTPTransport) (*v2alpha2.Analysis, error) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err

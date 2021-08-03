@@ -47,8 +47,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/configuration"
-	"github.com/iter8-tools/etc3/util"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -129,7 +127,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	// +kubebuilder:scaffold:scheme
 
-	iter8config := configuration.NewIter8Config().
+	iter8config := NewIter8Config().
 		WithEndpoint("http://iter8-analytics:8080").
 		WithHandlersDir("../test/handlers").
 		WithNamespace("iter8").
@@ -294,7 +292,7 @@ func isRunning(name string, ns string) bool {
 }
 
 func ctx() context.Context {
-	return context.WithValue(context.Background(), util.LoggerKey, ctrl.Log)
+	return context.WithValue(context.Background(), LoggerKey, ctrl.Log)
 }
 
 // Helper functions to check and remove string from a slice of strings.

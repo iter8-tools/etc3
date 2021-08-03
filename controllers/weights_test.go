@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 )
 
 var _ = Describe("Reading Weights Using internal method observeWeight", func() {
@@ -302,7 +301,7 @@ var _ = Describe("Weight Patching", func() {
 	namespace := "default"
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, util.LoggerKey, ctrl.Log)
+	ctx = context.WithValue(ctx, LoggerKey, ctrl.Log)
 
 	Context("When experimentType is Conformance", func() {
 		experiment := v2alpha2.NewExperiment("noVersionInfo", namespace).

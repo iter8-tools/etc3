@@ -1,5 +1,5 @@
 // Package util provides logging and testing related utility functions.
-package util
+package controllers
 
 // util.go - utility methods
 //    including methods to retrieve values from context.Context

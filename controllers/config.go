@@ -14,7 +14,7 @@ limitations under the License.
 
 // config.go - methods to support iter8 install time configuration options
 
-package configuration
+package controllers
 
 import (
 	"strings"

@@ -86,7 +86,7 @@ func (s *ExperimentSpec) GetNumberOfBaseline() int {
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
 
-// func handlersForStrategy(cfg configuration.Iter8Config, testingPattern TestingPatternType) *configuration.Handlers {
+// func handlersForStrategy(cfg Iter8Config, testingPattern TestingPatternType) *Handlers {
 // 	for _, t := range cfg.ExperimentTypes {
 // 		if t.Name == string(testingPattern) {
 // 			return &t.Handlers

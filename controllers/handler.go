@@ -24,7 +24,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -107,7 +106,7 @@ type JobManager interface {
 // IsHandlerLaunched returns the handler (job) if one has been launched
 // Otherwise it returns nil
 func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *v2alpha2.Experiment, handler string, handlerInstance *int) (*batchv1.Job, error) {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("IsHandlerLaunched called", "handler", handler)
 
 	job := &batchv1.Job{}
@@ -124,7 +123,7 @@ func (r *ExperimentReconciler) IsHandlerLaunched(ctx context.Context, instance *
 
 // LaunchHandler lauches the job that implements a particular handler
 func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2alpha2.Experiment, handler string, handlerInstance *int) error {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("LaunchHandler called", "handler", handler)
 	defer log.Info("LaunchHandler completed", "handler", handler)
 
@@ -330,7 +329,7 @@ const (
 
 // GetHandlerStatus determines a handlers status
 func (r *ExperimentReconciler) GetHandlerStatus(ctx context.Context, instance *v2alpha2.Experiment, handler *string, handlerInstance *int) HandlerStatusType {
-	log := util.Logger(ctx)
+	log := Logger(ctx)
 	log.Info("GetHandlerStatus called", "handler", handler)
 
 	if nil == handler {

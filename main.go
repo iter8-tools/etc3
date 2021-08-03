@@ -41,7 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/configuration"
 	"github.com/iter8-tools/etc3/controllers"
 	batchv1 "k8s.io/api/batch/v1"
 	//+kubebuilder:scaffold:imports
@@ -113,8 +112,8 @@ func main() {
 		setupLog.Error(err, "unable to configure manager")
 	}
 
-	cfg := configuration.Iter8Config{}
-	if err := configuration.ReadConfig(&cfg); err != nil {
+	cfg := controllers.Iter8Config{}
+	if err := controllers.ReadConfig(&cfg); err != nil {
 		setupLog.Error(err, "unable to configure manager")
 		os.Exit(1)
 	}

@@ -25,7 +25,6 @@ import (
 	"fmt"
 
 	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/util"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -66,7 +65,7 @@ func (r *ExperimentReconciler) recordEvent(ctx context.Context, instance *v2alph
 	reason string, messageFormat string, messageA ...interface{}) {
 	ok := instance.Status.MarkCondition(condition, status, reason, messageFormat, messageA...)
 	if ok {
-		util.Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
+		Logger(ctx).Info(reason + ", " + fmt.Sprintf(messageFormat, messageA...))
 		r.EventRecorder.Eventf(instance, corev1.EventTypeNormal, reason, messageFormat, messageA...)
 		// FUTURE: send notifications
 	}

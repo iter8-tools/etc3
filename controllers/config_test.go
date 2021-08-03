@@ -12,13 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package configuration_test
+package controllers
 
 import (
 	"os"
 	"testing"
 
-	"github.com/iter8-tools/etc3/configuration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,8 +26,8 @@ func TestNoInterpolation(t *testing.T) {
 	os.Setenv("ITER8_ANALYTICS_ENDPOINT", "endpoint")
 	os.Setenv("HANDLERS_DIR", "dir")
 
-	cfg := configuration.Iter8Config{}
-	err := configuration.ReadConfig(&cfg)
+	cfg := Iter8Config{}
+	err := ReadConfig(&cfg)
 	if err != nil {
 		t.Error("Unable to read configuration")
 	}
@@ -50,8 +49,8 @@ func TestInterpolation(t *testing.T) {
 	os.Setenv("ITER8_ANALYTICS_ENDPOINT", "ITER8_NAMESPACE/endpoint")
 	os.Setenv("HANDLERS_DIR", "dir")
 
-	cfg := configuration.Iter8Config{}
-	err := configuration.ReadConfig(&cfg)
+	cfg := Iter8Config{}
+	err := ReadConfig(&cfg)
 	if err != nil {
 		t.Error("Unable to read configuration")
 	}
@@ -69,7 +68,7 @@ func TestInterpolation(t *testing.T) {
 }
 
 func TestIter8Config(t *testing.T) {
-	config := configuration.NewIter8Config().
+	config := NewIter8Config().
 		WithEndpoint("endpoint").
 		WithNamespace("namespace").
 		WithHandlersDir("hDir").
