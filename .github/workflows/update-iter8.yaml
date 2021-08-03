@@ -1,0 +1,54 @@
+name: Update Iter8
+on:
+  release:
+    types:
+      - released
+jobs:
+  update_iter8_install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version
+        run: |
+          tarref=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tagref
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            echo "VERSION=$(echo $tarref | sed -e 's/^v//')" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == *"master" ]]; then
+            echo "VERSION=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Get owner and repo
+        run: |
+          ownerrepo=${{ github.repository }}
+          owner=$(echo $ownerrepo | cut -f1 -d/)
+          if [[ "$owner" == "iter8-tools" ]]; then
+            owner=iter8
+          fi
+          echo "OWNER=$owner" >> $GITHUB_ENV
+          echo "REPO=$(echo $ownerrepo | cut -f2 -d/)" >> $GITHUB_ENV
+
+      - name: Checkout Iter8 repository
+        # https://github.com/actions/checkout
+        uses: actions/checkout@v2
+        with:
+          repository: iter8-tools/iter8
+
+      - name: Update install kustomization.yaml
+        run: |
+          export KUSTOMIZATION=install/core/iter8-controller/kustomization.yaml
+          sed -i "s#newTag: .*#newTag: ${{env.VERSION}}#" $KUSTOMIZATION
+          sed -i "s#- github.com/iter8-tools/etc3/config/crd/?ref=v.*#- github.com/iter8-tools/etc3/config/crd/?ref=v${{env.VERSION}}#" $KUSTOMIZATION
+
+      - name: create pull request
+        # https://github.com/marketplace/actions/create-pull-request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          commit-message: 'Update install version of ${{env.REPO}}'
+          committer: 'Iter8 <iter8@iter8.tools>'
+          author: 'Iter8 <iter8@iter8.tools>'
+          signoff: true
+          branch: 'update-version-${{env.REPO}}'
+          delete-branch: true
+          title: 'Update to new version of ${{env.REPO}}'
+          body: 'Update to new version of ${{env.REPO}}'
