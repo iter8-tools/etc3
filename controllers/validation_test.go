@@ -17,7 +17,7 @@ package controllers
 import (
 	"context"
 
-	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
+	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
 	v1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -35,11 +35,11 @@ var _ = Describe("Validation of VersionInfo", func() {
 	// The way to have no versions is to have no VersionInfo
 
 	Context("Experiment is a Conformance test", func() {
-		var bldr *v2alpha2.ExperimentBuilder
+		var bldr *v2alpha3.ExperimentBuilder
 		BeforeEach(func() {
-			bldr = v2alpha2.NewExperiment("conformance-test", testNamespace).
+			bldr = v2alpha3.NewExperiment("conformance-test", testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternConformance)
+				WithTestingPattern(v2alpha3.TestingPatternConformance)
 		})
 		It("should be invalid when no versions are specified", func() {
 			experiment := bldr.
@@ -72,29 +72,29 @@ var _ = Describe("Validation of VersionInfo", func() {
 		It("should be invalid when there is a reward", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment is an AB test", func() {
-		var bldr *v2alpha2.ExperimentBuilder
+		var bldr *v2alpha3.ExperimentBuilder
 		BeforeEach(func() {
-			bldr = v2alpha2.NewExperiment("ab-test", testNamespace).
+			bldr = v2alpha3.NewExperiment("ab-test", testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternAB)
+				WithTestingPattern(v2alpha3.TestingPatternAB)
 		})
 		It("should be invalid when no versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 
 		It("should be invalid when exactly 1 version is specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
@@ -102,7 +102,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when exactly 2 versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				Build()
@@ -111,7 +111,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be invalid when more than 2 version are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
@@ -131,7 +131,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
@@ -139,19 +139,19 @@ var _ = Describe("Validation of VersionInfo", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
-				WithReward(*v2alpha2.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
-				WithReward(*v2alpha2.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment is an Canary test", func() {
-		var bldr *v2alpha2.ExperimentBuilder
+		var bldr *v2alpha3.ExperimentBuilder
 		BeforeEach(func() {
-			bldr = v2alpha2.NewExperiment("canary-test", testNamespace).
+			bldr = v2alpha3.NewExperiment("canary-test", testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternCanary)
+				WithTestingPattern(v2alpha3.TestingPatternCanary)
 		})
 
 		It("should be invalid when no versions are specified", func() {
@@ -196,30 +196,30 @@ var _ = Describe("Validation of VersionInfo", func() {
 			experiment := bldr.
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment is an ABN test", func() {
-		var bldr *v2alpha2.ExperimentBuilder
+		var bldr *v2alpha3.ExperimentBuilder
 		BeforeEach(func() {
-			bldr = v2alpha2.NewExperiment("abn-test", testNamespace).
+			bldr = v2alpha3.NewExperiment("abn-test", testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternABN)
+				WithTestingPattern(v2alpha3.TestingPatternABN)
 		})
 
 		It("should be invalid when no versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 
 		It("should be invalid when exactly 1 version is specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
@@ -227,7 +227,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when exactly 2 versions are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				Build()
@@ -236,7 +236,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when more than 2 version are specified", func() {
 			experiment := bldr.
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
@@ -258,7 +258,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
-				WithReward(*v2alpha2.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
@@ -268,32 +268,32 @@ var _ = Describe("Validation of VersionInfo", func() {
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate-1", nil).
 				WithCandidateVersion("candidate-2", nil).
-				WithReward(*v2alpha2.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
-				WithReward(*v2alpha2.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
+				WithReward(*v2alpha3.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2alpha3.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Experiment has common names", func() {
-		experiment := v2alpha2.NewExperiment("abn-test", testNamespace).
+		experiment := v2alpha3.NewExperiment("abn-test", testNamespace).
 			WithTarget("target").
 			WithBaselineVersion("baseline", nil).
 			WithCandidateVersion("candidate", nil).
-			WithTestingPattern(v2alpha2.TestingPatternABN).
+			WithTestingPattern(v2alpha3.TestingPatternABN).
 			Build()
 		It("should fail", func() {
 			By("adding another canidate with the same name")
 			experiment.Spec.VersionInfo.Candidates = append(experiment.Spec.VersionInfo.Candidates,
-				v2alpha2.VersionDetail{Name: "candidate"})
+				v2alpha3.VersionDetail{Name: "candidate"})
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})
 
 	Context("Spec.VersionInfo.*.WeightObjRef.FieldPath validity", func() {
-		bldr := v2alpha2.NewExperiment("invalid-fieldpath", testNamespace).
+		bldr := v2alpha3.NewExperiment("invalid-fieldpath", testNamespace).
 			WithTarget("target").
-			WithTestingPattern(v2alpha2.TestingPatternConformance)
+			WithTestingPattern(v2alpha3.TestingPatternConformance)
 		It("Should reject the experiment if fieldpath starts without '.'", func() {
 			experiment := bldr.WithBaselineVersion("baseline", &v1.ObjectReference{
 				Name:      "object",

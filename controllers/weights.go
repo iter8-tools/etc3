@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"strings"
 
-	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
+	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,19 +40,19 @@ import (
 	jp "k8s.io/client-go/util/jsonpath"
 )
 
-func shouldRedistribute(instance *v2alpha2.Experiment) bool {
+func shouldRedistribute(instance *v2alpha3.Experiment) bool {
 	experimentType := instance.Spec.Strategy.TestingPattern
-	if experimentType == v2alpha2.TestingPatternConformance {
+	if experimentType == v2alpha3.TestingPatternConformance {
 		return false
 	}
 	algorithm := instance.Spec.GetDeploymentPattern()
-	if algorithm == v2alpha2.DeploymentPatternFixedSplit {
+	if algorithm == v2alpha3.DeploymentPatternFixedSplit {
 		return false
 	}
 	return true
 }
 
-func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) error {
+func redistributeWeight(ctx context.Context, instance *v2alpha3.Experiment, restCfg *rest.Config) error {
 	log := Logger(ctx)
 	log.Info("redistributeWeight called")
 	defer log.Info("redistributeWeight ended")
@@ -92,7 +92,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, rest
 	return nil
 }
 
-func addPatch(ctx context.Context, instance *v2alpha2.Experiment, version v2alpha2.VersionDetail, patcheMap *map[corev1.ObjectReference][]patchIntValue) error {
+func addPatch(ctx context.Context, instance *v2alpha3.Experiment, version v2alpha3.VersionDetail, patcheMap *map[corev1.ObjectReference][]patchIntValue) error {
 	log := Logger(ctx)
 	//log.Info("addPatch called", "weight recommendations", instance.Status.Analysis.Weights)
 	defer log.Info("addPatch completed")
@@ -161,7 +161,7 @@ func getKey(obj corev1.ObjectReference) corev1.ObjectReference {
 	}
 }
 
-func getWeightRecommendation(version string, weights []v2alpha2.WeightData) *int32 {
+func getWeightRecommendation(version string, weights []v2alpha3.WeightData) *int32 {
 	for _, w := range weights {
 		if w.Name == version {
 			weight := w.Value
@@ -171,7 +171,7 @@ func getWeightRecommendation(version string, weights []v2alpha2.WeightData) *int
 	return nil
 }
 
-func getCurrentWeight(version string, weights []v2alpha2.WeightData) *int32 {
+func getCurrentWeight(version string, weights []v2alpha3.WeightData) *int32 {
 	zero := int32(0)
 	for _, weight := range weights {
 		if weight.Name == version {
@@ -314,7 +314,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespac
 	return &int32Value, nil
 }
 
-func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) error {
+func updateObservedWeights(ctx context.Context, instance *v2alpha3.Experiment, restCfg *rest.Config) error {
 	log := Logger(ctx)
 	log.Info("updateObservedWeights called")
 	defer log.Info("updateObservedWeights  ended")
@@ -325,7 +325,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 		return nil
 	}
 
-	observedWeights := make([]v2alpha2.WeightData, 0)
+	observedWeights := make([]v2alpha3.WeightData, 0)
 	missing := []string{}
 	total := int32(0)
 
@@ -336,7 +336,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 		if err != nil {
 			return err
 		}
-		observedWeights = append(observedWeights, v2alpha2.WeightData{Name: b.Name, Value: *w})
+		observedWeights = append(observedWeights, v2alpha3.WeightData{Name: b.Name, Value: *w})
 		total += *w
 		log.Info("updateObservedWeights", "name", b.Name, "weight", *w, "total", total)
 	} else {
@@ -350,7 +350,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 			if err != nil {
 				return err
 			}
-			observedWeights = append(observedWeights, v2alpha2.WeightData{Name: c.Name, Value: *w})
+			observedWeights = append(observedWeights, v2alpha3.WeightData{Name: c.Name, Value: *w})
 			total += *w
 			log.Info("updateObservedWeights", "name", c.Name, "weight", *w, "total", total)
 		} else {
@@ -362,11 +362,11 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 	if len(missing) == 1 {
 		log.Info("Computing weight", "missing", missing[0])
 		w := int32(100) - total
-		observedWeights = append(observedWeights, v2alpha2.WeightData{Name: missing[0], Value: w})
+		observedWeights = append(observedWeights, v2alpha3.WeightData{Name: missing[0], Value: w})
 		log.Info("updateObservedWeights", "name", missing[0], "weight", w, "total", int32(100))
 	} else if len(missing) > 1 {
 		log.Info("Multiple weights could not be read from cluster", "missing", missing)
-		if *instance.Spec.Strategy.DeploymentPattern != v2alpha2.DeploymentPatternFixedSplit {
+		if *instance.Spec.Strategy.DeploymentPattern != v2alpha3.DeploymentPatternFixedSplit {
 			return errors.New("Unable to read version weights; insufficient number of weightObjectRef specified")
 		}
 	}

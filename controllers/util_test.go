@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	"github.com/iter8-tools/etc3/api/v2alpha3"
 	"github.com/stretchr/testify/assert"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -33,7 +33,7 @@ func TestContext(t *testing.T) {
 	iterations := int32(5)
 	recommendation := "winner"
 	message := "message"
-	status := v2alpha2.ExperimentStatus{
+	status := v2alpha3.ExperimentStatus{
 		CompletedIterations:            &iterations,
 		VersionRecommendedForPromotion: &recommendation,
 		Message:                        &message,

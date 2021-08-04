@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
+	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
@@ -45,9 +45,9 @@ var _ = Describe("Experiment Validation", func() {
 		testName := "test-invalid-duration"
 		testNamespace := "default"
 		It("Should fail to create experiment", func() {
-			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+			experiment := v2alpha3.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithTestingPattern(v2alpha3.TestingPatternCanary).
 				WithDuration(10, 0, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
@@ -59,9 +59,9 @@ var _ = Describe("Experiment Validation", func() {
 		testNamespace := "default"
 		It("Should succeed in creating experiment", func() {
 			ctx := context.Background()
-			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+			experiment := v2alpha3.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithTestingPattern(v2alpha3.TestingPatternCanary).
 				WithDuration(10, 1, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
@@ -71,9 +71,9 @@ var _ = Describe("Experiment Validation", func() {
 	Context("When creating a valid new Experiment", func() {
 		It("Should successfully complete late initialization", func() {
 			By("Providing a request-count metric")
-			m := v2alpha2.NewMetric("request-count", "iter8").
-				WithType(v2alpha2.CounterMetricType).
-				WithParams([]v2alpha2.NamedValue{{
+			m := v2alpha3.NewMetric("request-count", "iter8").
+				WithType(v2alpha3.CounterMetricType).
+				WithParams([]v2alpha3.NamedValue{{
 					Name:  "param",
 					Value: "value",
 				}}).
@@ -86,7 +86,7 @@ var _ = Describe("Experiment Validation", func() {
 			// }
 			// Expect(k8sClient.Create(ctx, ns)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
-			// createdMetric := &v2alpha2.Metric{}
+			// createdMetric := &v2alpha3.Metric{}
 			// Eventually(func() bool {
 			// 	err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "iter8"}, createdMetric)
 			// 	if err != nil {
@@ -95,9 +95,9 @@ var _ = Describe("Experiment Validation", func() {
 			// 	return true
 			// }).Should(BeTrue())
 			By("creating a reward metric")
-			reward := v2alpha2.NewMetric("reward", "default").
-				WithType(v2alpha2.CounterMetricType).
-				WithParams([]v2alpha2.NamedValue{{
+			reward := v2alpha3.NewMetric("reward", "default").
+				WithType(v2alpha3.CounterMetricType).
+				WithParams([]v2alpha3.NamedValue{{
 					Name:  "param",
 					Value: "value",
 				}}).
@@ -107,9 +107,9 @@ var _ = Describe("Experiment Validation", func() {
 				Build()
 			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
 			By("creating an indicator")
-			indicator := v2alpha2.NewMetric("indicataor", "default").
-				WithType(v2alpha2.CounterMetricType).
-				WithParams([]v2alpha2.NamedValue{{
+			indicator := v2alpha3.NewMetric("indicataor", "default").
+				WithType(v2alpha3.CounterMetricType).
+				WithParams([]v2alpha3.NamedValue{{
 					Name:  "param",
 					Value: "value",
 				}}).
@@ -119,9 +119,9 @@ var _ = Describe("Experiment Validation", func() {
 				Build()
 			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
 			By("creating an objective")
-			objective := v2alpha2.NewMetric("objective", "default").
-				WithType(v2alpha2.CounterMetricType).
-				WithParams([]v2alpha2.NamedValue{{
+			objective := v2alpha3.NewMetric("objective", "default").
+				WithType(v2alpha3.CounterMetricType).
+				WithParams([]v2alpha3.NamedValue{{
 					Name:  "param",
 					Value: "value",
 				}}).
@@ -131,9 +131,9 @@ var _ = Describe("Experiment Validation", func() {
 				Build()
 			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
 			By("creating an objective that is not in the cluster")
-			fake := v2alpha2.NewMetric("fake", "default").
-				WithType(v2alpha2.CounterMetricType).
-				WithParams([]v2alpha2.NamedValue{{
+			fake := v2alpha3.NewMetric("fake", "default").
+				WithType(v2alpha3.CounterMetricType).
+				WithParams([]v2alpha3.NamedValue{{
 					Name:  "param",
 					Value: "value",
 				}}).
@@ -145,11 +145,11 @@ var _ = Describe("Experiment Validation", func() {
 			By("Creating a new Experiment")
 			testName := "late-initialization"
 			testNamespace := "default"
-			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+			experiment := v2alpha3.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithTestingPattern(v2alpha3.TestingPatternCanary).
 				WithRequestCount("request-count").
-				WithReward(*reward, v2alpha2.PreferredDirectionHigher).
+				WithReward(*reward, v2alpha3.PreferredDirectionHigher).
 				WithIndicator(*indicator).
 				WithObjective(*objective, nil, nil, false).
 				WithObjective(*fake, nil, nil, true).
@@ -158,7 +158,7 @@ var _ = Describe("Experiment Validation", func() {
 
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
 			Eventually(func() bool {
-				return hasValue(testName, testNamespace, func(exp *v2alpha2.Experiment) bool {
+				return hasValue(testName, testNamespace, func(exp *v2alpha3.Experiment) bool {
 					return exp.Status.InitTime != nil &&
 						exp.Status.LastUpdateTime != nil &&
 						exp.Status.CompletedIterations != nil &&
@@ -180,11 +180,11 @@ var _ = Describe("Experiment proceeds", func() {
 			expectedIterations := int32(2)
 			initialInterval := int32(5)
 			modifiedInterval := int32(10)
-			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+			experiment := v2alpha3.NewExperiment(testName, testNamespace).
 				WithTarget("early-reconcile-targets").
-				WithTestingPattern(v2alpha2.TestingPatternCanary).
+				WithTestingPattern(v2alpha3.TestingPatternCanary).
 				WithDuration(initialInterval, expectedIterations, 1).
-				WithDeploymentPattern(v2alpha2.DeploymentPatternFixedSplit).
+				WithDeploymentPattern(v2alpha3.DeploymentPatternFixedSplit).
 				WithBaselineVersion("baseline", nil).
 				WithCandidateVersion("candidate", nil).
 				Build()
@@ -192,7 +192,7 @@ var _ = Describe("Experiment proceeds", func() {
 
 			By("Changing the interval before the reconcile event triggers")
 			time.Sleep(2 * time.Second)
-			createdExperiment := &v2alpha2.Experiment{}
+			createdExperiment := &v2alpha3.Experiment{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)).Should(Succeed())
 			createdExperiment.Spec.Duration.IntervalSeconds = &modifiedInterval
 			Expect(k8sClient.Update(ctx, createdExperiment)).Should(Succeed())
@@ -215,14 +215,14 @@ var _ = Describe("Empty Criteria section", func() {
 
 	Context("When the Criteria section has empty lists", func() {
 		var testName string = "norealcriteria.yaml"
-		experiment := v2alpha2.Experiment{}
+		experiment := v2alpha3.Experiment{}
 		readExperimentFromFile(path.Join(dataDir, testName), &experiment)
 
 		Specify("The experiment should read the (non-existent) metrics", func() {
 			Expect(k8sClient.Create(ctx(), &experiment)).Should(Succeed())
 			// will fail after this point because there is no versionInfo is present
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha2.ReasonInvalidExperiment)
+				return containsSubString(events, v2alpha3.ReasonInvalidExperiment)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -238,7 +238,7 @@ var _ = Describe("Missing criteria.requestCount", func() {
 		Specify("The controller should read the other metrics", func() {
 			var testName string = "norequestcount"
 			By("Defining a Gauge metric that references requestcount")
-			metric := v2alpha2.NewMetric("referencesrequestcount", "default").
+			metric := v2alpha3.NewMetric("referencesrequestcount", "default").
 				WithType("Gauge").
 				WithProvider("provider").
 				WithJQExpression(&jqe).
@@ -247,15 +247,15 @@ var _ = Describe("Missing criteria.requestCount", func() {
 				Build()
 			Expect(k8sClient.Create(ctx(), metric)).Should(Succeed())
 			By("Defining an experiment with no request count")
-			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+			experiment := v2alpha3.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternType(v2alpha2.TestingPatternConformance)).
+				WithTestingPattern(v2alpha3.TestingPatternType(v2alpha3.TestingPatternConformance)).
 				WithIndicator(*metric).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			// will fail because samplesize reference is not available
 			Eventually(func() bool {
-				return containsSubString(events, v2alpha2.ReasonMetricUnavailable)
+				return containsSubString(events, v2alpha3.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -267,10 +267,10 @@ var _ = Describe("Loop Execution", func() {
 	BeforeEach(func() {
 		testNamespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha3.Experiment{}, client.InNamespace(testNamespace))
 	})
 	AfterEach(func() {
-		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(testNamespace))
+		k8sClient.DeleteAllOf(ctx(), &v2alpha3.Experiment{}, client.InNamespace(testNamespace))
 	})
 	Context("When creating an experiment with 3 loops", func() {
 		// experiment (in default namespace) refers to metric "objective-with-good-reference"
@@ -278,9 +278,9 @@ var _ = Describe("Loop Execution", func() {
 		It("Should successfully execute three times", func() {
 			By("Creating experiment")
 			testName = "loops"
-			experiment := v2alpha2.NewExperiment(testName, testNamespace).
+			experiment := v2alpha3.NewExperiment(testName, testNamespace).
 				WithTarget("target").
-				WithTestingPattern(v2alpha2.TestingPatternConformance).
+				WithTestingPattern(v2alpha3.TestingPatternConformance).
 				WithBaselineVersion("baseline", nil).
 				WithDuration(1, 1, 3).
 				Build()
