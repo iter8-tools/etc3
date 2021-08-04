@@ -19,4 +19,18 @@ resources:
   kind: Metric
   path: github.com/iter8-tools/etc3/api/v2alpha2
   version: v2alpha2
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: iter8.tools
+  kind: Experiment
+  path: github.com/iter8-tools/etc3/api/v2alpha3
+  version: v2alpha3
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: iter8.tools
+  kind: Metric
+  path: github.com/iter8-tools/etc3/api/v2alpha3
+  version: v2alpha3
 version: "3"
