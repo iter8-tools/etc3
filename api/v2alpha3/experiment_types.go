@@ -148,6 +148,10 @@ type TaskSpec struct {
 	// Task unique identifies the task to be executed with the library.
 	// Examples include 'init-experiment', 'exec', etc.
 	Task string `json:"task" yaml:"task"`
+	// Condition specifies when this task should be executed.
+	// Task will be evaluated if condition evaluates to true, and not otherwise.
+	// +optional
+	Condition *string `json:"condition,omitempty" yaml:"condition,omitempty"`
 	// With holds inputs to this task.
 	// Different task require different types of inputs. Hence, this data is held as json.RawMessage to be decoded by individual task libraries.
 	// +optional

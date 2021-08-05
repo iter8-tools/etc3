@@ -171,6 +171,11 @@ spec:
                       items:
                         description: TaskSpec contains the specification of a task.
                         properties:
+                          condition:
+                            description: Condition specifies when this task should
+                              be executed. Task will be evaluated if condition evaluates
+                              to true, and not otherwise.
+                            type: string
                           task:
                             description: Task unique identifies the task to be executed
                               with the library. Examples include 'init-experiment',
