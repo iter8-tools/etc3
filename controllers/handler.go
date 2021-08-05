@@ -26,7 +26,6 @@ import (
 	"github.com/iter8-tools/etc3/api/v2alpha2"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -65,11 +64,11 @@ var allHandlerTypes []HandlerType = []HandlerType{
 	HandlerTypeLoop,
 }
 
-var terminalHandlerTypes []HandlerType = []HandlerType{
-	HandlerTypeFinish,
-	HandlerTypeRollback,
-	HandlerTypeFailure,
-}
+// var terminalHandlerTypes []HandlerType = []HandlerType{
+// 	HandlerTypeFinish,
+// 	HandlerTypeRollback,
+// 	HandlerTypeFailure,
+// }
 
 // GetHandler returns handler of a given type
 func (r *ExperimentReconciler) GetHandler(instance *v2alpha2.Experiment, t HandlerType) *string {
@@ -201,7 +200,7 @@ func readJobSpec(templateFile string, job *batchv1.Job) error {
 	return nil
 }
 
-func setEnvVariable(env []v1.EnvVar, name string, value string) []v1.EnvVar {
+func setEnvVariable(env []corev1.EnvVar, name string, value string) []corev1.EnvVar {
 	for i, e := range env {
 		if e.Name == name {
 			env[i].Value = value
@@ -209,7 +208,7 @@ func setEnvVariable(env []v1.EnvVar, name string, value string) []v1.EnvVar {
 			return env
 		}
 	}
-	return append(env, v1.EnvVar{
+	return append(env, corev1.EnvVar{
 		Name:  name,
 		Value: value,
 	})

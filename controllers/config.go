@@ -27,6 +27,7 @@ type Iter8Config struct {
 	Analytics   `json:"analytics" yaml:"analytics"`
 	Namespace   string `envconfig:"ITER8_NAMESPACE"`
 	HandlersDir string `envconfig:"HANDLERS_DIR"`
+	SimplexDir  string `envconfig:"SIMPLEX_DIR"`
 }
 
 // Analytics captures details of analytics endpoint(s)
@@ -69,6 +70,12 @@ func (b Iter8ConfigBuilder) WithNamespace(namespace string) Iter8ConfigBuilder {
 // WithHandlersDir ..
 func (b Iter8ConfigBuilder) WithHandlersDir(handlersDir string) Iter8ConfigBuilder {
 	b.HandlersDir = handlersDir
+	return b
+}
+
+// WithSimplexDir ..
+func (b Iter8ConfigBuilder) WithSimplexDir(simplexDir string) Iter8ConfigBuilder {
+	b.SimplexDir = simplexDir
 	return b
 }
 
