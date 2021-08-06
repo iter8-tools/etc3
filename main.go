@@ -168,7 +168,8 @@ func main() {
 	}
 
 	setupLog.Info("launching simplex")
-	if err := controllers.LaunchSimplex(context.Background(), &cfg); err != nil {
+	ctx := context.WithValue(context.Background(), controllers.LoggerKey, setupLog)
+	if err := controllers.LaunchSimplex(ctx, &cfg); err != nil {
 		setupLog.Error(err, "problem launching simplex")
 		os.Exit(1)
 	}
