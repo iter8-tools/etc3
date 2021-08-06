@@ -83,6 +83,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, rest
 		log.Info("redistributeWeight", "err", err)
 		if err != nil {
 			log.Error(err, "Unable to patch", "object", obj, "patch", p)
+			return err
 		}
 	}
 
