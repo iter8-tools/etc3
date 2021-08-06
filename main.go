@@ -69,7 +69,7 @@ func (m *iter8Http) Post(url, contentType string, payload []byte) (resp []byte, 
 	var prettyJSON bytes.Buffer
 	json.Indent(&prettyJSON, payload, "", "  ")
 	setupLog.Info("post request", "URL", url)
-	setupLog.Info(string(prettyJSON.Bytes()))
+	setupLog.Info(prettyJSON.String())
 	raw, err := http.Post(url, contentType, bytes.NewBuffer(payload))
 	// setupLog.Info("post result", "raw", raw)
 	setupLog.Info("post error", "err", err)
@@ -164,6 +164,12 @@ func main() {
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
+		os.Exit(1)
+	}
+
+	setupLog.Info("launching simplex")
+	if err := controllers.LaunchSimplex(context.Background(), &cfg); err != nil {
+		setupLog.Error(err, "problem launching simplex")
 		os.Exit(1)
 	}
 }
