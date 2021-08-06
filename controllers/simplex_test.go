@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 func TestLaunchSimplex(t *testing.T) {
@@ -36,8 +35,6 @@ func TestLaunchSimplex(t *testing.T) {
 		t.Error("Unable to read configuration")
 	}
 
-	lg := zap.New().WithName("test")
-	ctx := context.WithValue(context.Background(), LoggerKey, lg)
-	err = LaunchSimplex(ctx, &cfg)
+	err = LaunchSimplex(context.Background(), &cfg)
 	assert.NoError(t, err)
 }

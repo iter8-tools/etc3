@@ -59,7 +59,7 @@ func readSimplexSpec(simplexFile string, simplex *Simplex) error {
 
 // LaunchSimplex lauches all the Simplex watches
 func LaunchSimplex(ctx context.Context, cfg *Iter8Config) error {
-	log := Logger(ctx)
+	log := GetLogger()
 	log.Info("LaunchSimplex called")
 	defer log.Info("LaunchSimplex completed")
 

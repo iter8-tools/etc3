@@ -24,6 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/iter8-tools/etc3/api/v2alpha2"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 // ContextKey variables can be used to retrieve values from context object
@@ -40,6 +41,16 @@ const (
 // Logger gets the logger from the context.
 func Logger(ctx context.Context) logr.Logger {
 	return ctx.Value(LoggerKey).(logr.Logger)
+}
+
+var log logr.Logger
+
+// GetLogger returns a logger, if needed after creating it.
+func GetLogger() logr.Logger {
+	if log == nil {
+		log = zap.New().WithName("etc3")
+	}
+	return log
 }
 
 // OriginalStatus gets the status from the context
