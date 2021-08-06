@@ -39,6 +39,7 @@ resources: # list of resources to watch; required;
 - mutatingwebhookconfigurations.v1beta1.admissionregistration.k8s.io
 */
 
+// Simplex describes the resources to be watched by etc3
 type Simplex struct {
 	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
 }
