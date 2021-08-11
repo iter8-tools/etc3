@@ -21,7 +21,7 @@ limitations under the License.
 // In particular, enumeration fields follow https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#constants;
 // optional fields follow https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#optional-vs-required
 
-package v2alpha3
+package v2beta1
 
 import (
 	resource "k8s.io/apimachinery/pkg/api/resource"

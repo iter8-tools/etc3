@@ -24,44 +24,44 @@ import (
 	"context"
 	"fmt"
 
-	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
+	v2beta1 "github.com/iter8-tools/etc3/api/v2beta1"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (r *ExperimentReconciler) recordExperimentFailed(ctx context.Context, instance *v2alpha3.Experiment,
+func (r *ExperimentReconciler) recordExperimentFailed(ctx context.Context, instance *v2beta1.Experiment,
 	reason string, messageFormat string, messageA ...interface{}) {
 	r.recordEvent(ctx, instance,
-		v2alpha3.ExperimentConditionExperimentFailed, corev1.ConditionTrue,
+		v2beta1.ExperimentConditionExperimentFailed, corev1.ConditionTrue,
 		reason, messageFormat, messageA...)
 }
 
-func (r *ExperimentReconciler) recordExperimentCompleted(ctx context.Context, instance *v2alpha3.Experiment,
+func (r *ExperimentReconciler) recordExperimentCompleted(ctx context.Context, instance *v2beta1.Experiment,
 	messageFormat string, messageA ...interface{}) {
 	r.recordEvent(ctx, instance,
-		v2alpha3.ExperimentConditionExperimentCompleted, corev1.ConditionTrue,
-		v2alpha3.ReasonExperimentCompleted, messageFormat, messageA...)
+		v2beta1.ExperimentConditionExperimentCompleted, corev1.ConditionTrue,
+		v2beta1.ReasonExperimentCompleted, messageFormat, messageA...)
 }
 
-func (r *ExperimentReconciler) recordExperimentProgress(ctx context.Context, instance *v2alpha3.Experiment,
+func (r *ExperimentReconciler) recordExperimentProgress(ctx context.Context, instance *v2beta1.Experiment,
 	reason string, messageFormat string, messageA ...interface{}) {
 	r.recordEvent(ctx, instance,
-		v2alpha3.ExperimentConditionExperimentCompleted, corev1.ConditionFalse,
+		v2beta1.ExperimentConditionExperimentCompleted, corev1.ConditionFalse,
 		reason, messageFormat, messageA...)
 }
 
-func (r *ExperimentReconciler) recordTargetAcquired(ctx context.Context, instance *v2alpha3.Experiment,
+func (r *ExperimentReconciler) recordTargetAcquired(ctx context.Context, instance *v2beta1.Experiment,
 	messageFormat string, messageA ...interface{}) {
 	r.recordEvent(ctx, instance,
-		v2alpha3.ExperimentConditionTargetAcquired, corev1.ConditionTrue,
-		v2alpha3.ReasonTargetAcquired, messageFormat, messageA...)
+		v2beta1.ExperimentConditionTargetAcquired, corev1.ConditionTrue,
+		v2beta1.ReasonTargetAcquired, messageFormat, messageA...)
 }
 
 // record the event in a variety of ways. Note that we do not want to report an event more than once
 // in a log message, kubernetes event or notification. Consequently, we must pay attention to whether
 // or not we are recording an event for the first time or repeating it. We do this by first updating
 // a condition on instance.Status. If the condition changes, we report the event externally.
-func (r *ExperimentReconciler) recordEvent(ctx context.Context, instance *v2alpha3.Experiment,
-	condition v2alpha3.ExperimentConditionType, status corev1.ConditionStatus,
+func (r *ExperimentReconciler) recordEvent(ctx context.Context, instance *v2beta1.Experiment,
+	condition v2beta1.ExperimentConditionType, status corev1.ConditionStatus,
 	reason string, messageFormat string, messageA ...interface{}) {
 	ok := instance.Status.MarkCondition(condition, status, reason, messageFormat, messageA...)
 	if ok {

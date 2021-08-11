@@ -1,4 +1,4 @@
-apiVersion: iter8.tools/v2alpha3
+apiVersion: iter8.tools/v2beta1
 kind: Metric
 metadata:
   name: invalid-authtype

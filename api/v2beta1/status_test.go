@@ -12,10 +12,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha3_test
+package v2beta1_test
 
 import (
-	"github.com/iter8-tools/etc3/api/v2alpha3"
+	"github.com/iter8-tools/etc3/api/v2beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -24,7 +24,7 @@ var _ = Describe("CurrentIterations", func() {
 	Context("Iteration Utilities", func() {
 		It("Work as Expected", func() {
 			By("Creating an experiment")
-			experiment := v2alpha3.NewExperiment("test", "default").WithTarget("target").Build()
+			experiment := v2beta1.NewExperiment("test", "default").WithTarget("target").Build()
 
 			By("Verifying that no iterations have been completed")
 			Expect(experiment.Status.GetCompletedIterations()).Should(Equal(int32(0)))
@@ -40,9 +40,9 @@ var _ = Describe("CurrentIterations", func() {
 })
 
 var _ = Describe("Winner Determination", func() {
-	var experiment *v2alpha3.Experiment
+	var experiment *v2beta1.Experiment
 	BeforeEach(func() {
-		experiment = v2alpha3.NewExperiment("test", "default").
+		experiment = v2beta1.NewExperiment("test", "default").
 			WithTarget("target").
 			WithBaselineVersion("baseline", nil).
 			WithCandidateVersion("candiate", nil).
@@ -57,7 +57,7 @@ var _ = Describe("Winner Determination", func() {
 	})
 	Context("When no winner assessment is present in Status.Analysis", func() {
 		Specify("Version recommended for promotion is current baseline", func() {
-			experiment.Status.Analysis = &v2alpha3.Analysis{}
+			experiment.Status.Analysis = &v2beta1.Analysis{}
 			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
 			Expect(*experiment.Status.VersionRecommendedForPromotion).Should(Equal(experiment.Spec.VersionInfo.Baseline.Name))
 		})
@@ -65,10 +65,10 @@ var _ = Describe("Winner Determination", func() {
 	Context("When no winner found", func() {
 		Specify("Version recommended for promotion is current baseline", func() {
 			winner := "winner"
-			experiment.Status.Analysis = &v2alpha3.Analysis{
-				WinnerAssessment: &v2alpha3.WinnerAssessmentAnalysis{
-					AnalysisMetaData: v2alpha3.AnalysisMetaData{},
-					Data: v2alpha3.WinnerAssessmentData{
+			experiment.Status.Analysis = &v2beta1.Analysis{
+				WinnerAssessment: &v2beta1.WinnerAssessmentAnalysis{
+					AnalysisMetaData: v2beta1.AnalysisMetaData{},
+					Data: v2beta1.WinnerAssessmentData{
 						WinnerFound: false,
 						Winner:      &winner,
 					},
@@ -81,10 +81,10 @@ var _ = Describe("Winner Determination", func() {
 	Context("When winner found", func() {
 		Specify("Version recommended for promotion is winner", func() {
 			winner := "winner"
-			experiment.Status.Analysis = &v2alpha3.Analysis{
-				WinnerAssessment: &v2alpha3.WinnerAssessmentAnalysis{
-					AnalysisMetaData: v2alpha3.AnalysisMetaData{},
-					Data: v2alpha3.WinnerAssessmentData{
+			experiment.Status.Analysis = &v2beta1.Analysis{
+				WinnerAssessment: &v2beta1.WinnerAssessmentAnalysis{
+					AnalysisMetaData: v2beta1.AnalysisMetaData{},
+					Data: v2beta1.WinnerAssessmentData{
 						WinnerFound: true,
 						Winner:      &winner,
 					},

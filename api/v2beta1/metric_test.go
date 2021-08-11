@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha3_test
+package v2beta1_test
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
-	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
+	v2beta1 "github.com/iter8-tools/etc3/api/v2beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -45,7 +45,7 @@ var _ = Describe("Metrics Not Created When Invalid", func() {
 		"invalid7.yaml": "spec.authType is not Basic/Bearer/APIKey",
 	} {
 		Context("When "+feature, func() {
-			metric := v2alpha3.Metric{}
+			metric := v2beta1.Metric{}
 			readMetricFromFile(path.Join(testMetricsDir, file), &metric)
 
 			It("should fail to create", func() {
@@ -62,18 +62,18 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 	url := "url"
 
 	Context("When metric is valid", func() {
-		metric := v2alpha3.NewMetric("test", "default").
+		metric := v2beta1.NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha3.NamedValue{{
+			WithParams([]v2beta1.NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha3.GaugeMetricType).
+			WithType(v2beta1.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
 			WithURLTemplate(&url).
-			WithMock([]v2alpha3.NamedLevel{
+			WithMock([]v2beta1.NamedLevel{
 				{
 					Name:  "sample-app-v1",
 					Level: resource.MustParse("2.5"),
@@ -98,14 +98,14 @@ var _ = Describe("Metrics with method", func() {
 	url := "url"
 
 	Context("When a metric is created with the method field", func() {
-		metric := v2alpha3.NewMetric("test", "default").
+		metric := v2beta1.NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha3.NamedValue{{
+			WithParams([]v2beta1.NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha3.GaugeMetricType).
-			WithMethod(v2alpha3.POSTMethodType).
+			WithType(v2beta1.GaugeMetricType).
+			WithMethod(v2beta1.POSTMethodType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -114,24 +114,24 @@ var _ = Describe("Metrics with method", func() {
 
 		It("the method field is preserved", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha3.NewMetric("test", "default").Build()
+			fetchedMetric := v2beta1.NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
 			}, fetchedMetric)
-			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2alpha3.POSTMethodType))
+			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2beta1.POSTMethodType))
 			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
 
 	Context("When a metric is created without the method field", func() {
-		metric := v2alpha3.NewMetric("test", "default").
+		metric := v2beta1.NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha3.NamedValue{{
+			WithParams([]v2beta1.NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha3.GaugeMetricType).
+			WithType(v2beta1.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -140,12 +140,12 @@ var _ = Describe("Metrics with method", func() {
 
 		It("the method field is defaulted to GET", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha3.NewMetric("test", "default").Build()
+			fetchedMetric := v2beta1.NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
 			}, fetchedMetric)
-			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2alpha3.GETMethodType))
+			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2beta1.GETMethodType))
 			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
@@ -157,15 +157,15 @@ var _ = Describe("Metrics with authtype", func() {
 	url := "url"
 
 	Context("When a metric is created with the authType field", func() {
-		metric := v2alpha3.NewMetric("test", "default").
+		metric := v2beta1.NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha3.NamedValue{{
+			WithParams([]v2beta1.NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha3.GaugeMetricType).
-			WithMethod(v2alpha3.POSTMethodType).
-			WithAuthType(v2alpha3.BasicAuthType).
+			WithType(v2beta1.GaugeMetricType).
+			WithMethod(v2beta1.POSTMethodType).
+			WithAuthType(v2beta1.BasicAuthType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -174,24 +174,24 @@ var _ = Describe("Metrics with authtype", func() {
 
 		It("the authtype field is preserved", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha3.NewMetric("test", "default").Build()
+			fetchedMetric := v2beta1.NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
 			}, fetchedMetric)
-			Expect(*fetchedMetric.Spec.AuthType).Should(Equal(v2alpha3.BasicAuthType))
+			Expect(*fetchedMetric.Spec.AuthType).Should(Equal(v2beta1.BasicAuthType))
 			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
 
 	Context("When a metric is created without AuthType field", func() {
-		metric := v2alpha3.NewMetric("test", "default").
+		metric := v2beta1.NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha3.NamedValue{{
+			WithParams([]v2beta1.NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha3.GaugeMetricType).
+			WithType(v2beta1.GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -200,7 +200,7 @@ var _ = Describe("Metrics with authtype", func() {
 
 		It("the AuthType field is not defaulted", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha3.NewMetric("test", "default").Build()
+			fetchedMetric := v2beta1.NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
@@ -211,7 +211,7 @@ var _ = Describe("Metrics with authtype", func() {
 	})
 })
 
-func readMetricFromFile(templateFile string, job *v2alpha3.Metric) error {
+func readMetricFromFile(templateFile string, job *v2beta1.Metric) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err

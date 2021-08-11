@@ -23,7 +23,7 @@ import (
 	"runtime"
 
 	"github.com/go-logr/logr"
-	"github.com/iter8-tools/etc3/api/v2alpha3"
+	"github.com/iter8-tools/etc3/api/v2beta1"
 )
 
 // ContextKey variables can be used to retrieve values from context object
@@ -43,8 +43,8 @@ func Logger(ctx context.Context) logr.Logger {
 }
 
 // OriginalStatus gets the status from the context
-func OriginalStatus(ctx context.Context) *v2alpha3.ExperimentStatus {
-	return ctx.Value(OriginalStatusKey).(*v2alpha3.ExperimentStatus)
+func OriginalStatus(ctx context.Context) *v2beta1.ExperimentStatus {
+	return ctx.Value(OriginalStatusKey).(*v2beta1.ExperimentStatus)
 }
 
 // CompletePath is a helper function for converting file paths, specified relative to the caller of this function, into absolute ones.

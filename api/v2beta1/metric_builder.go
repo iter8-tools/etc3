@@ -14,7 +14,7 @@ limitations under the License.
 
 // metrics_builder.go - methods to programatically create metrics; used for testing
 
-package v2alpha3
+package v2beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -23,26 +23,26 @@ import (
 	"errors"
 	"time"
 
-	"github.com/iter8-tools/etc3/api/v2alpha3"
+	"github.com/iter8-tools/etc3/api/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func moreIterationsNeeded(instance *v2alpha3.Experiment) bool {
+func moreIterationsNeeded(instance *v2beta1.Experiment) bool {
 	// Are there more iterations to execute
 	return *instance.Status.CompletedIterations < instance.Spec.GetIterationsPerLoop()*instance.Spec.GetMaxLoops()
 }
 
 // determine if a loop is completed by determing if the number of iterations executed
 // is a multiple of duration.iterationsPerLoop
-func completedLoop(instance *v2alpha3.Experiment) (int, bool) {
+func completedLoop(instance *v2beta1.Experiment) (int, bool) {
 	if 0 == instance.Status.GetCompletedIterations()%instance.Spec.GetIterationsPerLoop() {
 		return int(instance.Status.GetCompletedIterations() / instance.Spec.GetIterationsPerLoop()), true
 	}
 	return -1, false
 }
 
-func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx context.Context, instance *v2alpha3.Experiment) bool {
+func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx context.Context, instance *v2beta1.Experiment) bool {
 	log := Logger(ctx)
 
 	// Is this the first iteration or has enough time passed since last iteration?
@@ -64,7 +64,7 @@ func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx co
 	return true
 }
 
-func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alpha3.Experiment) (ctrl.Result, error) {
+func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta1.Experiment) (ctrl.Result, error) {
 	log := Logger(ctx)
 	log.Info("doIteration called")
 	defer log.Info("doIteration completed")
@@ -91,7 +91,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	analysis, err := Invoke(log, analyticsEndpoint, *instance, r.HTTP)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
-		r.recordExperimentFailed(ctx, instance, v2alpha3.ReasonAnalyticsServiceError, "Call to analytics engine failed")
+		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonAnalyticsServiceError, "Call to analytics engine failed")
 		return r.failExperiment(ctx, instance, err)
 	}
 
@@ -117,13 +117,13 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// update weight distribution
 	if err := redistributeWeight(ctx, instance, r.RestConfig); err != nil {
-		r.recordExperimentFailed(ctx, instance, v2alpha3.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
+		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
 		return r.failExperiment(ctx, instance, err)
 	}
 
 	// after weights have been redistributed, update Status.CurrentWeightDistribution
 	if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
-		r.recordExperimentFailed(ctx, instance, v2alpha3.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
+		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
 		return r.failExperiment(ctx, instance, nil)
 	}
 
@@ -132,13 +132,13 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)
-	r.recordExperimentProgress(ctx, instance, v2alpha3.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
+	r.recordExperimentProgress(ctx, instance, v2beta1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
 
 	// if we are at the end of a loop (we've executed Duration.IterationsPerLoop iterations)
 	// then call a loop handler if one is defined.
 	// Note that we on the last loop, we will not execute this code; we called returned just above.
 	if loop, ok := completedLoop(instance); ok {
-		r.recordExperimentProgress(ctx, instance, v2alpha3.ReasonIterationCompleted, "Completed Loop %d", loop)
+		r.recordExperimentProgress(ctx, instance, v2beta1.ReasonIterationCompleted, "Completed Loop %d", loop)
 
 		if quit, result, err := r.launchHandlerWrapper(
 			ctx, instance, HandlerTypeLoop, handlerLaunchModifier{loop: &loop}); quit {
@@ -150,7 +150,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
 }
 
-func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instance *v2alpha3.Experiment) error {
+func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instance *v2beta1.Experiment) error {
 	if instance.Status.StartTime == nil {
 		now := metav1.Now()
 		instance.Status.StartTime = &now
@@ -163,11 +163,11 @@ func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instanc
 	return nil
 }
 
-func hasCriteria(instance *v2alpha3.Experiment) bool {
+func hasCriteria(instance *v2beta1.Experiment) bool {
 	return instance.Spec.Criteria != nil
 }
 
-func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *v2alpha3.Experiment) {
+func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *v2beta1.Experiment) {
 	// update completedIterations counter
 	*instance.Status.CompletedIterations++
 	now := metav1.Now()
@@ -175,7 +175,7 @@ func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *
 }
 
 // mustRollback determines if the experiment should be rolled back.
-func (r *ExperimentReconciler) mustRollback(ctx context.Context, instance *v2alpha3.Experiment) bool {
+func (r *ExperimentReconciler) mustRollback(ctx context.Context, instance *v2beta1.Experiment) bool {
 	return len(r.versionsMustRollback(ctx, instance)) > 0
 }
 
@@ -184,7 +184,7 @@ func (r *ExperimentReconciler) mustRollback(ctx context.Context, instance *v2alp
 //   -    there is a version for which this objective is failing
 // Returns list of versions that failed an objective
 // Assumes the analysis has already been added to status.analysis (avoids another input parameter)
-func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instance *v2alpha3.Experiment) []string {
+func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instance *v2beta1.Experiment) []string {
 	log := Logger(ctx)
 	log.Info("mustRollbackVersions() called")
 	defer log.Info("mustRollbackVersions() ended")

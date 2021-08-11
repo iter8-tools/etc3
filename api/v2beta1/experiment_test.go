@@ -12,14 +12,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha3_test
+package v2beta1_test
 
 import (
 	"context"
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
-	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
+	v2beta1 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/controllers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -55,7 +55,7 @@ var _ = Describe("Experiment", func() {
 		Context(tc.feature, func() {
 			It("should deal "+tc.feature, func() {
 				By("reading experiment")
-				s := v2alpha3.Experiment{}
+				s := v2beta1.Experiment{}
 				Expect(readExperimentFromFile(controllers.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
 
 				By("creating the experiment")
@@ -67,8 +67,8 @@ var _ = Describe("Experiment", func() {
 				By("fetching the experiment with json fields")
 				exp2 := &unstructured.Unstructured{}
 				exp2.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v2alpha3.GroupVersion.Group,
-					Version: v2alpha3.GroupVersion.Version,
+					Group:   v2beta1.GroupVersion.Group,
+					Version: v2beta1.GroupVersion.Version,
 					Kind:    "Experiment",
 				})
 				Expect(k8sClient.Get(ctx, types.NamespacedName{
@@ -88,7 +88,7 @@ var _ = Describe("Experiment", func() {
 
 })
 
-func readExperimentFromFile(templateFile string, exp *v2alpha3.Experiment) error {
+func readExperimentFromFile(templateFile string, exp *v2beta1.Experiment) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err

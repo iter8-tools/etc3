@@ -40,10 +40,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	batchv1 "k8s.io/api/batch/v1"
-
-	v2alpha3 "github.com/iter8-tools/etc3/api/v2alpha3"
+	v2beta1 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/controllers"
+	batchv1 "k8s.io/api/batch/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -60,7 +59,7 @@ const (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(v2alpha3.AddToScheme(scheme))
+	utilruntime.Must(v2beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
