@@ -377,8 +377,15 @@ spec:
                 required:
                 - baseline
                 type: object
+              versions:
+                description: Versions is list of version labels
+                items:
+                  type: string
+                minItems: 1
+                type: array
             required:
             - strategy
+            - versions
             type: object
           status:
             description: ExperimentStatus defines the observed state of Experiment

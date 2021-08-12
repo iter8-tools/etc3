@@ -56,6 +56,10 @@ type ExperimentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// Versions is list of version labels
+	// +kubebuilder:validation:MinItems:=1
+	Versions []string `json:"versions" yaml:"versions"`
+
 	// VersionInfo is information about versions that is typically provided by the domain start handler
 	// +optional
 	VersionInfo *VersionInfo `json:"versionInfo,omitempty" yaml:"versionInfo,omitempty"`
