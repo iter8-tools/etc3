@@ -10,12 +10,12 @@ resources:
   domain: iter8.tools
   kind: Experiment
   path: github.com/iter8-tools/etc3/api/
-  version: 
+  version: v2beta1
 - api:
     crdVersion: v1
     namespaced: true
   domain: iter8.tools
   kind: Metric
   path: github.com/iter8-tools/etc3/api/
-  version: 
+  version: v2beta1
 version: "3"

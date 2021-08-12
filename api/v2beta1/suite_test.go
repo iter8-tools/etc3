@@ -1,10 +1,9 @@
-package v2beta1_test
+package v2beta1
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -33,7 +32,7 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(cfg).ToNot(BeNil())
 
-	err = v2beta1.AddToScheme(scheme.Scheme)
+	err = AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
