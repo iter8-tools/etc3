@@ -171,10 +171,10 @@ spec:
                       items:
                         description: TaskSpec contains the specification of a task.
                         properties:
-                          condition:
-                            description: Condition specifies when this task should
-                              be executed. Task will be evaluated if condition evaluates
-                              to true, and not otherwise.
+                          if:
+                            description: If specifies if this task should be executed.
+                              Task will be evaluated if condition specified by if
+                              evaluates to true, and not otherwise.
                             type: string
                           run:
                             description: Run is identifies the bash script to be run.

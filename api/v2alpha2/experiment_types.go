@@ -153,10 +153,10 @@ type TaskSpec struct {
 	// TaskSpec must include exactly one of the two fields, run or task.
 	// +optional
 	Run *string `json:"run,omitempty" yaml:"run,omitempty"`
-	// Condition specifies when this task should be executed.
-	// Task will be evaluated if condition evaluates to true, and not otherwise.
+	// If specifies if this task should be executed.
+	// Task will be evaluated if condition specified by if evaluates to true, and not otherwise.
 	// +optional
-	Condition *string `json:"condition,omitempty" yaml:"condition,omitempty"`
+	If *string `json:"if,omitempty" yaml:"if,omitempty"`
 	// With holds inputs to this task.
 	// Different task require different types of inputs. Hence, this data is held as json.RawMessage to be decoded by individual task libraries.
 	// +optional
