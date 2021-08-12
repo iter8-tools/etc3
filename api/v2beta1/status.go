@@ -28,11 +28,6 @@ const (
 	DefaultCompletedIterations = 0
 )
 
-var experimentCondSet = []ExperimentConditionType{
-	ExperimentConditionExperimentFailed,
-	ExperimentConditionExperimentCompleted,
-}
-
 func (s *ExperimentStatus) addCondition(conditionType ExperimentConditionType, status corev1.ConditionStatus) *ExperimentCondition {
 	condition := &ExperimentCondition{
 		Type:   conditionType,

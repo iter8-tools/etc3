@@ -43,7 +43,7 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTT
 	var prettyBody bytes.Buffer
 	json.Indent(&prettyBody, body, "", "  ")
 	log.Info("post response", "URL", endpoint)
-	log.Info(string(prettyBody.Bytes()))
+	log.Info(prettyBody.String())
 
 	if statuscode >= 400 {
 		return nil, fmt.Errorf("%v", string(body))

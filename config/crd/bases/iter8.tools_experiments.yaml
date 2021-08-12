@@ -171,15 +171,19 @@ spec:
                       items:
                         description: TaskSpec contains the specification of a task.
                         properties:
-                          condition:
-                            description: Condition specifies when this task should
-                              be executed. Task will be evaluated if condition evaluates
-                              to true, and not otherwise.
+                          if:
+                            description: If specifies if this task should be executed.
+                              Task will be evaluated if condition specified by if
+                              evaluates to true, and not otherwise.
+                            type: string
+                          run:
+                            description: Run is identifies the bash script to be run.
+                              TaskSpec must include exactly one of the two fields,
+                              run or task.
                             type: string
                           task:
-                            description: Task unique identifies the task to be executed
-                              with the library. Examples include 'init-experiment',
-                              'exec', etc.
+                            description: Task uniquely identifies the task to be executed.
+                              Examples include 'common/bash', etc.
                             type: string
                           with:
                             additionalProperties:
@@ -189,8 +193,6 @@ spec:
                               data is held as json.RawMessage to be decoded by individual
                               task libraries.
                             type: object
-                        required:
-                        - task
                         type: object
                       type: array
                     description: Actions define the collections of tasks that are
