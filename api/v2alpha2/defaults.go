@@ -305,10 +305,7 @@ func (s *ExperimentSpec) InitializeRequestCount() {
 // GetRollbackOnFailure identifies if the experiment should be rolledback on failure of an objective
 func (o *Objective) GetRollbackOnFailure(deploymentPattern DeploymentPatternType) bool {
 	if o.RollbackOnFailure == nil {
-		if deploymentPattern == DeploymentPatternBlueGreen {
-			return true
-		}
-		return false
+		return deploymentPattern == DeploymentPatternBlueGreen
 	}
 	return *o.RollbackOnFailure
 }

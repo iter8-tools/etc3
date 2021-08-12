@@ -181,7 +181,7 @@ var _ = Describe("Generated Code", func() {
 				WithUnits("ms").
 				WithSampleSize("sample/default")
 			metric := metricBuilder.Build()
-			metricList := *&v2alpha2.MetricList{
+			metricList := v2alpha2.MetricList{
 				Items: []v2alpha2.Metric{*metric},
 			}
 
@@ -193,6 +193,7 @@ var _ = Describe("Generated Code", func() {
 
 	Context("When an Experiment object is copied", func() {
 		Specify("the copy should be the same as the original", func() {
+			testStr := "test"
 			experimentBuilder := v2alpha2.NewExperiment("test", "default").
 				WithTarget("copy").
 				WithTestingPattern(v2alpha2.TestingPatternCanary).
@@ -211,7 +212,10 @@ var _ = Describe("Generated Code", func() {
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
 				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
 				WithCondition(v2alpha2.ExperimentConditionExperimentFailed, corev1.ConditionTrue, v2alpha2.ReasonHandlerFailed, "foo %s", "bar").
-				WithAction("start", []v2alpha2.TaskSpec{{Task: "task"}}).
+				WithAction("start", []v2alpha2.TaskSpec{
+					{Task: &testStr},
+					{Run: &testStr},
+				}).
 				WithRequestCount("request-count").
 				WithReward(*v2alpha2.NewMetric("reward", "default").WithJQExpression(&jqe).Build(), v2alpha2.PreferredDirectionHigher).
 				WithIndicator(*v2alpha2.NewMetric("indicator", "default").WithJQExpression(&jqe).Build()).
@@ -267,7 +271,7 @@ var _ = Describe("Generated Code", func() {
 					},
 				},
 			}
-			experimentList := *&v2alpha2.ExperimentList{
+			experimentList := v2alpha2.ExperimentList{
 				Items: []v2alpha2.Experiment{*experiment},
 			}
 
