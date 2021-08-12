@@ -180,7 +180,7 @@ var _ = Describe("Generated Code", func() {
 				WithUnits("ms").
 				WithSampleSize("sample/default")
 			metric := metricBuilder.Build()
-			metricList := *&MetricList{
+			metricList := MetricList{
 				Items: []Metric{*metric},
 			}
 
@@ -192,6 +192,7 @@ var _ = Describe("Generated Code", func() {
 
 	Context("When an Experiment object is copied", func() {
 		Specify("the copy should be the same as the original", func() {
+			testStr := "test"
 			experimentBuilder := NewExperiment("test", "default").
 				WithTarget("copy").
 				WithTestingPattern(TestingPatternCanary).
@@ -210,7 +211,10 @@ var _ = Describe("Generated Code", func() {
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
 				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
 				WithCondition(ExperimentConditionExperimentFailed, corev1.ConditionTrue, ReasonHandlerFailed, "foo %s", "bar").
-				WithAction("start", []TaskSpec{{Task: "task"}}).
+				WithAction("start", []TaskSpec{
+					{Task: &testStr},
+					{Run: &testStr},
+				}).
 				WithRequestCount("request-count").
 				WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
 				WithIndicator(*NewMetric("indicator", "default").WithJQExpression(&jqe).Build()).
@@ -266,7 +270,7 @@ var _ = Describe("Generated Code", func() {
 					},
 				},
 			}
-			experimentList := *&ExperimentList{
+			experimentList := ExperimentList{
 				Items: []Experiment{*experiment},
 			}
 

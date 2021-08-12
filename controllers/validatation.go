@@ -28,7 +28,7 @@ import (
 // TODO 3. For ab and abn there is a reward
 // TODO 4. If rollbackOnFailure there is a rollback handler?
 func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *v2beta1.Experiment) bool {
-	return true
+	return r.AreTasksValid(ctx, instance)
 }
 
 // IsVersionInfoValid verifies that Spec.versionInfo is valid
@@ -96,6 +96,25 @@ func versionsUnique(s v2beta1.ExperimentSpec) bool {
 			return false
 		}
 		versions = append(versions, candidate.Name)
+	}
+	return true
+}
+
+// AreTasksValid ensures that each task either has a valid task string or a valid run string but not both
+func (r *ExperimentReconciler) AreTasksValid(ctx context.Context, instance *v2beta1.Experiment) bool {
+	for _, a := range instance.Spec.Strategy.Actions {
+		for _, t := range a {
+			num := 0
+			if t.Task != nil && len(*t.Task) > 0 {
+				num++
+			}
+			if t.Run != nil && len(*t.Run) > 0 {
+				num++
+			}
+			if num != 1 {
+				return false
+			}
+		}
 	}
 	return true
 }

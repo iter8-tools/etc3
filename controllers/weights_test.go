@@ -231,7 +231,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			Eventually(func() bool { return fails(name, namespace) }, 5).Should(BeTrue())
 			Eventually(func() bool {
-				return issuedEvent("Specification of version weightObjectRef invalid: Unable to read version weights")
+				return issuedEvent("Specification of version weightObjectRef invalid: unable to read version weights")
 			}).Should(BeTrue())
 		})
 	})
@@ -331,7 +331,7 @@ var _ = Describe("Weight Patching", func() {
 			Build()
 		It("Should fail with error", func() {
 			err := redistributeWeight(ctx, experiment, restCfg)
-			Expect(err).Should(MatchError("Cannot redistribute weight; no version information present"))
+			Expect(err).Should(MatchError("cannot redistribute weight; no version information present"))
 		})
 	})
 
@@ -386,7 +386,7 @@ var _ = Describe("Weight Patching", func() {
 		It("Should not fail and not add a patch", func() {
 			patches := map[corev1.ObjectReference][]patchIntValue{}
 			err := addPatch(ctx, experiment, experiment.Spec.VersionInfo.Baseline, &patches)
-			Expect(err).Should(MatchError("No weight recommendation provided"))
+			Expect(err).Should(MatchError("no weight recommendation provided"))
 			Expect(patches).Should(BeEmpty())
 		})
 	})

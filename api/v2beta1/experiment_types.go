@@ -145,9 +145,14 @@ type Action []TaskSpec
 
 // TaskSpec contains the specification of a task.
 type TaskSpec struct {
-	// Task unique identifies the task to be executed with the library.
-	// Examples include 'init-experiment', 'exec', etc.
-	Task string `json:"task" yaml:"task"`
+	// Task uniquely identifies the task to be executed.
+	// Examples include 'common/bash', etc.
+	// +optional
+	Task *string `json:"task,omitempty" yaml:"task,omitempty"`
+	// Run is identifies the bash script to be run.
+	// TaskSpec must include exactly one of the two fields, run or task.
+	// +optional
+	Run *string `json:"run,omitempty" yaml:"run,omitempty"`
 	// Condition specifies when this task should be executed.
 	// Task will be evaluated if condition evaluates to true, and not otherwise.
 	// +optional

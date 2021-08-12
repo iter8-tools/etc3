@@ -18,7 +18,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: 1.16
     - name: Run Kubernetes tools
       uses: stefanprodan/kube-tools@v1
       with:
@@ -36,10 +36,12 @@ jobs:
         # (you'll need to set the KUBEBUILDER_ASSETS env var if you put it somewhere else)
         sudo mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
         export PATH=$PATH:/usr/local/kubebuilder/bin
+    - name: Set up linter
+      run: go get honnef.co/go/tools/cmd/staticcheck@latest
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
     - name: Test
-      run: make test
+      run: make test # includes vet and lint
     - name: Enforce coverage
       run: |
         export COVERAGE=$(go tool cover -func cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
@@ -50,13 +52,6 @@ jobs:
           echo "not good... coverage is not at 79.0% or above";
           exit 1
         fi
-    - name: Get golint
-      run: go get -u golang.org/x/lint/golint
-    - name: Run Vet & Lint
-      run: |
-        go vet ./...
-        echo $(go list -f {{.Target}} golang.org/x/lint/golint)
-        $(go list -f {{.Target}} golang.org/x/lint/golint) -set_exit_status=1 ./...
 
   # Compute and upload code coverage
   code-coverage:
@@ -67,7 +62,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: 1.16
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Build
