@@ -856,8 +856,8 @@ func (in *TaskSpec) DeepCopyInto(out *TaskSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Condition != nil {
-		in, out := &in.Condition, &out.Condition
+	if in.If != nil {
+		in, out := &in.If, &out.If
 		*out = new(string)
 		**out = **in
 	}
