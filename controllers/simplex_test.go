@@ -15,14 +15,30 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLaunchSimplex(t *testing.T) {
+func TestReadSimplexGVKs(t *testing.T) {
+	simplexDir := CompletePath("../test/data", "")
+	simplexFile := path.Join(simplexDir, SimplexYaml)
+	var sgvks SimplexGVKs
+	err := readSimplexGVKs(simplexFile, &sgvks)
+
+	assert.NoError(t, err)
+	assert.Len(t, sgvks.GVKs, 2)
+	assert.Equal(t, "apps", sgvks.GVKs[0].Group)
+	assert.Equal(t, "v1", sgvks.GVKs[0].Version)
+	assert.Equal(t, "deployments", sgvks.GVKs[0].Kind)
+	assert.Equal(t, "", sgvks.GVKs[1].Group)
+	assert.Equal(t, "v1", sgvks.GVKs[1].Version)
+	assert.Equal(t, "secrets", sgvks.GVKs[1].Kind)
+}
+
+func TestGetSimplexes(t *testing.T) {
 	os.Setenv("ITER8_NAMESPACE", "namespace")
 	os.Setenv("ITER8_ANALYTICS_ENDPOINT", "endpoint")
 	os.Setenv("HANDLERS_DIR", "dir")
@@ -35,6 +51,14 @@ func TestLaunchSimplex(t *testing.T) {
 		t.Error("Unable to read configuration")
 	}
 
-	err = LaunchSimplex(context.Background(), &cfg)
+	s, err := GetSimplexes(&cfg)
 	assert.NoError(t, err)
+	assert.NoError(t, err)
+	assert.Len(t, s, 2)
+	assert.Equal(t, "apps", s[0].GVK.Group)
+	assert.Equal(t, "v1", s[0].GVK.Version)
+	assert.Equal(t, "deployments", s[0].GVK.Kind)
+	assert.Equal(t, "", s[1].GVK.Group)
+	assert.Equal(t, "v1", s[1].GVK.Version)
+	assert.Equal(t, "secrets", s[1].GVK.Kind)
 }

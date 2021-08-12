@@ -34,6 +34,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -54,6 +55,8 @@ var (
 const (
 	// Iter8Controller string constant used to label event recorder
 	Iter8Controller = "iter8"
+	// SimplexController string constant used to label event recorder
+	SimplexController = "simplex"
 )
 
 func init() {
@@ -119,6 +122,11 @@ func main() {
 	}
 	setupLog.Info("read config", "cfg", cfg)
 
+	var cacheFunc cache.NewCacheFunc
+	if cfg.CacheNamespaces != nil && len(cfg.CacheNamespaces) > 0 {
+		cacheFunc = cache.MultiNamespacedCacheBuilder(cfg.CacheNamespaces)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                     scheme,
 		MetricsBindAddress:         metricsAddr,
@@ -128,7 +136,9 @@ func main() {
 		LeaderElectionResourceLock: "leases",
 		LeaderElectionNamespace:    cfg.Namespace,
 		LeaderElectionID:           "leader.iter8.tools",
+		NewCache:                   cacheFunc,
 	})
+
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
@@ -150,6 +160,21 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Experiment")
 		os.Exit(1)
 	}
+
+	simplexes, err := controllers.GetSimplexes(&cfg)
+	if err != nil {
+		setupLog.Error(err, "unable to create simplex", "controller", "Simplex")
+		os.Exit(1)
+	}
+	for _, simplex := range simplexes {
+		simplex.EventRecorder = mgr.GetEventRecorderFor(SimplexController)
+		simplex.Log = ctrl.Log.WithName("controllers").WithName("Simplex")
+		if err = simplex.SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Simplex")
+			os.Exit(1)
+		}
+	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -164,13 +189,6 @@ func main() {
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
-	}
-
-	setupLog.Info("launching simplex")
-	ctx := context.WithValue(context.Background(), controllers.LoggerKey, setupLog)
-	if err := controllers.LaunchSimplex(ctx, &cfg); err != nil {
-		setupLog.Error(err, "problem launching simplex")
 		os.Exit(1)
 	}
 }

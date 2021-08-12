@@ -24,10 +24,11 @@ import (
 
 // Iter8Config describes structure of configuration file
 type Iter8Config struct {
-	Analytics   `json:"analytics" yaml:"analytics"`
-	Namespace   string `envconfig:"ITER8_NAMESPACE"`
-	HandlersDir string `envconfig:"HANDLERS_DIR"`
-	SimplexDir  string `envconfig:"SIMPLEX_DIR"`
+	Analytics       `json:"analytics" yaml:"analytics"`
+	Namespace       string   `envconfig:"ITER8_NAMESPACE"`
+	HandlersDir     string   `envconfig:"HANDLERS_DIR"`
+	SimplexDir      string   `envconfig:"SIMPLEX_DIR"`
+	CacheNamespaces []string `envconfig:"CACHE_NAMESPACES"`
 }
 
 // Analytics captures details of analytics endpoint(s)
