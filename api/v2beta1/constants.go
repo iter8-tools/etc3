@@ -14,7 +14,7 @@ limitations under the License.
 
 // constants.go - values of constants used in experiment model
 
-package v2alpha2
+package v2beta1
 
 // TestingPatternType identifies the type of experiment type
 // +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance
@@ -35,7 +35,7 @@ const (
 )
 
 // ValidTestingPatternTypes are legal strategy types iter8 is aware of
-// Should match list in github.com/iter8-tools/etc3/api/v2alpha2 (cf. constants.go)
+// Should match list in github.com/iter8-tools/etc3/api/v2beta1 (cf. constants.go)
 var ValidTestingPatternTypes []TestingPatternType = []TestingPatternType{
 	TestingPatternCanary,
 	TestingPatternAB,

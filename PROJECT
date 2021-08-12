@@ -7,16 +7,15 @@ resources:
 - api:
     crdVersion: v1
     namespaced: true
-  controller: true
   domain: iter8.tools
   kind: Experiment
-  path: github.com/iter8-tools/etc3/api/v2alpha2
-  version: v2alpha2
+  path: github.com/iter8-tools/etc3/api/v2beta1
+  version: v2beta1
 - api:
     crdVersion: v1
     namespaced: true
   domain: iter8.tools
   kind: Metric
-  path: github.com/iter8-tools/etc3/api/v2alpha2
-  version: v2alpha2
+  path: github.com/iter8-tools/etc3/api/v2beta1
+  version: v2beta1
 version: "3"

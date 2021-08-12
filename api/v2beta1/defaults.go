@@ -15,7 +15,7 @@ limitations under the License.
 // defaults.go - methods to get values for optional spec fields that return a default value when none set
 //             - methods to initialize spec fields with default or derived values
 
-package v2alpha2
+package v2beta1
 
 import (
 	"time"

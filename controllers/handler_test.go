@@ -17,7 +17,7 @@ package controllers
 import (
 	"fmt"
 
-	v2alpha2 "github.com/iter8-tools/etc3/api/v2alpha2"
+	v2beta1 "github.com/iter8-tools/etc3/api/v2beta1"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,7 +35,7 @@ var _ = Describe("Handlers Run", func() {
 	BeforeEach(func() {
 		namespace = "default"
 
-		k8sClient.DeleteAllOf(ctx(), &v2alpha2.Experiment{}, client.InNamespace(namespace))
+		k8sClient.DeleteAllOf(ctx(), &v2beta1.Experiment{}, client.InNamespace(namespace))
 	})
 
 	Context("When an experiment with a start handler runs", func() {
@@ -44,10 +44,10 @@ var _ = Describe("Handlers Run", func() {
 			name, target := "has-start-handler", "has-start-handler"
 			handler := "start"
 			iterations, loops := int32(2), int32(1)
-			experiment := v2alpha2.NewExperiment(name, namespace).
+			experiment := v2beta1.NewExperiment(name, namespace).
 				WithTarget(target).
-				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithAction("start", []v2alpha2.TaskSpec{}).
+				WithTestingPattern(v2beta1.TestingPatternConformance).
+				WithAction("start", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()
@@ -79,10 +79,10 @@ var _ = Describe("Handlers Run", func() {
 			name, target := "has-finish-handler", "has-finish-handler"
 			handler := "finish"
 			iterations, loops := int32(2), int32(1)
-			experiment := v2alpha2.NewExperiment(name, namespace).
+			experiment := v2beta1.NewExperiment(name, namespace).
 				WithTarget(target).
-				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithAction("finish", []v2alpha2.TaskSpec{}).
+				WithTestingPattern(v2beta1.TestingPatternConformance).
+				WithAction("finish", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()
@@ -106,7 +106,7 @@ var _ = Describe("Handlers Run", func() {
 			}, 20).Should(BeTrue())
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
-				return hasValue(name, namespace, func(exp *v2alpha2.Experiment) bool {
+				return hasValue(name, namespace, func(exp *v2beta1.Experiment) bool {
 					return exp.Status.GetCompletedIterations() == iterations*loops
 				})
 			}, 20).Should(BeTrue())
@@ -119,10 +119,10 @@ var _ = Describe("Handlers Run", func() {
 			handler := "loop"
 			iterations, loops := int32(1), int32(2)
 			testLoop := 1
-			experiment := v2alpha2.NewExperiment(name, namespace).
+			experiment := v2beta1.NewExperiment(name, namespace).
 				WithTarget(target).
-				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithAction("loop", []v2alpha2.TaskSpec{}).
+				WithTestingPattern(v2beta1.TestingPatternConformance).
+				WithAction("loop", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
 				WithBaselineVersion("baseline", nil).
 				Build()

@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha2_test
+package v2beta1
 
 import (
 	"context"
@@ -23,7 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -45,7 +44,7 @@ var _ = Describe("Metrics Not Created When Invalid", func() {
 		"invalid7.yaml": "spec.authType is not Basic/Bearer/APIKey",
 	} {
 		Context("When "+feature, func() {
-			metric := v2alpha2.Metric{}
+			metric := Metric{}
 			readMetricFromFile(path.Join(testMetricsDir, file), &metric)
 
 			It("should fail to create", func() {
@@ -62,18 +61,18 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 	url := "url"
 
 	Context("When metric is valid", func() {
-		metric := v2alpha2.NewMetric("test", "default").
+		metric := NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha2.NamedValue{{
+			WithParams([]NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha2.GaugeMetricType).
+			WithType(GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
 			WithURLTemplate(&url).
-			WithMock([]v2alpha2.NamedLevel{
+			WithMock([]NamedLevel{
 				{
 					Name:  "sample-app-v1",
 					Level: resource.MustParse("2.5"),
@@ -98,14 +97,14 @@ var _ = Describe("Metrics with method", func() {
 	url := "url"
 
 	Context("When a metric is created with the method field", func() {
-		metric := v2alpha2.NewMetric("test", "default").
+		metric := NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha2.NamedValue{{
+			WithParams([]NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha2.GaugeMetricType).
-			WithMethod(v2alpha2.POSTMethodType).
+			WithType(GaugeMetricType).
+			WithMethod(POSTMethodType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -114,24 +113,24 @@ var _ = Describe("Metrics with method", func() {
 
 		It("the method field is preserved", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			fetchedMetric := NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
 			}, fetchedMetric)
-			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2alpha2.POSTMethodType))
+			Expect(*fetchedMetric.Spec.Method).Should(Equal(POSTMethodType))
 			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
 
 	Context("When a metric is created without the method field", func() {
-		metric := v2alpha2.NewMetric("test", "default").
+		metric := NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha2.NamedValue{{
+			WithParams([]NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha2.GaugeMetricType).
+			WithType(GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -140,12 +139,12 @@ var _ = Describe("Metrics with method", func() {
 
 		It("the method field is defaulted to GET", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			fetchedMetric := NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
 			}, fetchedMetric)
-			Expect(*fetchedMetric.Spec.Method).Should(Equal(v2alpha2.GETMethodType))
+			Expect(*fetchedMetric.Spec.Method).Should(Equal(GETMethodType))
 			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
@@ -157,15 +156,15 @@ var _ = Describe("Metrics with authtype", func() {
 	url := "url"
 
 	Context("When a metric is created with the authType field", func() {
-		metric := v2alpha2.NewMetric("test", "default").
+		metric := NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha2.NamedValue{{
+			WithParams([]NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha2.GaugeMetricType).
-			WithMethod(v2alpha2.POSTMethodType).
-			WithAuthType(v2alpha2.BasicAuthType).
+			WithType(GaugeMetricType).
+			WithMethod(POSTMethodType).
+			WithAuthType(BasicAuthType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -174,24 +173,24 @@ var _ = Describe("Metrics with authtype", func() {
 
 		It("the authtype field is preserved", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			fetchedMetric := NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
 			}, fetchedMetric)
-			Expect(*fetchedMetric.Spec.AuthType).Should(Equal(v2alpha2.BasicAuthType))
+			Expect(*fetchedMetric.Spec.AuthType).Should(Equal(BasicAuthType))
 			k8sClient.Delete(ctx, metric) // cleanup
 		})
 	})
 
 	Context("When a metric is created without AuthType field", func() {
-		metric := v2alpha2.NewMetric("test", "default").
+		metric := NewMetric("test", "default").
 			WithDescription("valid metric").
-			WithParams([]v2alpha2.NamedValue{{
+			WithParams([]NamedValue{{
 				Name:  "foo",
 				Value: "bar",
 			}}).
-			WithType(v2alpha2.GaugeMetricType).
+			WithType(GaugeMetricType).
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
@@ -200,7 +199,7 @@ var _ = Describe("Metrics with authtype", func() {
 
 		It("the AuthType field is not defaulted", func() {
 			Expect(k8sClient.Create(ctx, metric)).Should(Succeed())
-			fetchedMetric := v2alpha2.NewMetric("test", "default").Build()
+			fetchedMetric := NewMetric("test", "default").Build()
 			k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
@@ -211,7 +210,7 @@ var _ = Describe("Metrics with authtype", func() {
 	})
 })
 
-func readMetricFromFile(templateFile string, job *v2alpha2.Metric) error {
+func readMetricFromFile(templateFile string, job *Metric) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err

@@ -14,7 +14,7 @@ limitations under the License.
 
 // experiment_types.go - go model for experiment CRD
 
-package v2alpha2
+package v2beta1
 
 // NamedValue name/value to be used in constructing a REST query to backend metrics server
 type NamedValue struct {

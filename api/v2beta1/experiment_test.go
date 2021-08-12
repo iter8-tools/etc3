@@ -12,15 +12,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v2alpha2_test
+package v2beta1
 
 import (
 	"context"
 	"io/ioutil"
+	"path"
 
 	"github.com/ghodss/yaml"
-	"github.com/iter8-tools/etc3/api/v2alpha2"
-	"github.com/iter8-tools/etc3/controllers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -55,8 +54,9 @@ var _ = Describe("Experiment", func() {
 		Context(tc.feature, func() {
 			It("should deal "+tc.feature, func() {
 				By("reading experiment")
-				s := v2alpha2.Experiment{}
-				Expect(readExperimentFromFile(controllers.CompletePath("../../test/data", tc.file), &s)).To(Succeed())
+				s := Experiment{}
+				path.Join("..", "..", "test", "data", tc.file)
+				Expect(readExperimentFromFile(path.Join("..", "..", "test", "data", tc.file), &s)).To(Succeed())
 
 				By("creating the experiment")
 				Expect(k8sClient.Create(ctx, &s)).Should(Succeed())
@@ -67,8 +67,8 @@ var _ = Describe("Experiment", func() {
 				By("fetching the experiment with json fields")
 				exp2 := &unstructured.Unstructured{}
 				exp2.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v2alpha2.GroupVersion.Group,
-					Version: v2alpha2.GroupVersion.Version,
+					Group:   GroupVersion.Group,
+					Version: GroupVersion.Version,
 					Kind:    "Experiment",
 				})
 				Expect(k8sClient.Get(ctx, types.NamespacedName{
@@ -88,7 +88,7 @@ var _ = Describe("Experiment", func() {
 
 })
 
-func readExperimentFromFile(templateFile string, exp *v2alpha2.Experiment) error {
+func readExperimentFromFile(templateFile string, exp *Experiment) error {
 	yamlFile, err := ioutil.ReadFile(templateFile)
 	if err != nil {
 		return err

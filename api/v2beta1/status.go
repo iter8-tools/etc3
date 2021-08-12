@@ -14,7 +14,7 @@ limitations under the License.
 
 // status.go - methods to get and update status fields
 
-package v2alpha2
+package v2beta1
 
 import (
 	"fmt"
