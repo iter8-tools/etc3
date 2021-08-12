@@ -4,6 +4,7 @@ metadata:
   name: exp-with-builtins
   namespace: default
 spec:
+  versions: ["baseline", "candidate"]
   strategy:
     testingPattern: Canary
     actions:

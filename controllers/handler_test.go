@@ -45,6 +45,7 @@ var _ = Describe("Handlers Run", func() {
 			handler := "start"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2beta1.NewExperiment(name, namespace).
+				WithVersion("baseline").
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction("start", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
@@ -79,6 +80,7 @@ var _ = Describe("Handlers Run", func() {
 			handler := "finish"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2beta1.NewExperiment(name, namespace).
+				WithVersion("baseline").
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction("finish", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
@@ -118,6 +120,7 @@ var _ = Describe("Handlers Run", func() {
 			iterations, loops := int32(1), int32(2)
 			testLoop := 1
 			experiment := v2beta1.NewExperiment(name, namespace).
+				WithVersion("baseline").
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction("loop", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).

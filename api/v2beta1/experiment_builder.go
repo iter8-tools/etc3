@@ -43,6 +43,13 @@ func (b *ExperimentBuilder) Build() *Experiment {
 	return (*Experiment)(b)
 }
 
+// With Version ..
+func (b *ExperimentBuilder) WithVersion(version string) *ExperimentBuilder {
+	b.Spec.Versions = append(b.Spec.Versions, version)
+
+	return b
+}
+
 // WithTestingPattern ..
 func (b *ExperimentBuilder) WithTestingPattern(testingPattern TestingPatternType) *ExperimentBuilder {
 	b.Spec.Strategy.TestingPattern = testingPattern

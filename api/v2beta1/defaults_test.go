@@ -38,6 +38,7 @@ var _ = Describe("Stages", func() {
 var _ = Describe("Initialization", func() {
 	Context("Before Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
+			WithVersion("baseline").WithVersion("candidate").
 			WithTestingPattern(TestingPatternCanary).
 			Build()
 		Specify("status values should be unset", func() {
@@ -65,6 +66,7 @@ var _ = Describe("Initialization", func() {
 
 	Context("After Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
+			WithVersion("baseline").WithVersion("candidate").
 			WithTestingPattern(TestingPatternCanary).
 			WithRequestCount("request-count").
 			Build()
@@ -101,7 +103,8 @@ var _ = Describe("Initialization", func() {
 
 var _ = Describe("VersionInfo", func() {
 	Context("When count versions", func() {
-		builder := NewExperiment("test", "default")
+		builder := NewExperiment("test", "default").
+			WithVersion("baseline").WithVersion("candidate")
 		It("should count correctly", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
@@ -141,7 +144,8 @@ var _ = Describe("Criteria", func() {
 	var jqe string = "expr"
 
 	Context("Criteria", func() {
-		builder := NewExperiment("test", "default")
+		builder := NewExperiment("test", "default").
+			WithVersion("baseline").WithVersion("candidate")
 		It("", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.Criteria).Should(BeNil())
@@ -192,6 +196,7 @@ var _ = Describe("Generated Code", func() {
 		Specify("the copy should be the same as the original", func() {
 			testStr := "test"
 			experimentBuilder := NewExperiment("test", "default").
+				WithVersion("baseline").WithVersion("candidate").
 				WithTestingPattern(TestingPatternCanary).
 				WithDeploymentPattern(DeploymentPatternFixedSplit).
 				WithDuration(3, 2, 1).

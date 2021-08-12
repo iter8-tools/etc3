@@ -42,6 +42,7 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 		var objRef *corev1.ObjectReference
 		JustBeforeEach(func() {
 			experiment = v2beta1.NewExperiment(name, namespace).
+				WithVersion("baseline").WithVersion("candidate").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				Build()
@@ -131,6 +132,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 				FieldPath:  ".spec.Duration.bad",
 			}
 			experiment := v2beta1.NewExperiment(name, namespace).
+				WithVersion("baseline").WithVersion("candidate").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithBaselineVersion("baseline", objRefb).
 				WithCandidateVersion("candidate-1", objRef1).
@@ -156,6 +158,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 				FieldPath:  ".spec.duration.maxLoops",
 			}
 			experiment := v2beta1.NewExperiment(name, namespace).
+				WithVersion("baseline").WithVersion("candidate").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
@@ -187,6 +190,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			}
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithTestingPattern(v2beta1.TestingPatternCanary).
+				WithVersion("baseline").WithVersion("candidate").
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -217,6 +221,7 @@ var _ = Describe("Updating weights from reconcile", func() {
 			}
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithTestingPattern(v2beta1.TestingPatternCanary).
+				WithVersion("baseline").WithVersion("candidate").WithVersion("candidate2").
 				WithDuration(10, 5, 3).
 				WithBaselineVersion("baseline", objRef).
 				WithCandidateVersion("candidate", nil).
@@ -246,6 +251,7 @@ var _ = Describe("patch", func() {
 		JustBeforeEach(func() {
 			bldr = v2beta1.NewExperiment(name, namespace).
 				WithTestingPattern(v2beta1.TestingPatternCanary).
+				WithVersion("baseline").WithVersion("candidate").
 				WithDuration(10, 5, 3)
 
 			objRef = &corev1.ObjectReference{
@@ -309,6 +315,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When algorithm is FixedSplit", func() {
 		experiment := v2beta1.NewExperiment("noVersionInfo", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDeploymentPattern(v2beta1.DeploymentPatternFixedSplit).
 			Build()
 		It("should succeed without error", func() {
@@ -319,6 +326,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When no versionInfo", func() {
 		experiment := v2beta1.NewExperiment("noVersionInfo", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			Build()
 		It("Should fail with error", func() {
 			err := redistributeWeight(ctx, experiment, restCfg)
@@ -329,6 +337,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When WeightObjRef is not set", func() {
 		experiment := v2beta1.NewExperiment("noWeightObRef", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", nil).
 			Build()
@@ -343,6 +352,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When WeightObjRef set but no FieldPath", func() {
 		experiment := v2beta1.NewExperiment("noFieldPath", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -362,6 +372,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When full WeightObjRef set but no weight recommendation", func() {
 		experiment := v2beta1.NewExperiment("noWeightRecommendation", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -382,6 +393,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When full WeightObjRef and weight recommendation matches current value", func() {
 		experiment := v2beta1.NewExperiment("recommendationIsCurrent", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -403,6 +415,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When full WeightObjRef and weight recommendation does not match the current value", func() {
 		experiment := v2beta1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -424,6 +437,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When multiple versions require updates to the same object", func() {
 		experiment := v2beta1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
@@ -463,6 +477,7 @@ var _ = Describe("Weight Patching", func() {
 	Context("When multiple versions require updates to different objects", func() {
 		experiment := v2beta1.NewExperiment("recommendationNotCurrent", namespace).
 			WithTestingPattern(v2beta1.TestingPatternCanary).
+			WithVersion("baseline").WithVersion("candidate").
 			WithDuration(10, 0, 1).
 			WithBaselineVersion("baseline", &corev1.ObjectReference{
 				APIVersion: "networking.istio.io/v1alpha3",
