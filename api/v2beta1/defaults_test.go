@@ -38,7 +38,6 @@ var _ = Describe("Stages", func() {
 var _ = Describe("Initialization", func() {
 	Context("Before Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
-			WithTarget("target").
 			WithTestingPattern(TestingPatternCanary).
 			Build()
 		Specify("status values should be unset", func() {
@@ -66,7 +65,6 @@ var _ = Describe("Initialization", func() {
 
 	Context("After Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
-			WithTarget("target").
 			WithTestingPattern(TestingPatternCanary).
 			WithRequestCount("request-count").
 			Build()
@@ -77,7 +75,7 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Status.InitTime).ShouldNot(BeNil())
 			Expect(experiment.Status.LastUpdateTime).ShouldNot(BeNil())
 			Expect(experiment.Status.CompletedIterations).ShouldNot(BeNil())
-			Expect(len(experiment.Status.Conditions)).Should(Equal(3))
+			Expect(len(experiment.Status.Conditions)).Should(Equal(2))
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsTrue()).Should(Equal(false))
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsFalse()).Should(Equal(true))
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsUnknown()).Should(Equal(false))
@@ -103,7 +101,7 @@ var _ = Describe("Initialization", func() {
 
 var _ = Describe("VersionInfo", func() {
 	Context("When count versions", func() {
-		builder := NewExperiment("test", "default").WithTarget("target")
+		builder := NewExperiment("test", "default")
 		It("should count correctly", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
@@ -143,7 +141,7 @@ var _ = Describe("Criteria", func() {
 	var jqe string = "expr"
 
 	Context("Criteria", func() {
-		builder := NewExperiment("test", "default").WithTarget("target")
+		builder := NewExperiment("test", "default")
 		It("", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.Criteria).Should(BeNil())
@@ -194,7 +192,6 @@ var _ = Describe("Generated Code", func() {
 		Specify("the copy should be the same as the original", func() {
 			testStr := "test"
 			experimentBuilder := NewExperiment("test", "default").
-				WithTarget("copy").
 				WithTestingPattern(TestingPatternCanary).
 				WithDeploymentPattern(DeploymentPatternFixedSplit).
 				WithDuration(3, 2, 1).

@@ -4,7 +4,6 @@ metadata:
   name: exp
   namespace: default
 spec:
-  target: default/my-model
   strategy:
     testingPattern: Canary
     actions:

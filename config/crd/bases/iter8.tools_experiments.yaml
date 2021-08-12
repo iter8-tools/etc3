@@ -20,9 +20,6 @@ spec:
     - jsonPath: .spec.strategy.testingPattern
       name: type
       type: string
-    - jsonPath: .spec.target
-      name: target
-      type: string
     - jsonPath: .status.stage
       name: stage
       type: string
@@ -239,11 +236,6 @@ spec:
                 required:
                 - testingPattern
                 type: object
-              target:
-                description: Target is used to enable concurrent experimentation Two
-                  experiments cannot be running concurrently for the same target.
-                minLength: 1
-                type: string
               versionInfo:
                 description: VersionInfo is information about versions that is typically
                   provided by the domain start handler
@@ -387,7 +379,6 @@ spec:
                 type: object
             required:
             - strategy
-            - target
             type: object
           status:
             description: ExperimentStatus defines the observed state of Experiment
@@ -634,7 +625,6 @@ spec:
                       enum:
                       - Completed
                       - Failed
-                      - TargetAcquired
                       type: string
                   required:
                   - status

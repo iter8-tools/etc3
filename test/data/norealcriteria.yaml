@@ -4,7 +4,6 @@ metadata:
   name: norealcriteria
   namespace: default
 spec:
-  target: target
   strategy:
     testingPattern: Conformance
   criteria:

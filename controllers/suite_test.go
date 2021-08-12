@@ -211,31 +211,6 @@ var _ = AfterSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-func isDeployed(name string, ns string) bool {
-	exp := &v2beta1.Experiment{}
-	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	return err == nil
-}
-
-func hasTarget(name string, ns string) bool {
-	exp := &v2beta1.Experiment{}
-	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-
-	return exp.Status.GetCondition(v2beta1.ExperimentConditionTargetAcquired).IsTrue()
-}
-
-func completes(name string, ns string) bool {
-	exp := &v2beta1.Experiment{}
-	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-	return exp.Status.GetCondition(v2beta1.ExperimentConditionExperimentCompleted).IsTrue()
-}
-
 func fails(name string, ns string) bool {
 	exp := &v2beta1.Experiment{}
 	err := k8sClient.Get(ctx(), types.NamespacedName{Name: name, Namespace: ns}, exp)
@@ -250,13 +225,6 @@ func fails(name string, ns string) bool {
 
 func issuedEvent(message string) bool {
 	return containsSubString(events, message)
-}
-
-func isDeleted(name string, ns string) bool {
-	exp := &v2beta1.Experiment{}
-	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	return err != nil &&
-		(errors.IsNotFound(err) || errors.IsGone(err))
 }
 
 type check func(*v2beta1.Experiment) bool
