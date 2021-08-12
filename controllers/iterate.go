@@ -36,7 +36,7 @@ func moreIterationsNeeded(instance *v2alpha2.Experiment) bool {
 // determine if a loop is completed by determing if the number of iterations executed
 // is a multiple of duration.iterationsPerLoop
 func completedLoop(instance *v2alpha2.Experiment) (int, bool) {
-	if 0 == instance.Status.GetCompletedIterations()%instance.Spec.GetIterationsPerLoop() {
+	if instance.Status.GetCompletedIterations()%instance.Spec.GetIterationsPerLoop() == 0 {
 		return int(instance.Status.GetCompletedIterations() / instance.Spec.GetIterationsPerLoop()), true
 	}
 	return -1, false
@@ -82,7 +82,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2alph
 
 	if !r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
 		// not enough time has passed since the last iteration, wait
-		return ctrl.Result{}, errors.New("Insufficient time has passed since previous iteration")
+		return ctrl.Result{}, errors.New("insufficient time has passed since previous iteration")
 	}
 
 	// TODO  GET CURRENT WEIGHTS (from cluster)
@@ -161,10 +161,6 @@ func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instanc
 		}
 	}
 	return nil
-}
-
-func hasCriteria(instance *v2alpha2.Experiment) bool {
-	return instance.Spec.Criteria != nil
 }
 
 func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *v2alpha2.Experiment) {

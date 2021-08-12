@@ -214,10 +214,7 @@ var _ = AfterSuite(func() {
 func isDeployed(name string, ns string) bool {
 	exp := &v2alpha2.Experiment{}
 	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func hasTarget(name string, ns string) bool {
@@ -237,18 +234,6 @@ func completes(name string, ns string) bool {
 		return false
 	}
 	return exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue()
-}
-
-func completesSuccessfully(name string, ns string) bool {
-	exp := &v2alpha2.Experiment{}
-	err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-	completed := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted).IsTrue()
-	successful := exp.Status.GetCondition(v2alpha2.ExperimentConditionExperimentFailed).IsFalse()
-
-	return completed && successful
 }
 
 func fails(name string, ns string) bool {
@@ -283,12 +268,6 @@ func hasValue(name string, ns string, check check) bool {
 		return false
 	}
 	return check(exp)
-}
-
-func isRunning(name string, ns string) bool {
-	return hasValue(name, ns, func(exp *v2alpha2.Experiment) bool {
-		return exp.Status.Stage != nil && *exp.Status.Stage == v2alpha2.ExperimentStageRunning
-	})
 }
 
 func ctx() context.Context {

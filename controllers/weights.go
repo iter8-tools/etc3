@@ -46,10 +46,7 @@ func shouldRedistribute(instance *v2alpha2.Experiment) bool {
 		return false
 	}
 	algorithm := instance.Spec.GetDeploymentPattern()
-	if algorithm == v2alpha2.DeploymentPatternFixedSplit {
-		return false
-	}
-	return true
+	return algorithm != v2alpha2.DeploymentPatternFixedSplit
 }
 
 func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, restCfg *rest.Config) error {
@@ -64,7 +61,7 @@ func redistributeWeight(ctx context.Context, instance *v2alpha2.Experiment, rest
 
 	// Get spec.versionInfo; it should be present by now
 	if versionInfo := instance.Spec.VersionInfo; versionInfo == nil {
-		return errors.New("Cannot redistribute weight; no version information present")
+		return errors.New("cannot redistribute weight; no version information present")
 	}
 
 	// For each version, get the patch to apply
@@ -118,7 +115,7 @@ func addPatch(ctx context.Context, instance *v2alpha2.Experiment, version v2alph
 	if weight == nil {
 		log.Info("Unable to find weight recommendation.", "version", version)
 		// fatal error; expected a weight recommendation for all versions
-		return errors.New("No weight recommendation provided")
+		return errors.New("no weight recommendation provided")
 	}
 	log.Info("addPatch", "version", version.Name, "recommended weight", weight)
 
@@ -286,7 +283,7 @@ func observeWeight(ctx context.Context, objRef *corev1.ObjectReference, namespac
 	// quit if nothing there
 	if len(objRef.FieldPath) == 0 {
 		log.Error(err, "Unable to read zero length field", "objRef", objRef, "obj", obj)
-		return nil, errors.New("No fieldpath specified in referencing object")
+		return nil, errors.New("no fieldpath specified in referencing object")
 	}
 
 	// create JSONPath object and parse template (fieldpath)
@@ -367,7 +364,7 @@ func updateObservedWeights(ctx context.Context, instance *v2alpha2.Experiment, r
 	} else if len(missing) > 1 {
 		log.Info("Multiple weights could not be read from cluster", "missing", missing)
 		if *instance.Spec.Strategy.DeploymentPattern != v2alpha2.DeploymentPatternFixedSplit {
-			return errors.New("Unable to read version weights; insufficient number of weightObjectRef specified")
+			return errors.New("unable to read version weights; insufficient number of weightObjectRef specified")
 		}
 	}
 
