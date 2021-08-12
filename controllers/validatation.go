@@ -106,10 +106,10 @@ func (r *ExperimentReconciler) AreTasksValid(ctx context.Context, instance *v2al
 		for _, t := range a {
 			num := 0
 			if t.Task != nil && len(*t.Task) > 0 {
-				num += 1
+				num++
 			}
 			if t.Run != nil && len(*t.Run) > 0 {
-				num += 1
+				num++
 			}
 			if num != 1 {
 				return false
