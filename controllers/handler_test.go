@@ -41,11 +41,10 @@ var _ = Describe("Handlers Run", func() {
 	Context("When an experiment with a start handler runs", func() {
 		Specify("the start handler is run", func() {
 			By("Defining an experiment with a start handler")
-			name, target := "has-start-handler", "has-start-handler"
+			name := "has-start-handler"
 			handler := "start"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2beta1.NewExperiment(name, namespace).
-				WithTarget(target).
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction("start", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
@@ -76,11 +75,10 @@ var _ = Describe("Handlers Run", func() {
 		Specify("the finish handler is run", func() {
 			By("Defining an experiment with a finish handler")
 			// for simplicity, no start handler
-			name, target := "has-finish-handler", "has-finish-handler"
+			name := "has-finish-handler"
 			handler := "finish"
 			iterations, loops := int32(2), int32(1)
 			experiment := v2beta1.NewExperiment(name, namespace).
-				WithTarget(target).
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction("finish", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
@@ -115,12 +113,11 @@ var _ = Describe("Handlers Run", func() {
 	Context("When an experiment with a loop handler passes loop boundary", func() {
 		Specify("the loop handler is started", func() {
 			By("Defining an experiment with a loop handler")
-			name, target := "has-loop-handler", "has-loop-handler"
+			name := "has-loop-handler"
 			handler := "loop"
 			iterations, loops := int32(1), int32(2)
 			testLoop := 1
 			experiment := v2beta1.NewExperiment(name, namespace).
-				WithTarget(target).
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction("loop", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).

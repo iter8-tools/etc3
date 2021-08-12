@@ -23,7 +23,7 @@ var _ = Describe("CurrentIterations", func() {
 	Context("Iteration Utilities", func() {
 		It("Work as Expected", func() {
 			By("Creating an experiment")
-			experiment := NewExperiment("test", "default").WithTarget("target").Build()
+			experiment := NewExperiment("test", "default").Build()
 
 			By("Verifying that no iterations have been completed")
 			Expect(experiment.Status.GetCompletedIterations()).Should(Equal(int32(0)))
@@ -42,7 +42,6 @@ var _ = Describe("Winner Determination", func() {
 	var experiment *Experiment
 	BeforeEach(func() {
 		experiment = NewExperiment("test", "default").
-			WithTarget("target").
 			WithBaselineVersion("baseline", nil).
 			WithCandidateVersion("candiate", nil).
 			WithCandidateVersion("winner", nil).

@@ -38,7 +38,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		var bldr *v2beta1.ExperimentBuilder
 		BeforeEach(func() {
 			bldr = v2beta1.NewExperiment("conformance-test", testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternConformance)
 		})
 		It("should be invalid when no versions are specified", func() {
@@ -82,7 +81,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		var bldr *v2beta1.ExperimentBuilder
 		BeforeEach(func() {
 			bldr = v2beta1.NewExperiment("ab-test", testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternAB)
 		})
 		It("should be invalid when no versions are specified", func() {
@@ -150,7 +148,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		var bldr *v2beta1.ExperimentBuilder
 		BeforeEach(func() {
 			bldr = v2beta1.NewExperiment("canary-test", testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternCanary)
 		})
 
@@ -206,7 +203,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		var bldr *v2beta1.ExperimentBuilder
 		BeforeEach(func() {
 			bldr = v2beta1.NewExperiment("abn-test", testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternABN)
 		})
 
@@ -277,7 +273,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 	Context("Experiment has common names", func() {
 		experiment := v2beta1.NewExperiment("abn-test", testNamespace).
-			WithTarget("target").
 			WithBaselineVersion("baseline", nil).
 			WithCandidateVersion("candidate", nil).
 			WithTestingPattern(v2beta1.TestingPatternABN).
@@ -292,7 +287,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 	Context("Spec.VersionInfo.*.WeightObjRef.FieldPath validity", func() {
 		bldr := v2beta1.NewExperiment("invalid-fieldpath", testNamespace).
-			WithTarget("target").
 			WithTestingPattern(v2beta1.TestingPatternConformance)
 		It("Should reject the experiment if fieldpath starts without '.'", func() {
 			experiment := bldr.WithBaselineVersion("baseline", &v1.ObjectReference{

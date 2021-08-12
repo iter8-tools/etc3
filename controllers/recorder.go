@@ -49,13 +49,6 @@ func (r *ExperimentReconciler) recordExperimentProgress(ctx context.Context, ins
 		reason, messageFormat, messageA...)
 }
 
-func (r *ExperimentReconciler) recordTargetAcquired(ctx context.Context, instance *v2beta1.Experiment,
-	messageFormat string, messageA ...interface{}) {
-	r.recordEvent(ctx, instance,
-		v2beta1.ExperimentConditionTargetAcquired, corev1.ConditionTrue,
-		v2beta1.ReasonTargetAcquired, messageFormat, messageA...)
-}
-
 // record the event in a variety of ways. Note that we do not want to report an event more than once
 // in a log message, kubernetes event or notification. Consequently, we must pay attention to whether
 // or not we are recording an event for the first time or repeating it. We do this by first updating

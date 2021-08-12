@@ -46,7 +46,6 @@ var _ = Describe("Experiment Validation", func() {
 		testNamespace := "default"
 		It("Should fail to create experiment", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(10, 0, 1).
 				Build()
@@ -60,7 +59,6 @@ var _ = Describe("Experiment Validation", func() {
 		It("Should succeed in creating experiment", func() {
 			ctx := context.Background()
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(10, 1, 1).
 				Build()
@@ -146,7 +144,6 @@ var _ = Describe("Experiment Validation", func() {
 			testName := "late-initialization"
 			testNamespace := "default"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount("request-count").
 				WithReward(*reward, v2beta1.PreferredDirectionHigher).
@@ -162,7 +159,7 @@ var _ = Describe("Experiment Validation", func() {
 					return exp.Status.InitTime != nil &&
 						exp.Status.LastUpdateTime != nil &&
 						exp.Status.CompletedIterations != nil &&
-						len(exp.Status.Conditions) == 3
+						len(exp.Status.Conditions) == 2
 				})
 			}).Should(BeTrue())
 		})
@@ -181,7 +178,6 @@ var _ = Describe("Experiment proceeds", func() {
 			initialInterval := int32(5)
 			modifiedInterval := int32(10)
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithTarget("early-reconcile-targets").
 				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(initialInterval, expectedIterations, 1).
 				WithDeploymentPattern(v2beta1.DeploymentPatternFixedSplit).
@@ -248,7 +244,6 @@ var _ = Describe("Missing criteria.requestCount", func() {
 			Expect(k8sClient.Create(ctx(), metric)).Should(Succeed())
 			By("Defining an experiment with no request count")
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternType(v2beta1.TestingPatternConformance)).
 				WithIndicator(*metric).
 				Build()
@@ -279,7 +274,6 @@ var _ = Describe("Loop Execution", func() {
 			By("Creating experiment")
 			testName = "loops"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithTarget("target").
 				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithBaselineVersion("baseline", nil).
 				WithDuration(1, 1, 3).

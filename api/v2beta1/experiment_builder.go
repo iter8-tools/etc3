@@ -43,13 +43,6 @@ func (b *ExperimentBuilder) Build() *Experiment {
 	return (*Experiment)(b)
 }
 
-// WithTarget sets spec.Target
-func (b *ExperimentBuilder) WithTarget(target string) *ExperimentBuilder {
-	b.Spec.Target = target
-
-	return b
-}
-
 // WithTestingPattern ..
 func (b *ExperimentBuilder) WithTestingPattern(testingPattern TestingPatternType) *ExperimentBuilder {
 	b.Spec.Strategy.TestingPattern = testingPattern

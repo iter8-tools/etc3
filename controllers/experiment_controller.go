@@ -80,7 +80,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Info("Experiment not found")
 			// we make sure to have deleted all jobs and trigger any waiting experiment
 			r.cleanupDeletedExperiments(ctx, instance)
-			r.triggerWaitingExperiments(ctx, nil)
 			return ctrl.Result{}, nil
 		}
 		// other error reading instance; return
@@ -90,11 +89,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	log.Info("Reconcile", "instance", instance)
 	ctx = context.WithValue(ctx, OriginalStatusKey, instance.Status.DeepCopy())
-
-	// // check that there aren't any orphaned handler jobs
-	// // or experiments stuck waiting to acquire a target
-	// r.cleanupDeletedExperiments(ctx, instance)
-	// r.triggerWaitingExperiments(ctx, instance)
 
 	// If instance has never been seen before, initialize status object
 	if instance.Status.InitTime == nil {
@@ -133,14 +127,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// TODO move to validating web hook
 	if !r.IsExperimentValid(ctx, instance) {
 		return r.failExperiment(ctx, instance, nil)
-	}
-
-	// TARGET ACQUISITION
-	// Ensure that we are the only experiment proceding with the same target
-	// If we find another, end request and wait to be triggered again
-	if !r.acquireTarget(ctx, instance) {
-		// do not have the target, quit
-		return r.endRequest(ctx, instance)
 	}
 
 	// advance stage from Waiting to Initializing
@@ -320,7 +306,6 @@ func (r *ExperimentReconciler) endExperiment(ctx context.Context, instance *v2be
 		log.Info("Updating stage advance to: Completed")
 		r.recordExperimentCompleted(ctx, instance, msg)
 		r.updateStatus(ctx, instance)
-		r.triggerNextExperiment(ctx, instance.Spec.Target, instance)
 	}
 
 	return r.endRequest(ctx, instance)
