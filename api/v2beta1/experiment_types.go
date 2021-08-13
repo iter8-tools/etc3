@@ -31,7 +31,7 @@ import (
 // Experiment is the Schema for the experiments API
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".spec.strategy.testingPattern"
+// +kubebuilder:printcolumn:name="type",type="string",JSONPath=".status.testingPattern"
 // +kubebuilder:printcolumn:name="stage",type="string",JSONPath=".status.stage"
 // +kubebuilder:printcolumn:name="completed iterations",type="string",JSONPath=".status.completedIterations"
 // +kubebuilder:printcolumn:name="message",type="string",JSONPath=".status.message"
@@ -115,9 +115,6 @@ type VersionDetail struct {
 // Strategy identifies the type of experiment and its properties
 // The behavior of the experiment can be modified by setting advanced properties.
 type Strategy struct {
-	// TestingPattern is the testing pattern of an experiment
-	TestingPattern TestingPatternType `json:"testingPattern" yaml:"testingPattern"`
-
 	// DeploymentPattern is the deployment pattern of an experiment.
 	// It takes effect when the testing pattern is one of Canary, A/B or A/B/n.
 	// It defaults to Progressive.
@@ -286,6 +283,9 @@ type ExperimentStatus struct {
 	// Stage indicates where the experiment is in its process of execution
 	// +optional
 	Stage *ExperimentStageType `json:"stage,omitempty" yaml:"stage,omitempty"`
+
+	// TestingPattern identifies the type of experiment being executed
+	TestingPattern *TestingPatternType `json:"testingPattern,omitempty" yaml:"testingPattern,omitempty"`
 
 	// CurrentIteration is the current iteration number.
 	// It is undefined until the experiment starts.

@@ -507,6 +507,11 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 		*out = new(ExperimentStageType)
 		**out = **in
 	}
+	if in.TestingPattern != nil {
+		in, out := &in.TestingPattern, &out.TestingPattern
+		*out = new(TestingPatternType)
+		**out = **in
+	}
 	if in.CompletedIterations != nil {
 		in, out := &in.CompletedIterations, &out.CompletedIterations
 		*out = new(int32)

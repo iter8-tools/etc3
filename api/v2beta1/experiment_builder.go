@@ -50,13 +50,6 @@ func (b *ExperimentBuilder) WithVersion(version string) *ExperimentBuilder {
 	return b
 }
 
-// WithTestingPattern ..
-func (b *ExperimentBuilder) WithTestingPattern(testingPattern TestingPatternType) *ExperimentBuilder {
-	b.Spec.Strategy.TestingPattern = testingPattern
-
-	return b
-}
-
 // WithDeploymentPattern ..
 func (b *ExperimentBuilder) WithDeploymentPattern(deploymentPattern DeploymentPatternType) *ExperimentBuilder {
 	b.Spec.Strategy.DeploymentPattern = &deploymentPattern

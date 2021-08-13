@@ -23,79 +23,44 @@ import (
 )
 
 // IsExperimentValid verifies that instance.Spec is valid; this should be done after late initialization
-// TODO 1. If fixed_split, we have an initial split (or are we just assuming start handler does it?)
-// TODO 2. Warning if no criteria?
-// TODO 3. For ab and abn there is a reward
-// TODO 4. If rollbackOnFailure there is a rollback handler?
+// DONE 1. Validate task specification
 func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *v2beta1.Experiment) bool {
 	return r.AreTasksValid(ctx, instance)
 }
 
 // IsVersionInfoValid verifies that Spec.versionInfo is valid
-// DONE Verify that versionInfo is present
-// DONE Verify that the number of versions (spec.versionInfo) is suitable to the spec.strategy.testingPattern
+// DONE Verify at least one version (this is mostly to ensure tests are valid)
 // DONE Verify that the names of the versions are all unique
-// DONE Verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
-// DONE Verify that each fieldpath starts with '.'
-// TODO Verify any ObjectReferences are existing objects in the cluster
+// DONE Verify that the number of rewards (spec.criteria.rewards) is acceptable
 func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2beta1.Experiment) bool {
-	// Verify that versionInfo is present
-	if instance.Spec.VersionInfo == nil {
-		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "No versionInfo in experiment")
+	// Verify at least one version
+	if len(instance.Spec.Versions) < 1 {
+		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "There must be at least one version")
 		return false
 	}
-	// Verify that the number of versions in Spec.versionInfo is suitable to the Spec.Strategy.Type
-	if !candidatesMatchStrategy(instance.Spec) {
-		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Invalid number of candidates for %s experiment", instance.Spec.Strategy.TestingPattern)
-		return false
-	}
+
 	// Verify that the names of the versionns are all unique
 	if !versionsUnique(instance.Spec) {
 		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Version names are not unique")
 		return false
 	}
 
-	// Verify that the number of rewards (spec.criteria.rewards) is suitable to spec.strategy.testingPattern
+	// Verify that the number of rewards (spec.criteria.rewards) is acceptable
 	if !validNumberOfRewards(instance.Spec) {
-		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Invalid number of rewards for %s experiment", instance.Spec.Strategy.TestingPattern)
+		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Invalid number of rewards (at most 1 allowed)")
 		return false
 	}
 
-	// Verify that any specified fieldpath starts with a '.'
-	b := instance.Spec.VersionInfo.Baseline.WeightObjRef
-	if b != nil && b.FieldPath != "" && b.FieldPath[0] != '.' {
-		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Fieldpaths must start with '.'")
-		return false
-	}
-	for _, c := range instance.Spec.VersionInfo.Candidates {
-		if c.WeightObjRef != nil && len(c.WeightObjRef.FieldPath) != 0 && c.WeightObjRef.FieldPath[0] != '.' {
-			r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Fieldpaths must start with '.'")
-			return false
-		}
-	}
-
-	return true
-}
-
-func candidatesMatchStrategy(s v2beta1.ExperimentSpec) bool {
-	switch s.Strategy.TestingPattern {
-	case v2beta1.TestingPatternConformance:
-		return len(s.VersionInfo.Candidates) == 0
-	case v2beta1.TestingPatternAB, v2beta1.TestingPatternCanary:
-		return len(s.VersionInfo.Candidates) == 1
-	case v2beta1.TestingPatternABN:
-		return len(s.VersionInfo.Candidates) > 0
-	}
 	return true
 }
 
 func versionsUnique(s v2beta1.ExperimentSpec) bool {
-	versions := []string{s.VersionInfo.Baseline.Name}
-	for _, candidate := range s.VersionInfo.Candidates {
-		if containsString(versions, candidate.Name) {
+	versions := []string{}
+	for _, v := range s.Versions {
+		if containsString(versions, v) {
 			return false
 		}
-		versions = append(versions, candidate.Name)
+		versions = append(versions, v)
 	}
 	return true
 }
@@ -119,16 +84,19 @@ func (r *ExperimentReconciler) AreTasksValid(ctx context.Context, instance *v2be
 	return true
 }
 
+// verify that there is at most 1 reward
+// verify that there are no rewards if just 1 version
 func validNumberOfRewards(s v2beta1.ExperimentSpec) bool {
-	switch s.Strategy.TestingPattern {
-	case v2beta1.TestingPatternConformance:
-		return s.Criteria == nil || len(s.Criteria.Rewards) == 0
-	case v2beta1.TestingPatternCanary:
-		return s.Criteria == nil || len(s.Criteria.Rewards) == 0
-	case v2beta1.TestingPatternAB:
-		return s.Criteria != nil && len(s.Criteria.Rewards) == 1
-	case v2beta1.TestingPatternABN:
-		return s.Criteria != nil && len(s.Criteria.Rewards) == 1
+	numRewards := 0
+	if s.Criteria != nil {
+		numRewards = len(s.Criteria.Rewards)
 	}
-	return true
+	numVersions := len(s.Versions)
+
+	// if numVersions is 1 then should be no reward
+	// if numVersions is 2 then can be 1 reward or not
+	// if numVersions is 3 or more then must be 1 reward
+	return numVersions == 1 && numRewards == 0 ||
+		numVersions == 2 && numRewards <= 1 ||
+		numVersions > 2 && numRewards == 1
 }

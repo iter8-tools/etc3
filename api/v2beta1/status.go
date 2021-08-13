@@ -79,8 +79,47 @@ func (e *Experiment) InitializeStatus() {
 	stage := ExperimentStageWaiting
 	e.Status.Stage = &stage
 
+	e.TestingPattern()
+
 	completedIterations := int32(0)
 	e.Status.CompletedIterations = &completedIterations
+}
+
+// TestingPattern assigns a "testing pattern" to the experiment. Note that if the
+// experiment is defined incorrectly, the pattern assigned may be incorrect.
+func (e *Experiment) TestingPattern() TestingPatternType {
+	if e.Status.TestingPattern == nil {
+		// set e.Status.TestingPattern
+		numVersions := len(e.Spec.Versions)
+		hasReward := e.Spec.Criteria != nil && len(e.Spec.Criteria.Rewards) > 0
+		hasObjectives := e.Spec.Criteria != nil && len(e.Spec.Criteria.Objectives) > 0
+
+		testingPattern := TestingPatternSLOValidation
+
+		if hasReward {
+			if !hasObjectives {
+				if numVersions == 2 {
+					testingPattern = TestingPatternAB
+				} else if numVersions > 2 {
+					testingPattern = TestingPatternABN
+				}
+			} else {
+				if numVersions == 2 {
+					testingPattern = TestingPatternHybridAB
+				} else if numVersions > 2 {
+					testingPattern = TestingPatternHybridABN
+				}
+			}
+		}
+
+		// Note that numVersions >= 0 (crd validation ensures this)
+		// If numVersions == 1 and hasReward --> validation error (cf. validNumberOfRewards())
+
+		e.Status.TestingPattern = &testingPattern
+	}
+
+	// return TestingPattern
+	return *e.Status.TestingPattern
 }
 
 // GetCompletedIterations ..

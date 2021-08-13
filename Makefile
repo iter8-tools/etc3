@@ -50,8 +50,8 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code
 	go vet ./...
 
-staticcheck:
-	staticcheck ./...
+staticcheck: sc
+	$(STATICCHECK) ./...
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: manifests generate fmt vet staticcheck ## Run tests.
@@ -96,6 +96,10 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+STATICCHECK = $(shell pwd)/bin/staticcheck
+sc: ## Download staticcheck locally if necessary.
+	$(call go-get-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))

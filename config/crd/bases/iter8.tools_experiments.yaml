@@ -17,7 +17,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.strategy.testingPattern
+    - jsonPath: .status.testingPattern
       name: type
       type: string
     - jsonPath: .status.stage
@@ -205,14 +205,6 @@ spec:
                     - Progressive
                     - BlueGreen
                     type: string
-                  testingPattern:
-                    description: TestingPattern is the testing pattern of an experiment
-                    enum:
-                    - Canary
-                    - A/B
-                    - A/B/N
-                    - Conformance
-                    type: string
                   weights:
                     description: Weights modify the behavior of the traffic split
                       algorithm. Defaults depend on the experiment type.
@@ -233,8 +225,6 @@ spec:
                         minimum: 0
                         type: integer
                     type: object
-                required:
-                - testingPattern
                 type: object
               versionInfo:
                 description: VersionInfo is information about versions that is typically
@@ -866,6 +856,16 @@ spec:
                 description: StartTime is the time when the experiment starts (after
                   the start handler finished) matches
                 format: date-time
+                type: string
+              testingPattern:
+                description: TestingPattern identifies the type of experiment being
+                  executed
+                enum:
+                - SLOValidation
+                - A/B
+                - A/B/N
+                - Hybrid-A/B
+                - Hybrid-A/B/N
                 type: string
               versionRecommendedForPromotion:
                 description: VersionRecommendedForPromotion is the version recommended

@@ -47,7 +47,6 @@ var _ = Describe("Experiment Validation", func() {
 		It("Should fail to create experiment", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(10, 0, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
@@ -61,7 +60,6 @@ var _ = Describe("Experiment Validation", func() {
 			ctx := context.Background()
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(10, 1, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
@@ -147,7 +145,6 @@ var _ = Describe("Experiment Validation", func() {
 			testNamespace := "default"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount("request-count").
 				WithReward(*reward, v2beta1.PreferredDirectionHigher).
 				WithIndicator(*indicator).
@@ -182,7 +179,6 @@ var _ = Describe("Experiment proceeds", func() {
 			modifiedInterval := int32(10)
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithDuration(initialInterval, expectedIterations, 1).
 				WithDeploymentPattern(v2beta1.DeploymentPatternFixedSplit).
 				WithBaselineVersion("baseline", nil).
@@ -249,7 +245,6 @@ var _ = Describe("Missing criteria.requestCount", func() {
 			By("Defining an experiment with no request count")
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").
-				WithTestingPattern(v2beta1.TestingPatternType(v2beta1.TestingPatternConformance)).
 				WithIndicator(*metric).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -280,7 +275,6 @@ var _ = Describe("Loop Execution", func() {
 			testName = "loops"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").
-				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithBaselineVersion("baseline", nil).
 				WithDuration(1, 1, 3).
 				Build()
