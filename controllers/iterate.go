@@ -69,11 +69,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 	log.Info("doIteration called")
 	defer log.Info("doIteration completed")
 
-	// record start time of experiment if not already set
-	if err := r.setStartTimeIfNotSet(ctx, instance); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// If we've already executed as many iterations as requested, we  should finish the experiment
 	// Check here since may have executed a loop handler
 	if !moreIterationsNeeded(instance) {
@@ -148,19 +143,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 
 	// Not of loop or there is no loop handler --> schedule next iteration
 	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
-}
-
-func (r *ExperimentReconciler) setStartTimeIfNotSet(ctx context.Context, instance *v2beta1.Experiment) error {
-	if instance.Status.StartTime == nil {
-		now := metav1.Now()
-		instance.Status.StartTime = &now
-
-		if err := r.Status().Update(ctx, instance); err != nil {
-			Logger(ctx).Info("Failed to update when initializing status: " + err.Error())
-			return err
-		}
-	}
-	return nil
 }
 
 func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *v2beta1.Experiment) {

@@ -78,7 +78,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		// if object not found, it has been deleted
 		if errors.IsNotFound(err) {
 			log.Info("Experiment not found")
-			// we make sure to have deleted all jobs and trigger any waiting experiment
+			// we make sure to have deleted all jobs
 			r.cleanupDeletedExperiments(ctx, instance)
 			return ctrl.Result{}, nil
 		}
@@ -91,7 +91,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	ctx = context.WithValue(ctx, OriginalStatusKey, instance.Status.DeepCopy())
 
 	// If instance has never been seen before, initialize status object
-	if instance.Status.InitTime == nil {
+	if instance.Status.StartTime == nil {
 		instance.InitializeStatus()
 		if err := r.Status().Update(ctx, instance); err != nil {
 			log.Error(err, "Failed to update Status after initialization.")
@@ -127,13 +127,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// TODO move to validating web hook
 	if !r.IsExperimentValid(ctx, instance) {
 		return r.failExperiment(ctx, instance, nil)
-	}
-
-	// advance stage from Waiting to Initializing
-	// when we advance for the first time, we exit to force update; will be retriggered
-	if ok := r.advanceStage(ctx, instance, v2beta1.ExperimentStageInitializing); ok {
-		log.Info("Update stage advance to: Initializing")
-		return r.endRequest(ctx, instance)
 	}
 
 	// RUN START HANDLER if necessary

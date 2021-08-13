@@ -266,12 +266,8 @@ type ExperimentStatus struct {
 	// +optional
 	Conditions []*ExperimentCondition `json:"conditions,omitempty" yaml:"conditions,omitempty"`
 
-	// InitTime is the times when the experiment is initialized (experiment CR is new)
-	// +optional
-	// matches example
-	InitTime *metav1.Time `json:"initTime,omitempty" yaml:"initTime,omitempty"`
-
-	// StartTime is the time when the experiment starts (after the start handler finished)
+	// StartTime is the time when the experiment is created. It is set by the controller
+	// when the experiment is initialized.
 	// +optional
 	// matches
 	StartTime *metav1.Time `json:"startTime,omitempty" yaml:"startTime,omitempty"`

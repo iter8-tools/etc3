@@ -72,11 +72,11 @@ func (e *Experiment) InitializeStatus() {
 	e.Status.addCondition(ExperimentConditionExperimentFailed, corev1.ConditionFalse)
 
 	now := metav1.Now()
-	e.Status.InitTime = &now // metav1.Now()
+	e.Status.StartTime = &now // metav1.Now()
 
 	e.Status.LastUpdateTime = &now // metav1.Now()
 
-	stage := ExperimentStageWaiting
+	stage := ExperimentStageInitializing
 	e.Status.Stage = &stage
 
 	e.TestingPattern()
