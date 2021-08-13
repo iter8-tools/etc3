@@ -156,7 +156,7 @@ var _ = Describe("Experiment Validation", func() {
 			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
 			Eventually(func() bool {
 				return hasValue(testName, testNamespace, func(exp *v2beta1.Experiment) bool {
-					return exp.Status.InitTime != nil &&
+					return exp.Status.StartTime != nil &&
 						exp.Status.LastUpdateTime != nil &&
 						exp.Status.CompletedIterations != nil &&
 						len(exp.Status.Conditions) == 2

@@ -41,7 +41,7 @@ var _ = Describe("Initialization", func() {
 			WithVersion("baseline").WithVersion("candidate").
 			Build()
 		Specify("status values should be unset", func() {
-			Expect(experiment.Status.InitTime).Should(BeNil())
+			Expect(experiment.Status.StartTime).Should(BeNil())
 			Expect(experiment.Status.LastUpdateTime).Should(BeNil())
 			Expect(experiment.Status.CompletedIterations).Should(BeNil())
 			Expect(len(experiment.Status.Conditions)).Should(Equal(0))
@@ -73,7 +73,7 @@ var _ = Describe("Initialization", func() {
 			By("Initializing Status")
 			experiment.InitializeStatus()
 			By("Inspecting Status")
-			Expect(experiment.Status.InitTime).ShouldNot(BeNil())
+			Expect(experiment.Status.StartTime).ShouldNot(BeNil())
 			Expect(experiment.Status.LastUpdateTime).ShouldNot(BeNil())
 			Expect(experiment.Status.CompletedIterations).ShouldNot(BeNil())
 			Expect(len(experiment.Status.Conditions)).Should(Equal(2))

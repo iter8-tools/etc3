@@ -91,7 +91,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	ctx = context.WithValue(ctx, OriginalStatusKey, instance.Status.DeepCopy())
 
 	// If instance has never been seen before, initialize status object
-	if instance.Status.InitTime == nil {
+	if instance.Status.StartTime == nil {
 		instance.InitializeStatus()
 		if err := r.Status().Update(ctx, instance); err != nil {
 			log.Error(err, "Failed to update Status after initialization.")
