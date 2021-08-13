@@ -96,14 +96,10 @@ const (
 )
 
 // ExperimentStageType identifies valid stages of an experiment
-// +kubebuilder:validation:Enum:=Waiting;Initializing;Running;Finishing;Completed
+// +kubebuilder:validation:Enum:=Initializing;Running;Finishing;Completed
 type ExperimentStageType string
 
 const (
-	// ExperimentStageWaiting indicates the experiment is not yet scheduled to run because it
-	// does not yet have exclusive experiment access to the target
-	ExperimentStageWaiting ExperimentStageType = "Waiting"
-
 	// ExperimentStageInitializing indicates an experiment has acquired access to the target
 	// and a start handler, if  any, is running
 	ExperimentStageInitializing ExperimentStageType = "Initializing"
@@ -122,7 +118,6 @@ const (
 // After Determines if a stage is after another
 func (stage ExperimentStageType) After(otherStage ExperimentStageType) bool {
 	orderedStages := []ExperimentStageType{
-		ExperimentStageWaiting,
 		ExperimentStageInitializing,
 		ExperimentStageRunning,
 		ExperimentStageFinishing,

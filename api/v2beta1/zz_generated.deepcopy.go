@@ -490,10 +490,6 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 			}
 		}
 	}
-	if in.InitTime != nil {
-		in, out := &in.InitTime, &out.InitTime
-		*out = (*in).DeepCopy()
-	}
 	if in.StartTime != nil {
 		in, out := &in.StartTime, &out.StartTime
 		*out = (*in).DeepCopy()

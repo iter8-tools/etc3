@@ -646,11 +646,6 @@ spec:
                   - value
                   type: object
                 type: array
-              initTime:
-                description: InitTime is the times when the experiment is initialized
-                  (experiment CR is new) matches example
-                format: date-time
-                type: string
               lastUpdateTime:
                 description: LastUpdateTime is the last time iteration has been updated
                 format: date-time
@@ -846,15 +841,15 @@ spec:
                 description: Stage indicates where the experiment is in its process
                   of execution
                 enum:
-                - Waiting
                 - Initializing
                 - Running
                 - Finishing
                 - Completed
                 type: string
               startTime:
-                description: StartTime is the time when the experiment starts (after
-                  the start handler finished) matches
+                description: StartTime is the time when the experiment is created.
+                  It is set by the controller when the experiment is initialized.
+                  matches
                 format: date-time
                 type: string
               testingPattern:

@@ -76,7 +76,7 @@ func (e *Experiment) InitializeStatus() {
 
 	e.Status.LastUpdateTime = &now // metav1.Now()
 
-	stage := ExperimentStageWaiting
+	stage := ExperimentStageInitializing
 	e.Status.Stage = &stage
 
 	e.TestingPattern()
