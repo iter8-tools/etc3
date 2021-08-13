@@ -86,15 +86,6 @@ func (s *ExperimentSpec) GetNumberOfBaseline() int {
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
 
-// func handlersForStrategy(cfg Iter8Config, testingPattern TestingPatternType) *Handlers {
-// 	for _, t := range cfg.ExperimentTypes {
-// 		if t.Name == string(testingPattern) {
-// 			return &t.Handlers
-// 		}
-// 	}
-// 	return nil
-// }
-
 // GetStartHandler returns the name of the handler to be called when an experiment starts
 func (s *ExperimentSpec) GetStartHandler() *string {
 	handler := DefaultStartHandler

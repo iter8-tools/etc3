@@ -94,4 +94,70 @@ var _ = Describe("Winner Determination", func() {
 		})
 	})
 
+	var _ = Describe("TestingPattern", func() {
+		var jqe string = "expr"
+		Context("When experiment has 1 version, no reward", func() {
+			It("TestingPattern should be SLOValidation", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("baseline").
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternSLOValidation))
+			})
+		})
+		Context("When experiment has 2 versions, no reward", func() {
+			It("TestingPattern should be SLOValidation", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("baseline").WithVersion("candidate").
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternSLOValidation))
+			})
+		})
+		Context("When experiment has 3 versions, no reward", func() {
+			It("TestingPattern should be SLOValidation", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("v1").WithVersion("v2").WithVersion("v3").
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternSLOValidation))
+			})
+		})
+
+		Context("When experiment has 2 version, 1 reward, no objectives", func() {
+			It("TestingPattern should be TestingPatternAB", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("v1").WithVersion("v2").
+					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternAB))
+			})
+		})
+		Context("When experiment has 3 version, reward, no objectives", func() {
+			It("TestingPattern should be TestingPatternABN", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("v1").WithVersion("v2").WithVersion("v3").
+					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternABN))
+			})
+		})
+		Context("When experiment has 2 version, reward, objective", func() {
+			It("TestingPattern should be TestingPatternHybridAB", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("v1").WithVersion("v2").
+					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil, false).
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternHybridAB))
+			})
+		})
+		Context("When experiment has 3 version, reward, objective", func() {
+			It("TestingPattern should be TestingPatternHybridABN", func() {
+				experiment = NewExperiment("test", "default").
+					WithVersion("v1").WithVersion("v2").WithVersion("v3").
+					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil, false).
+					Build()
+				Expect(experiment.TestingPattern()).To(Equal(TestingPatternHybridABN))
+			})
+		})
+	})
 })

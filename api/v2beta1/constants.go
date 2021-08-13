@@ -17,12 +17,12 @@ limitations under the License.
 package v2beta1
 
 // TestingPatternType identifies the type of experiment type
-// +kubebuilder:validation:Enum=Canary;A/B;A/B/N;Conformance
+// +kubebuilder:validation:Enum=SLOValidation;A/B;A/B/N;Hybrid-A/B;Hybrid-A/B/N
 type TestingPatternType string
 
 const (
-	// TestingPatternCanary indicates an experiment is a canary experiment
-	TestingPatternCanary TestingPatternType = "Canary"
+	// TestingPatternSLOValidation indicates an experiment tests for SLO validation
+	TestingPatternSLOValidation TestingPatternType = "SLOValidation"
 
 	// TestingPatternAB indicates an experiment is a A/B experiment
 	TestingPatternAB TestingPatternType = "A/B"
@@ -30,18 +30,12 @@ const (
 	// TestingPatternABN indicates an experiment is a A/B/n experiment
 	TestingPatternABN TestingPatternType = "A/B/N"
 
-	// TestingPatternConformance indicates an experiment is a conformance experiment
-	TestingPatternConformance TestingPatternType = "Conformance"
-)
+	// TestingPatternHybridAB indicates an experiment is a Hybrid-A/B experiment
+	TestingPatternHybridAB TestingPatternType = "Hybrid-A/B"
 
-// ValidTestingPatternTypes are legal strategy types iter8 is aware of
-// Should match list in github.com/iter8-tools/etc3/api/v2beta1 (cf. constants.go)
-var ValidTestingPatternTypes []TestingPatternType = []TestingPatternType{
-	TestingPatternCanary,
-	TestingPatternAB,
-	TestingPatternABN,
-	TestingPatternConformance,
-}
+	// TestingPatternHybridABN indicates an experiment is a Hybrid-A/B/n experiment
+	TestingPatternHybridABN TestingPatternType = "Hybrid-A/B/N"
+)
 
 // DeploymentPatternType identifies the deployment patterns that can be used
 // +kubebuilder:validation:Enum=FixedSplit;Progressive;BlueGreen

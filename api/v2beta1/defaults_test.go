@@ -39,13 +39,13 @@ var _ = Describe("Initialization", func() {
 	Context("Before Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
 			WithVersion("baseline").WithVersion("candidate").
-			WithTestingPattern(TestingPatternCanary).
 			Build()
 		Specify("status values should be unset", func() {
 			Expect(experiment.Status.InitTime).Should(BeNil())
 			Expect(experiment.Status.LastUpdateTime).Should(BeNil())
 			Expect(experiment.Status.CompletedIterations).Should(BeNil())
 			Expect(len(experiment.Status.Conditions)).Should(Equal(0))
+			Expect(experiment.Status.TestingPattern).Should(BeNil())
 		})
 		Specify("methods on spec should handle nil gracefully", func() {
 			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(DefaultIterationsPerLoop))
@@ -67,7 +67,6 @@ var _ = Describe("Initialization", func() {
 	Context("After Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
 			WithVersion("baseline").WithVersion("candidate").
-			WithTestingPattern(TestingPatternCanary).
 			WithRequestCount("request-count").
 			Build()
 		It("is initialized", func() {
@@ -81,6 +80,7 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsTrue()).Should(Equal(false))
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsFalse()).Should(Equal(true))
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsUnknown()).Should(Equal(false))
+			Expect(*experiment.Status.TestingPattern).Should(Equal(TestingPatternSLOValidation))
 
 			By("Initializing Spec")
 			experiment.Spec.InitializeSpec()
@@ -197,7 +197,6 @@ var _ = Describe("Generated Code", func() {
 			testStr := "test"
 			experimentBuilder := NewExperiment("test", "default").
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(TestingPatternCanary).
 				WithDeploymentPattern(DeploymentPatternFixedSplit).
 				WithDuration(3, 2, 1).
 				WithBaselineVersion("baseline", nil).

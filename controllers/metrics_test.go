@@ -110,7 +110,6 @@ var _ = Describe("Metrics", func() {
 			testName = "valid-reference"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*goodObjectiveMetric, nil, nil, false).
 				WithReward(*rewardMetric, v2beta1.PreferredDirectionHigher).
@@ -132,7 +131,6 @@ var _ = Describe("Metrics", func() {
 			handler := "start"
 			experiment := v2beta1.NewExperiment(name, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternConformance).
 				WithAction(handler, []v2beta1.TaskSpec{}).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithDuration(30, iterations, loops).
@@ -151,7 +149,6 @@ var _ = Describe("Metrics", func() {
 			testName = "invalid-metric"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount("request-count").
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -171,7 +168,6 @@ var _ = Describe("Metrics", func() {
 			testName = "invalid-metric"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount("iter8/request-count").
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -192,7 +188,6 @@ var _ = Describe("Metrics", func() {
 			testName = "invalid-reference"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*badObjectiveMetric, nil, nil, false).
 				Build()
@@ -215,7 +210,6 @@ var _ = Describe("Metrics", func() {
 
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount(metricsNamespace+"/objective-with-good-reference-2").
 				WithObjective(*goodObjective2Metric, nil, nil, false).
 				Build()
@@ -235,7 +229,6 @@ var _ = Describe("Metrics", func() {
 
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithObjective(*goodObjective2Metric, nil, nil, false).
 				Build()
@@ -253,7 +246,6 @@ var _ = Describe("Metrics", func() {
 			By("Defining experiment with requestcount specified with and without namespace")
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithTestingPattern(v2beta1.TestingPatternCanary).
 				WithRequestCount(metricsNamespace+"/request-count").   // specified with namespace
 				WithObjective(*goodObjective2Metric, nil, nil, false). // specifid without namespace
 				Build()
