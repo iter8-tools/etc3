@@ -290,7 +290,7 @@ type ExperimentStatus struct {
 
 	// CurrentWeightDistribution is currently applied traffic weights
 	// +optional
-	CurrentWeightDistribution []WeightData `json:"currentWeightDistribution,omitempty" yaml:"currentWeightDistribution,omitempty"`
+	CurrentWeightDistribution []int32 `json:"currentWeightDistribution,omitempty" yaml:"currentWeightDistribution,omitempty"`
 
 	// Analysis returned by the last analyis
 	// +optional

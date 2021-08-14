@@ -117,9 +117,8 @@ func addPatch(ctx context.Context, instance *v2beta1.Experiment, version v2beta1
 		// fatal error; expected a weight recommendation for all versions
 		return errors.New("no weight recommendation provided")
 	}
-	log.Info("addPatch", "version", version.Name, "recommended weight", weight)
-
-	if *weight == *getCurrentWeight(version.Name, instance.Status.CurrentWeightDistribution) {
+	idx, _ := versionIndex(version.Name, instance)
+	if *weight == instance.Status.CurrentWeightDistribution[idx] {
 		log.Info("No change in weight distribution", "version", version.Name)
 		return nil
 	}
@@ -166,16 +165,6 @@ func getWeightRecommendation(version string, weights []v2beta1.WeightData) *int3
 		}
 	}
 	return nil
-}
-
-func getCurrentWeight(version string, weights []v2beta1.WeightData) *int32 {
-	zero := int32(0)
-	for _, weight := range weights {
-		if weight.Name == version {
-			return &weight.Value
-		}
-	}
-	return &zero
 }
 
 func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReference, defaultNamespace string) (dynamic.ResourceInterface, error) {
@@ -322,7 +311,7 @@ func updateObservedWeights(ctx context.Context, instance *v2beta1.Experiment, re
 		return nil
 	}
 
-	observedWeights := make([]v2beta1.WeightData, 0)
+	observedWeights := make([]int32, 0)
 	missing := []string{}
 	total := int32(0)
 
@@ -333,7 +322,7 @@ func updateObservedWeights(ctx context.Context, instance *v2beta1.Experiment, re
 		if err != nil {
 			return err
 		}
-		observedWeights = append(observedWeights, v2beta1.WeightData{Name: b.Name, Value: *w})
+		observedWeights = append(observedWeights, *w)
 		total += *w
 		log.Info("updateObservedWeights", "name", b.Name, "weight", *w, "total", total)
 	} else {
@@ -347,7 +336,7 @@ func updateObservedWeights(ctx context.Context, instance *v2beta1.Experiment, re
 			if err != nil {
 				return err
 			}
-			observedWeights = append(observedWeights, v2beta1.WeightData{Name: c.Name, Value: *w})
+			observedWeights = append(observedWeights, *w)
 			total += *w
 			log.Info("updateObservedWeights", "name", c.Name, "weight", *w, "total", total)
 		} else {
@@ -359,7 +348,7 @@ func updateObservedWeights(ctx context.Context, instance *v2beta1.Experiment, re
 	if len(missing) == 1 {
 		log.Info("Computing weight", "missing", missing[0])
 		w := int32(100) - total
-		observedWeights = append(observedWeights, v2beta1.WeightData{Name: missing[0], Value: w})
+		observedWeights = append(observedWeights, w)
 		log.Info("updateObservedWeights", "name", missing[0], "weight", w, "total", int32(100))
 	} else if len(missing) > 1 {
 		log.Info("Multiple weights could not be read from cluster", "missing", missing)

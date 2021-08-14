@@ -6,7 +6,6 @@ metadata:
 spec:
   versions: ["baseline", "candidate"]
   strategy:
-    testingPattern: Canary
     actions:
       loop:
       - task: library/task

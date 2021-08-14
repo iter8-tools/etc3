@@ -632,19 +632,8 @@ spec:
                 description: CurrentWeightDistribution is currently applied traffic
                   weights
                 items:
-                  description: WeightData is the weight for a version
-                  properties:
-                    name:
-                      description: Name the name of a version
-                      type: string
-                    value:
-                      description: Value is the weight assigned to name
-                      format: int32
-                      type: integer
-                  required:
-                  - name
-                  - value
-                  type: object
+                  format: int32
+                  type: integer
                 type: array
               lastUpdateTime:
                 description: LastUpdateTime is the last time iteration has been updated

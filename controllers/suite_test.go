@@ -239,7 +239,7 @@ func hasValue(name string, ns string, check check) bool {
 }
 
 func ctx() context.Context {
-	return context.WithValue(context.Background(), LoggerKey, ctrl.Log)
+	return context.WithValue(context.Background(), LoggerKey, lg)
 }
 
 // Helper functions to check and remove string from a slice of strings.

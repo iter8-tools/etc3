@@ -515,7 +515,7 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 	}
 	if in.CurrentWeightDistribution != nil {
 		in, out := &in.CurrentWeightDistribution, &out.CurrentWeightDistribution
-		*out = make([]WeightData, len(*in))
+		*out = make([]int32, len(*in))
 		copy(*out, *in)
 	}
 	if in.Analysis != nil {

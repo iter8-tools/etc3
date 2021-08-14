@@ -139,16 +139,17 @@ func (b *ExperimentBuilder) WithCandidateVersion(name string, objRef *corev1.Obj
 // WithCurrentWeight ..
 func (b *ExperimentBuilder) WithCurrentWeight(name string, weight int32) *ExperimentBuilder {
 
-	for _, w := range b.Status.CurrentWeightDistribution {
-		if w.Name == name {
-			w.Value = weight
+	if len(b.Status.CurrentWeightDistribution) == 0 {
+		b.Status.CurrentWeightDistribution = make([]int32, len(b.Spec.Versions))
+	}
+
+	for i, w := range b.Spec.Versions {
+		if w == name {
+			b.Status.CurrentWeightDistribution[i] = weight
 			return b
 		}
 	}
-	b.Status.CurrentWeightDistribution = append(
-		b.Status.CurrentWeightDistribution,
-		WeightData{Name: name, Value: weight},
-	)
+
 	return b
 }
 
