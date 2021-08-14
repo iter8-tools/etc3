@@ -340,15 +340,18 @@ type Analysis struct {
 	AggregatedBuiltinHists *AggregatedBuiltinHists `json:"aggregatedBuiltinHists,omitempty" yaml:"aggregatedBuiltinHists,omitempty"`
 
 	// AggregatedMetrics
+	// --> Metrics
 	AggregatedMetrics *AggregatedMetricsAnalysis `json:"aggregatedMetrics,omitempty" yaml:"aggregatedMetrics,omitempty"`
 
-	// WinnerAssessment
-	WinnerAssessment *WinnerAssessmentAnalysis `json:"winnerAssessment,omitempty" yaml:"winnerAssessment,omitempty"`
+	// Winner
+	Winner *Winner `json:"winner,omitempty" yaml:"winner,omitempty"`
 
 	// VersionAssessments
+	// --> Objections
 	VersionAssessments *VersionAssessmentAnalysis `json:"versionAssessments,omitempty" yaml:"versionAssessments,omitempty"`
 
 	// Weights
+	// --> Weights
 	Weights *WeightsAnalysis `json:"weights,omitempty" yaml:"weights,omitempty"`
 }
 
@@ -370,14 +373,6 @@ type AggregatedBuiltinHists struct {
 	AnalysisMetaData `json:",inline" yaml:",inline"`
 	// This field needs leeway to evolve. At the moment, it would look like DurationHists from fortio output, but further experimentation is needed. Hence, `apiextensionsv1.JSON` is a safe starting point.
 	Data apiextensionsv1.JSON `json:"data" yaml:"data"`
-}
-
-// WinnerAssessmentAnalysis ..
-type WinnerAssessmentAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data
-	Data WinnerAssessmentData `json:"data" yaml:"data"`
 }
 
 // VersionAssessmentAnalysis ..
@@ -409,8 +404,8 @@ type AggregatedMetricsAnalysis struct {
 	Data map[string]AggregatedMetricsData `json:"data" yaml:"data"`
 }
 
-// WinnerAssessmentData ..
-type WinnerAssessmentData struct {
+// Winner ..
+type Winner struct {
 	// WinnerFound whether or not a winning version has been identified
 	WinnerFound bool `json:"winnerFound" yaml:"winnerFound"`
 

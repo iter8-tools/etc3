@@ -410,7 +410,7 @@ spec:
                     - timestamp
                     type: object
                   aggregatedMetrics:
-                    description: AggregatedMetrics
+                    description: AggregatedMetrics --> Metrics
                     properties:
                       data:
                         additionalProperties:
@@ -494,7 +494,7 @@ spec:
                     - timestamp
                     type: object
                   versionAssessments:
-                    description: VersionAssessments
+                    description: VersionAssessments --> Objections
                     properties:
                       data:
                         additionalProperties:
@@ -525,7 +525,7 @@ spec:
                     - timestamp
                     type: object
                   weights:
-                    description: Weights
+                    description: Weights --> Weights
                     properties:
                       data:
                         description: Data
@@ -560,37 +560,18 @@ spec:
                     - provenance
                     - timestamp
                     type: object
-                  winnerAssessment:
-                    description: WinnerAssessment
+                  winner:
+                    description: Winner
                     properties:
-                      data:
-                        description: Data
-                        properties:
-                          winner:
-                            description: Winner if found
-                            type: string
-                          winnerFound:
-                            description: WinnerFound whether or not a winning version
-                              has been identified
-                            type: boolean
-                        required:
-                        - winnerFound
-                        type: object
-                      message:
-                        description: Message optional messsage for user
+                      winner:
+                        description: Winner if found
                         type: string
-                      provenance:
-                        description: Provenance is source of data
-                        type: string
-                      timestamp:
-                        description: Timestamp is the timestamp when the controller
-                          got its data from an analytics engine
-                        format: date-time
-                        type: string
+                      winnerFound:
+                        description: WinnerFound whether or not a winning version
+                          has been identified
+                        type: boolean
                     required:
-                    - data
-                    - provenance
-                    - timestamp
+                    - winnerFound
                     type: object
                 type: object
               completedIterations:
