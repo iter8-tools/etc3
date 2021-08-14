@@ -383,118 +383,78 @@ spec:
               analysis:
                 description: Analysis returned by the last analyis
                 properties:
-                  aggregatedBuiltinHists:
-                    description: AggregatedBuiltinHistograms -- aggregated builtin
-                      metrics will be derived from this data structure
-                    properties:
-                      data:
-                        description: This field needs leeway to evolve. At the moment,
-                          it would look like DurationHists from fortio output, but
-                          further experimentation is needed. Hence, `apiextensionsv1.JSON`
-                          is a safe starting point.
-                        x-kubernetes-preserve-unknown-fields: true
-                      message:
-                        description: Message optional messsage for user
-                        type: string
-                      provenance:
-                        description: Provenance is source of data
-                        type: string
-                      timestamp:
-                        description: Timestamp is the timestamp when the controller
-                          got its data from an analytics engine
-                        format: date-time
-                        type: string
-                    required:
-                    - data
-                    - provenance
-                    - timestamp
-                    type: object
-                  aggregatedMetrics:
-                    description: AggregatedMetrics --> Metrics
-                    properties:
-                      data:
-                        additionalProperties:
-                          description: AggregatedMetricsData ..
-                          properties:
-                            data:
-                              additionalProperties:
-                                description: AggregatedMetricsVersionData ..
-                                properties:
-                                  max:
-                                    anyOf:
-                                    - type: integer
-                                    - type: string
-                                    description: Max value observed for this metric
-                                      for this version
-                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                    x-kubernetes-int-or-string: true
-                                  min:
-                                    anyOf:
-                                    - type: integer
-                                    - type: string
-                                    description: Min value observed for this metric
-                                      for this version
-                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                    x-kubernetes-int-or-string: true
-                                  sampleSize:
-                                    description: SampleSize is the size of the sample
-                                      used for computing this metric. This field is
-                                      applicable only to Gauge metrics
-                                    format: int32
-                                    minimum: 0
-                                    type: integer
-                                  value:
-                                    anyOf:
-                                    - type: integer
-                                    - type: string
-                                    description: Value of the metric observed for
-                                      this version
-                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                    x-kubernetes-int-or-string: true
-                                type: object
-                              description: Data is a map from version name to the
-                                most recent aggregated metrics data for that version
-                              type: object
-                            max:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              description: Max value observed for this metric across
-                                all versions
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            min:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              description: Min value observed for this metric across
-                                all versions
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                          required:
-                          - data
+                  builtinHists:
+                    description: BuiltinHistograms -- aggregated builtin metrics will
+                      be derived from this data structure
+                    x-kubernetes-preserve-unknown-fields: true
+                  metrics:
+                    additionalProperties:
+                      description: MetricsData ..
+                      properties:
+                        data:
+                          additionalProperties:
+                            description: MetricsVersionData ..
+                            properties:
+                              max:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                description: Max value observed for this metric for
+                                  this version
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              min:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                description: Min value observed for this metric for
+                                  this version
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              sampleSize:
+                                description: SampleSize is the size of the sample
+                                  used for computing this metric. This field is applicable
+                                  only to Gauge metrics
+                                format: int32
+                                minimum: 0
+                                type: integer
+                              value:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                description: Value of the metric observed for this
+                                  version
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          description: Data is a map from version name to the most
+                            recent aggregated metrics data for that version
                           type: object
-                        description: Data is a map from metric name to most recent
-                          metric data
-                        type: object
-                      message:
-                        description: Message optional messsage for user
-                        type: string
-                      provenance:
-                        description: Provenance is source of data
-                        type: string
-                      timestamp:
-                        description: Timestamp is the timestamp when the controller
-                          got its data from an analytics engine
-                        format: date-time
-                        type: string
-                    required:
-                    - data
-                    - provenance
-                    - timestamp
+                        max:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          description: Max value observed for this metric across all
+                            versions
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        min:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          description: Min value observed for this metric across all
+                            versions
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                      required:
+                      - data
+                      type: object
+                    description: Metrics
                     type: object
                   objectives:
-                    description: Objectives
+                    description: Objectives if not empty, the length of the outer
+                      slice must match the length of Spec.Versions if not empty, the
+                      length of an inner slice must match the number of Spec.Criteria.Objectives
                     items:
                       description: BooleanList ..
                       items:
@@ -502,7 +462,8 @@ spec:
                       type: array
                     type: array
                   weights:
-                    description: Weights
+                    description: Weights if not empty, the length of the slice must
+                      match the length of Spec.Versions
                     items:
                       format: int32
                       type: integer

@@ -21,5 +21,5 @@ func TestInvoke(t *testing.T) {
 	log := logr.Discard()
 	resp, err := Invoke(log, "https://iter8.tools", "hello", hm)
 	assert.NoError(t, err)
-	assert.Nil(t, resp.AggregatedBuiltinHists)
+	assert.Nil(t, resp.BuiltinHists)
 }

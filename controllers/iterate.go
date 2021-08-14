@@ -101,7 +101,7 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 	// however, we don't want to rely on iter8-analytics for this guarantee
 	// etc3 will guarantee it in the following way
 	if instance.Status.Analysis != nil {
-		analysis.AggregatedBuiltinHists = instance.Status.Analysis.AggregatedBuiltinHists
+		analysis.BuiltinHists = instance.Status.Analysis.BuiltinHists
 	}
 	instance.Status.Analysis = analysis
 

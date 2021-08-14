@@ -23,7 +23,6 @@ import (
 
 	"github.com/go-logr/logr"
 	v2beta1 "github.com/iter8-tools/etc3/api/v2beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // HTTPTransport ..
@@ -54,11 +53,6 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTT
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: fill in provenance, timestamp
-	response.AggregatedMetrics.Provenance = endpoint
-	now := metav1.Now()
-	response.AggregatedMetrics.Timestamp = now
 
 	return &response, nil
 }

@@ -336,12 +336,11 @@ type ExperimentCondition struct {
 
 // Analysis is data from an analytics provider
 type Analysis struct {
-	// AggregatedBuiltinHistograms -- aggregated builtin metrics will be derived from this data structure
-	AggregatedBuiltinHists *AggregatedBuiltinHists `json:"aggregatedBuiltinHists,omitempty" yaml:"aggregatedBuiltinHists,omitempty"`
+	// BuiltinHistograms -- aggregated builtin metrics will be derived from this data structure
+	BuiltinHists *apiextensionsv1.JSON `json:"builtinHists,omitempty" yaml:"builtinHists,omitempty"`
 
-	// AggregatedMetrics
-	// --> Metrics
-	AggregatedMetrics *AggregatedMetricsAnalysis `json:"aggregatedMetrics,omitempty" yaml:"aggregatedMetrics,omitempty"`
+	// Metrics
+	Metrics *map[string]MetricsData `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 
 	// Winner
 	Winner *Winner `json:"winner,omitempty" yaml:"winner,omitempty"`
@@ -356,36 +355,8 @@ type Analysis struct {
 	Weights []int32 `json:"weights,omitempty" yaml:"weights,omitempty"`
 }
 
-// AnalysisMetaData ..
-type AnalysisMetaData struct {
-	// Provenance is source of data
-	Provenance string `json:"provenance" yaml:"provenance"`
-
-	// Timestamp is the timestamp when the controller got its data from an analytics engine
-	Timestamp metav1.Time `json:"timestamp" yaml:"timestamp"`
-
-	// Message optional messsage for user
-	// +optional
-	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
-}
-
-// AggregatedBuiltinHists ..
-type AggregatedBuiltinHists struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-	// This field needs leeway to evolve. At the moment, it would look like DurationHists from fortio output, but further experimentation is needed. Hence, `apiextensionsv1.JSON` is a safe starting point.
-	Data apiextensionsv1.JSON `json:"data" yaml:"data"`
-}
-
 // BooleanList ..
 type BooleanList []bool
-
-// AggregatedMetricsAnalysis ..
-type AggregatedMetricsAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data is a map from metric name to most recent metric data
-	Data map[string]AggregatedMetricsData `json:"data" yaml:"data"`
-}
 
 // Winner ..
 type Winner struct {
@@ -397,8 +368,8 @@ type Winner struct {
 	Winner *string `json:"winner,omitempty" yaml:"winner,omitempty"`
 }
 
-// AggregatedMetricsData ..
-type AggregatedMetricsData struct {
+// MetricsData ..
+type MetricsData struct {
 	// Max value observed for this metric across all versions
 	// +optional
 	Max *resource.Quantity `json:"max,omitempty" yaml:"max,omitempty"`
@@ -408,11 +379,11 @@ type AggregatedMetricsData struct {
 	Min *resource.Quantity `json:"min,omitempty" yaml:"min,omitempty"`
 
 	// Data is a map from version name to the most recent aggregated metrics data for that version
-	Data map[string]AggregatedMetricsVersionData `json:"data" yaml:"data"`
+	Data map[string]MetricsVersionData `json:"data" yaml:"data"`
 }
 
-// AggregatedMetricsVersionData ..
-type AggregatedMetricsVersionData struct {
+// MetricsVersionData ..
+type MetricsVersionData struct {
 	// Max value observed for this metric for this version
 	// +optional
 	Max *resource.Quantity `json:"max,omitempty" yaml:"max,omitempty"`

@@ -22,7 +22,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Stages", func() {
@@ -222,29 +221,20 @@ var _ = Describe("Generated Code", func() {
 				WithObjective(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), nil, nil, false)
 			experiment := experimentBuilder.Build()
 			experiment.InitializeStatus()
-			now := metav1.Now()
-			message := "message"
 			winner := "winner"
 			q := resource.Quantity{}
 			ss := int32(1)
 			experiment.Status.Analysis = &Analysis{
-				AggregatedMetrics: &AggregatedMetricsAnalysis{
-					AnalysisMetaData: AnalysisMetaData{
-						Provenance: "provenance",
-						Timestamp:  now,
-						Message:    &message,
-					},
-					Data: map[string]AggregatedMetricsData{
-						"metric1": {
-							Max: &q,
-							Min: &q,
-							Data: map[string]AggregatedMetricsVersionData{
-								"metric": {
-									Min:        &q,
-									Max:        &q,
-									Value:      &q,
-									SampleSize: &ss,
-								},
+				Metrics: &map[string]MetricsData{
+					"metric1": {
+						Max: &q,
+						Min: &q,
+						Data: map[string]MetricsVersionData{
+							"metric": {
+								Min:        &q,
+								Max:        &q,
+								Value:      &q,
+								SampleSize: &ss,
 							},
 						},
 					},
@@ -280,11 +270,7 @@ var _ = Describe("Generated Code", func() {
 
 			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedBuiltinHists, experiment.Status.Analysis.AggregatedBuiltinHists.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedMetrics, experiment.Status.Analysis.AggregatedMetrics.DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedMetrics.AnalysisMetaData, experiment.Status.Analysis.AggregatedMetrics.AnalysisMetaData.DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Status.Analysis.Objectives, experiment.Status.Analysis.Objectives.DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments, experiment.Status.Analysis.Weights.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Status.Analysis.BuiltinHists, experiment.Status.Analysis.BuiltinHists.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis.Winner, experiment.Status.Analysis.Winner.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Conditions[0], experiment.Status.Conditions[0].DeepCopy())).Should(BeTrue())
 		})

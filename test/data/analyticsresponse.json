@@ -1,44 +1,41 @@
 {
   "aggregatedMetrics": {
-    "data": {
-      "request-count": {
-        "max": null,
-        "min": null,
-        "data": {
-          "default": {
-            "max": null,
-            "min": null,
-            "value": null,
-            "sampleSize": null
-          },
-          "canary": {
-            "max": null,
-            "min": null,
-            "value": null,
-            "sampleSize": null
-          }
-        }
-      },
-      "mean-latency": {
-        "max": null,
-        "min": null,
-        "data": {
-          "default": {
-            "max": null,
-            "min": null,
-            "value": null,
-            "sampleSize": null
-          },
-          "canary": {
-            "max": null,
-            "min": null,
-            "value": null,
-            "sampleSize": null
-          }
+    "request-count": {
+      "max": null,
+      "min": null,
+      "data": {
+        "default": {
+          "max": null,
+          "min": null,
+          "value": null,
+          "sampleSize": null
+        },
+        "canary": {
+          "max": null,
+          "min": null,
+          "value": null,
+          "sampleSize": null
         }
       }
     },
-    "message": "Error: Error from metrics backend for metric: request-count                             and version: default, Error from metrics backend for metric: request-count                             and version: canary, Error from metrics backend for metric: mean-latency                             and version: default, Error from metrics backend for metric: mean-latency                             and version: canary; Warning: ; Info: "
+    "mean-latency": {
+      "max": null,
+      "min": null,
+      "data": {
+        "default": {
+          "max": null,
+          "min": null,
+          "value": null,
+          "sampleSize": null
+        },
+        "canary": {
+          "max": null,
+          "min": null,
+          "value": null,
+          "sampleSize": null
+        }
+      }
+    }
   },
   "objectives": [ [false], [false] ],
   "winner": {
