@@ -525,41 +525,11 @@ spec:
                     - timestamp
                     type: object
                   weights:
-                    description: Weights --> Weights
-                    properties:
-                      data:
-                        description: Data
-                        items:
-                          description: WeightData is the weight for a version
-                          properties:
-                            name:
-                              description: Name the name of a version
-                              type: string
-                            value:
-                              description: Value is the weight assigned to name
-                              format: int32
-                              type: integer
-                          required:
-                          - name
-                          - value
-                          type: object
-                        type: array
-                      message:
-                        description: Message optional messsage for user
-                        type: string
-                      provenance:
-                        description: Provenance is source of data
-                        type: string
-                      timestamp:
-                        description: Timestamp is the timestamp when the controller
-                          got its data from an analytics engine
-                        format: date-time
-                        type: string
-                    required:
-                    - data
-                    - provenance
-                    - timestamp
-                    type: object
+                    description: Weights
+                    items:
+                      format: int32
+                      type: integer
+                    type: array
                   winner:
                     description: Winner
                     properties:

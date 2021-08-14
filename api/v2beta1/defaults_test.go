@@ -260,13 +260,7 @@ var _ = Describe("Generated Code", func() {
 						"candidate": []bool{false},
 					},
 				},
-				Weights: &WeightsAnalysis{
-					AnalysisMetaData: AnalysisMetaData{},
-					Data: []WeightData{
-						{Name: "baseline", Value: 25},
-						{Name: "candidate", Value: 75},
-					},
-				},
+				Weights: []int32{25, 74},
 			}
 			experimentList := ExperimentList{
 				Items: []Experiment{*experiment},

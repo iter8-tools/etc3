@@ -351,8 +351,7 @@ type Analysis struct {
 	VersionAssessments *VersionAssessmentAnalysis `json:"versionAssessments,omitempty" yaml:"versionAssessments,omitempty"`
 
 	// Weights
-	// --> Weights
-	Weights *WeightsAnalysis `json:"weights,omitempty" yaml:"weights,omitempty"`
+	Weights []int32 `json:"weights,omitempty" yaml:"weights,omitempty"`
 }
 
 // AnalysisMetaData ..
@@ -388,14 +387,6 @@ type VersionAssessmentAnalysis struct {
 // BooleanList ..
 type BooleanList []bool
 
-// WeightsAnalysis ..
-type WeightsAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data
-	Data []WeightData `json:"data" yaml:"data"`
-}
-
 // AggregatedMetricsAnalysis ..
 type AggregatedMetricsAnalysis struct {
 	AnalysisMetaData `json:",inline" yaml:",inline"`
@@ -426,15 +417,6 @@ type AggregatedMetricsData struct {
 
 	// Data is a map from version name to the most recent aggregated metrics data for that version
 	Data map[string]AggregatedMetricsVersionData `json:"data" yaml:"data"`
-}
-
-// WeightData is the weight for a version
-type WeightData struct {
-	// Name the name of a version
-	Name string `json:"name" yaml:"name"`
-
-	// Value is the weight assigned to name
-	Value int32 `json:"value" yaml:"value"`
 }
 
 // AggregatedMetricsVersionData ..

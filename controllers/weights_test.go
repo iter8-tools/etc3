@@ -21,7 +21,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -260,16 +259,7 @@ var _ = Describe("patch", func() {
 			Expect(k8sClient.Get(ctx(), types.NamespacedName{Namespace: namespace, Name: name}, &exp)).Should(Succeed())
 			By("Updating experiment with recommended weights")
 			exp.Status.Analysis = &v2beta1.Analysis{
-				Weights: &v2beta1.WeightsAnalysis{
-					AnalysisMetaData: v2beta1.AnalysisMetaData{
-						Provenance: "provenance",
-						Timestamp:  metav1.Now(),
-					},
-					Data: []v2beta1.WeightData{
-						{Name: "v1", Value: 14},
-						{Name: "v2", Value: 16},
-					},
-				},
+				Weights: []int32{14, 16},
 			}
 			Expect(k8sClient.Status().Update(ctx(), &exp)).Should(Succeed())
 			By("calling redistributeWeight")

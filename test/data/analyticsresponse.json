@@ -51,25 +51,9 @@
     },
     "message": "Error: ; Warning: Value for mean-latency metric and default version is None., Value for mean-latency metric and canary version is None.; Info: "
   },
-  "winnerAssessment": {
-    "data": {
+  "winner": {
       "winnerFound": false,
-      "winner": null,
-      "bestVersions": []
-    },
-    "message": null
+      "winner": null
   },
-  "weights": {
-    "data": [
-      {
-        "name": "default",
-        "value": 95
-      },
-      {
-        "name": "canary",
-        "value": 5
-      }
-    ],
-    "message": "Error: ; Warning: ; Info: all ok"
-  }
+  "weights": [95,5]
 }

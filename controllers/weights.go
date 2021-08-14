@@ -107,18 +107,18 @@ func addPatch(ctx context.Context, instance *v2beta1.Experiment, version v2beta1
 
 	// get the latest recommended weight from the analytics service (cached in Status)
 	log.Info("addPatch", "analysis", instance.Status.Analysis)
-	var weight *int32
-	if instance.Status.Analysis != nil {
-		log.Info("addPatch", "weights", instance.Status.Analysis.Weights.Data)
-		weight = getWeightRecommendation(version.Name, instance.Status.Analysis.Weights.Data)
-	}
-	if weight == nil {
-		log.Info("Unable to find weight recommendation.", "version", version)
-		// fatal error; expected a weight recommendation for all versions
+	var weight int32
+	if instance.Status.Analysis == nil || len(instance.Status.Analysis.Weights) == 0 {
+		// no weight recommendation -- error because expected it
 		return errors.New("no weight recommendation provided")
 	}
-	idx, _ := versionIndex(version.Name, instance)
-	if *weight == instance.Status.CurrentWeightDistribution[idx] {
+
+	log.Info("addPatch", "weights", instance.Status.Analysis.Weights)
+	recommendationIndex, _ := versionIndex(version.Name, instance)
+	weight = instance.Status.Analysis.Weights[recommendationIndex]
+
+	currentIndex, _ := versionIndex(version.Name, instance)
+	if weight == instance.Status.CurrentWeightDistribution[currentIndex] {
 		log.Info("No change in weight distribution", "version", version.Name)
 		return nil
 	}
@@ -131,7 +131,7 @@ func addPatch(ctx context.Context, instance *v2beta1.Experiment, version v2beta1
 	patch := patchIntValue{
 		Op:    "add",
 		Path:  path,
-		Value: *weight,
+		Value: weight,
 	}
 
 	log.Info("addPatch adding patch", "patch", patch)
@@ -155,16 +155,6 @@ func getKey(obj corev1.ObjectReference) corev1.ObjectReference {
 		Namespace:  obj.Namespace,
 		Name:       obj.Name,
 	}
-}
-
-func getWeightRecommendation(version string, weights []v2beta1.WeightData) *int32 {
-	for _, w := range weights {
-		if w.Name == version {
-			weight := w.Value
-			return &weight
-		}
-	}
-	return nil
 }
 
 func getDynamicResourceInterface(cfg *rest.Config, objRef *corev1.ObjectReference, defaultNamespace string) (dynamic.ResourceInterface, error) {

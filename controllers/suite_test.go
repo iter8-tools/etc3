@@ -163,10 +163,7 @@ var _ = BeforeSuite(func(done Done) {
 				AnalysisMetaData: v2beta1.AnalysisMetaData{},
 				Data:             map[string]v2beta1.BooleanList{},
 			},
-			Weights: &v2beta1.WeightsAnalysis{
-				AnalysisMetaData: v2beta1.AnalysisMetaData{},
-				Data:             []v2beta1.WeightData{},
-			},
+			Weights: []int32{},
 		},
 	}
 

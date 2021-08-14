@@ -159,27 +159,17 @@ func (b *ExperimentBuilder) WithRecommendedWeight(name string, weight int32) *Ex
 	if b.Status.Analysis == nil {
 		b.Status.Analysis = &Analysis{}
 	}
-	if b.Status.Analysis.Weights == nil {
-		now := metav1.Now()
-		b.Status.Analysis.Weights = &WeightsAnalysis{
-			AnalysisMetaData: AnalysisMetaData{
-				Provenance: "provenance",
-				Timestamp:  now,
-			},
-			Data: []WeightData{},
-		}
+
+	if len(b.Status.Analysis.Weights) == 0 {
+		b.Status.Analysis.Weights = make([]int32, len(b.Spec.Versions))
 	}
 
-	for _, w := range b.Status.Analysis.Weights.Data {
-		if w.Name == name {
-			w.Value = weight
+	for i, w := range b.Spec.Versions {
+		if w == name {
+			b.Status.Analysis.Weights[i] = weight
 			return b
 		}
 	}
-	b.Status.Analysis.Weights.Data = append(
-		b.Status.Analysis.Weights.Data,
-		WeightData{Name: name, Value: weight},
-	)
 
 	return b
 }
