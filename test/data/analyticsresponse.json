@@ -40,17 +40,7 @@
     },
     "message": "Error: Error from metrics backend for metric: request-count                             and version: default, Error from metrics backend for metric: request-count                             and version: canary, Error from metrics backend for metric: mean-latency                             and version: default, Error from metrics backend for metric: mean-latency                             and version: canary; Warning: ; Info: "
   },
-  "versionAssessments": {
-    "data": {
-      "default": [
-        false
-      ],
-      "canary": [
-        false
-      ]
-    },
-    "message": "Error: ; Warning: Value for mean-latency metric and default version is None., Value for mean-latency metric and canary version is None.; Info: "
-  },
+  "objectives": [ [false], [false] ],
   "winner": {
       "winnerFound": false,
       "winner": null

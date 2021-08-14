@@ -493,37 +493,14 @@ spec:
                     - provenance
                     - timestamp
                     type: object
-                  versionAssessments:
-                    description: VersionAssessments --> Objections
-                    properties:
-                      data:
-                        additionalProperties:
-                          description: BooleanList ..
-                          items:
-                            type: boolean
-                          type: array
-                        description: Data is a map from version name to an array of
-                          indicators as to whether or not the objectives are satisfied
-                          The order of the array entries is the same as the order
-                          of objectives in spec.criteria.objectives There must be
-                          an entry for each objective
-                        type: object
-                      message:
-                        description: Message optional messsage for user
-                        type: string
-                      provenance:
-                        description: Provenance is source of data
-                        type: string
-                      timestamp:
-                        description: Timestamp is the timestamp when the controller
-                          got its data from an analytics engine
-                        format: date-time
-                        type: string
-                    required:
-                    - data
-                    - provenance
-                    - timestamp
-                    type: object
+                  objectives:
+                    description: Objectives
+                    items:
+                      description: BooleanList ..
+                      items:
+                        type: boolean
+                      type: array
+                    type: array
                   weights:
                     description: Weights
                     items:

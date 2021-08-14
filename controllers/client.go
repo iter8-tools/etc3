@@ -57,10 +57,8 @@ func Invoke(log logr.Logger, endpoint string, payload interface{}, transport HTT
 
 	// TODO: fill in provenance, timestamp
 	response.AggregatedMetrics.Provenance = endpoint
-	response.VersionAssessments.Provenance = endpoint
 	now := metav1.Now()
 	response.AggregatedMetrics.Timestamp = now
-	response.VersionAssessments.Timestamp = now
 
 	return &response, nil
 }

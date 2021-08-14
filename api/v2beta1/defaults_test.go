@@ -253,12 +253,9 @@ var _ = Describe("Generated Code", func() {
 					WinnerFound: true,
 					Winner:      &winner,
 				},
-				VersionAssessments: &VersionAssessmentAnalysis{
-					AnalysisMetaData: AnalysisMetaData{},
-					Data: map[string]BooleanList{
-						"baseline":  []bool{false},
-						"candidate": []bool{false},
-					},
+				Objectives: []BooleanList{
+					[]bool{false},
+					[]bool{false},
 				},
 				Weights: []int32{25, 74},
 			}
@@ -286,7 +283,7 @@ var _ = Describe("Generated Code", func() {
 			Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedBuiltinHists, experiment.Status.Analysis.AggregatedBuiltinHists.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedMetrics, experiment.Status.Analysis.AggregatedMetrics.DeepCopy())).Should(BeTrue())
 			// Expect(reflect.DeepEqual(experiment.Status.Analysis.AggregatedMetrics.AnalysisMetaData, experiment.Status.Analysis.AggregatedMetrics.AnalysisMetaData.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments, experiment.Status.Analysis.VersionAssessments.DeepCopy())).Should(BeTrue())
+			// Expect(reflect.DeepEqual(experiment.Status.Analysis.Objectives, experiment.Status.Analysis.Objectives.DeepCopy())).Should(BeTrue())
 			// Expect(reflect.DeepEqual(experiment.Status.Analysis.VersionAssessments, experiment.Status.Analysis.Weights.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis.Winner, experiment.Status.Analysis.Winner.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Conditions[0], experiment.Status.Conditions[0].DeepCopy())).Should(BeTrue())

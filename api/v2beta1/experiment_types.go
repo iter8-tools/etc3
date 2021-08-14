@@ -346,9 +346,8 @@ type Analysis struct {
 	// Winner
 	Winner *Winner `json:"winner,omitempty" yaml:"winner,omitempty"`
 
-	// VersionAssessments
-	// --> Objections
-	VersionAssessments *VersionAssessmentAnalysis `json:"versionAssessments,omitempty" yaml:"versionAssessments,omitempty"`
+	// Objectives
+	Objectives []BooleanList `json:"objectives,omitempty" yaml:"objectives,omitempty"`
 
 	// Weights
 	Weights []int32 `json:"weights,omitempty" yaml:"weights,omitempty"`
@@ -372,16 +371,6 @@ type AggregatedBuiltinHists struct {
 	AnalysisMetaData `json:",inline" yaml:",inline"`
 	// This field needs leeway to evolve. At the moment, it would look like DurationHists from fortio output, but further experimentation is needed. Hence, `apiextensionsv1.JSON` is a safe starting point.
 	Data apiextensionsv1.JSON `json:"data" yaml:"data"`
-}
-
-// VersionAssessmentAnalysis ..
-type VersionAssessmentAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data is a map from version name to an array of indicators as to whether or not the objectives are satisfied
-	// The order of the array entries is the same as the order of objectives in spec.criteria.objectives
-	// There must be an entry for each objective
-	Data map[string]BooleanList `json:"data" yaml:"data"`
 }
 
 // BooleanList ..

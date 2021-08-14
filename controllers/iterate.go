@@ -173,11 +173,11 @@ func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instanc
 		// there are no criteria
 		return failedVersions
 	}
-	for index, o := range instance.Spec.Criteria.Objectives {
+	for criteriaIndex, o := range instance.Spec.Criteria.Objectives {
 		if o.GetRollbackOnFailure(deploymentPattern) {
 			// need to rollback on failure; did some version fail for this objective?
-			for version, satisfiesObjectives := range instance.Status.Analysis.VersionAssessments.Data {
-				if !satisfiesObjectives[index] {
+			for versionIndex, version := range instance.Spec.Versions {
+				if instance.Status.Analysis.Objectives[versionIndex][criteriaIndex] {
 					failedVersions = append(failedVersions, version)
 				}
 			}
