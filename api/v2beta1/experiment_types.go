@@ -347,9 +347,12 @@ type Analysis struct {
 	Winner *Winner `json:"winner,omitempty" yaml:"winner,omitempty"`
 
 	// Objectives
+	// if not empty, the length of the outer slice must match the length of Spec.Versions
+	// if not empty, the length of an inner slice must match the number of Spec.Criteria.Objectives
 	Objectives []BooleanList `json:"objectives,omitempty" yaml:"objectives,omitempty"`
 
 	// Weights
+	// if not empty, the length of the slice must match the length of Spec.Versions
 	Weights []int32 `json:"weights,omitempty" yaml:"weights,omitempty"`
 }
 
