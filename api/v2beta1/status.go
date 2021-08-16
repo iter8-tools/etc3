@@ -83,10 +83,10 @@ func (e *Experiment) InitializeStatus() {
 
 	e.TestingPattern()
 
-	completedIterations := int32(0)
+	completedIterations := int32(DefaultCompletedIterations)
 	e.Status.CompletedIterations = &completedIterations
 
-	completedLoops := int32(0)
+	completedLoops := int32(DefaultCompletedLoops)
 	e.Status.CompletedLoops = &completedLoops
 }
 
