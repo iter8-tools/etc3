@@ -216,9 +216,8 @@ var _ = Describe("Empty Criteria section", func() {
 
 		Specify("The experiment should read the (non-existent) metrics", func() {
 			Expect(k8sClient.Create(ctx(), &experiment)).Should(Succeed())
-			// will fail after this point because there is no versionInfo is present
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonInvalidExperiment)
+				return containsSubString(events, v2beta1.ReasonExperimentCompleted)
 			}, 5).Should(BeTrue())
 		})
 	})

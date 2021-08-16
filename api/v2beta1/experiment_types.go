@@ -290,7 +290,7 @@ type ExperimentStatus struct {
 
 	// CurrentWeightDistribution is currently applied traffic weights
 	// +optional
-	CurrentWeightDistribution []WeightData `json:"currentWeightDistribution,omitempty" yaml:"currentWeightDistribution,omitempty"`
+	CurrentWeightDistribution []int32 `json:"currentWeightDistribution,omitempty" yaml:"currentWeightDistribution,omitempty"`
 
 	// Analysis returned by the last analyis
 	// +optional
@@ -336,130 +336,36 @@ type ExperimentCondition struct {
 
 // Analysis is data from an analytics provider
 type Analysis struct {
-	// AggregatedBuiltinHistograms -- aggregated builtin metrics will be derived from this data structure
-	AggregatedBuiltinHists *AggregatedBuiltinHists `json:"aggregatedBuiltinHists,omitempty" yaml:"aggregatedBuiltinHists,omitempty"`
+	// Metrics
+	Metrics []map[string]QuantityList `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 
-	// AggregatedMetrics
-	AggregatedMetrics *AggregatedMetricsAnalysis `json:"aggregatedMetrics,omitempty" yaml:"aggregatedMetrics,omitempty"`
+	// Winner
+	Winner *Winner `json:"winner,omitempty" yaml:"winner,omitempty"`
 
-	// WinnerAssessment
-	WinnerAssessment *WinnerAssessmentAnalysis `json:"winnerAssessment,omitempty" yaml:"winnerAssessment,omitempty"`
-
-	// VersionAssessments
-	VersionAssessments *VersionAssessmentAnalysis `json:"versionAssessments,omitempty" yaml:"versionAssessments,omitempty"`
+	// Objectives
+	// if not empty, the length of the outer slice must match the length of Spec.Versions
+	// if not empty, the length of an inner slice must match the number of Spec.Criteria.Objectives
+	Objectives []BooleanList `json:"objectives,omitempty" yaml:"objectives,omitempty"`
 
 	// Weights
-	Weights *WeightsAnalysis `json:"weights,omitempty" yaml:"weights,omitempty"`
-}
-
-// AnalysisMetaData ..
-type AnalysisMetaData struct {
-	// Provenance is source of data
-	Provenance string `json:"provenance" yaml:"provenance"`
-
-	// Timestamp is the timestamp when the controller got its data from an analytics engine
-	Timestamp metav1.Time `json:"timestamp" yaml:"timestamp"`
-
-	// Message optional messsage for user
-	// +optional
-	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
-}
-
-// AggregatedBuiltinHists ..
-type AggregatedBuiltinHists struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-	// This field needs leeway to evolve. At the moment, it would look like DurationHists from fortio output, but further experimentation is needed. Hence, `apiextensionsv1.JSON` is a safe starting point.
-	Data apiextensionsv1.JSON `json:"data" yaml:"data"`
-}
-
-// WinnerAssessmentAnalysis ..
-type WinnerAssessmentAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data
-	Data WinnerAssessmentData `json:"data" yaml:"data"`
-}
-
-// VersionAssessmentAnalysis ..
-type VersionAssessmentAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data is a map from version name to an array of indicators as to whether or not the objectives are satisfied
-	// The order of the array entries is the same as the order of objectives in spec.criteria.objectives
-	// There must be an entry for each objective
-	Data map[string]BooleanList `json:"data" yaml:"data"`
+	// if not empty, the length of the slice must match the length of Spec.Versions
+	Weights []int32 `json:"weights,omitempty" yaml:"weights,omitempty"`
 }
 
 // BooleanList ..
 type BooleanList []bool
 
-// WeightsAnalysis ..
-type WeightsAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
+// QuantityList ..
+type QuantityList []resource.Quantity
 
-	// Data
-	Data []WeightData `json:"data" yaml:"data"`
-}
-
-// AggregatedMetricsAnalysis ..
-type AggregatedMetricsAnalysis struct {
-	AnalysisMetaData `json:",inline" yaml:",inline"`
-
-	// Data is a map from metric name to most recent metric data
-	Data map[string]AggregatedMetricsData `json:"data" yaml:"data"`
-}
-
-// WinnerAssessmentData ..
-type WinnerAssessmentData struct {
+// Winner ..
+type Winner struct {
 	// WinnerFound whether or not a winning version has been identified
 	WinnerFound bool `json:"winnerFound" yaml:"winnerFound"`
 
 	// Winner if found
 	// +optional
 	Winner *string `json:"winner,omitempty" yaml:"winner,omitempty"`
-}
-
-// AggregatedMetricsData ..
-type AggregatedMetricsData struct {
-	// Max value observed for this metric across all versions
-	// +optional
-	Max *resource.Quantity `json:"max,omitempty" yaml:"max,omitempty"`
-
-	// Min value observed for this metric across all versions
-	// +optional
-	Min *resource.Quantity `json:"min,omitempty" yaml:"min,omitempty"`
-
-	// Data is a map from version name to the most recent aggregated metrics data for that version
-	Data map[string]AggregatedMetricsVersionData `json:"data" yaml:"data"`
-}
-
-// WeightData is the weight for a version
-type WeightData struct {
-	// Name the name of a version
-	Name string `json:"name" yaml:"name"`
-
-	// Value is the weight assigned to name
-	Value int32 `json:"value" yaml:"value"`
-}
-
-// AggregatedMetricsVersionData ..
-type AggregatedMetricsVersionData struct {
-	// Max value observed for this metric for this version
-	// +optional
-	Max *resource.Quantity `json:"max,omitempty" yaml:"max,omitempty"`
-
-	// Min value observed for this metric for this version
-	// +optional
-	Min *resource.Quantity `json:"min,omitempty" yaml:"min,omitempty"`
-
-	// Value of the metric observed for this version
-	// +optional
-	Value *resource.Quantity `json:"value,omitempty" yaml:"value,omitempty"`
-
-	// SampleSize is the size of the sample used for computing this metric.
-	// This field is applicable only to Gauge metrics
-	// +kubebuilder:validation:Minimum:=0
-	SampleSize *int32 `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 }
 
 func init() {

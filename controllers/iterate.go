@@ -96,13 +96,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 	// 3. weights has entry for each version
 	// If not valid: return r.failExperiment(context, instance)
 
-	// update analysis in instance.status
-	// iter8-analytics must not overwrite builtin hists
-	// however, we don't want to rely on iter8-analytics for this guarantee
-	// etc3 will guarantee it in the following way
-	if instance.Status.Analysis != nil {
-		analysis.AggregatedBuiltinHists = instance.Status.Analysis.AggregatedBuiltinHists
-	}
 	instance.Status.Analysis = analysis
 
 	// Handle failure of objective (possibly rollback)
@@ -173,11 +166,11 @@ func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instanc
 		// there are no criteria
 		return failedVersions
 	}
-	for index, o := range instance.Spec.Criteria.Objectives {
+	for criteriaIndex, o := range instance.Spec.Criteria.Objectives {
 		if o.GetRollbackOnFailure(deploymentPattern) {
 			// need to rollback on failure; did some version fail for this objective?
-			for version, satisfiesObjectives := range instance.Status.Analysis.VersionAssessments.Data {
-				if !satisfiesObjectives[index] {
+			for versionIndex, version := range instance.Spec.Versions {
+				if instance.Status.Analysis.Objectives[versionIndex][criteriaIndex] {
 					failedVersions = append(failedVersions, version)
 				}
 			}

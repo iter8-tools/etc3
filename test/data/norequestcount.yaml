@@ -5,8 +5,6 @@ metadata:
   namespace: default
 spec:
   versions: ["baseline"]
-  strategy:
-    testingPattern: Conformance
   criteria:
     objectives: []
   duration:
