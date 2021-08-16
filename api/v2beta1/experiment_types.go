@@ -336,9 +336,6 @@ type ExperimentCondition struct {
 
 // Analysis is data from an analytics provider
 type Analysis struct {
-	// BuiltinHistograms -- aggregated builtin metrics will be derived from this data structure
-	BuiltinHists *apiextensionsv1.JSON `json:"builtinHists,omitempty" yaml:"builtinHists,omitempty"`
-
 	// Metrics
 	Metrics *map[string]MetricsData `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 

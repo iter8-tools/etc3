@@ -42,11 +42,6 @@ var _ = Describe("Experiment", func() {
 			feature:   "with strategy containing actions",
 			fieldPath: []string{"spec", "strategy", "actions", "start"},
 		},
-		{
-			file:      "expwithbuiltins.yaml",
-			feature:   "with status containing builtin data",
-			fieldPath: []string{"status", "analysis", "builtinHists", "DurationHistogram", "Avg"},
-		},
 	}
 
 	for _, tc := range testcases {

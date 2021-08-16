@@ -270,7 +270,6 @@ var _ = Describe("Generated Code", func() {
 
 			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Status.Analysis.BuiltinHists, experiment.Status.Analysis.BuiltinHists.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis.Winner, experiment.Status.Analysis.Winner.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Conditions[0], experiment.Status.Conditions[0].DeepCopy())).Should(BeTrue())
 		})

@@ -383,10 +383,6 @@ spec:
               analysis:
                 description: Analysis returned by the last analyis
                 properties:
-                  builtinHists:
-                    description: BuiltinHistograms -- aggregated builtin metrics will
-                      be derived from this data structure
-                    x-kubernetes-preserve-unknown-fields: true
                   metrics:
                     additionalProperties:
                       description: MetricsData ..

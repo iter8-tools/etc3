@@ -19,7 +19,6 @@ func (HTTPMock) Post(url, contentType string, body []byte) ([]byte, int, error) 
 func TestInvoke(t *testing.T) {
 	hm := HTTPMock{}
 	log := logr.Discard()
-	resp, err := Invoke(log, "https://iter8.tools", "hello", hm)
+	_, err := Invoke(log, "https://iter8.tools", "hello", hm)
 	assert.NoError(t, err)
-	assert.Nil(t, resp.BuiltinHists)
 }
