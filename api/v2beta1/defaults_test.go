@@ -104,36 +104,28 @@ var _ = Describe("Initialization", func() {
 
 var _ = Describe("VersionInfo", func() {
 	Context("When count versions", func() {
-		builder := NewExperiment("test", "default").
-			WithVersion("baseline").WithVersion("candidate")
+		builder := NewExperiment("test", "default")
 		It("should count correctly", func() {
 			experiment := builder.DeepCopy().Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
 			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(0))
 
-			experiment = builder.DeepCopy().
-				WithBaselineVersion("baseline", nil).
+			experiment = builder.DeepCopy().WithVersion("v1").
 				Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
 			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(0))
 
 			experiment = builder.DeepCopy().
-				WithCandidateVersion("candidate", nil).
-				Build()
-				//			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
-			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(1))
-
-			experiment = builder.DeepCopy().
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate", nil).
+				WithVersion("v1").
+				WithVersion("v2").
 				Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
 			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(1))
 
 			experiment = builder.DeepCopy().
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate", nil).
-				WithCandidateVersion("c", nil).
+				WithVersion("v1").
+				WithVersion("v2").
+				WithVersion("v3").
 				Build()
 			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
 			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(2))
@@ -200,15 +192,6 @@ var _ = Describe("Generated Code", func() {
 				WithVersion("baseline").WithVersion("candidate").
 				WithDeploymentPattern(DeploymentPatternFixedSplit).
 				WithDuration(3, 2, 1).
-				WithBaselineVersion("baseline", nil).
-				WithBaselineVersion("baseline", &corev1.ObjectReference{
-					Kind:       "kind",
-					Namespace:  "namespace",
-					Name:       "name",
-					APIVersion: "apiVersion",
-					FieldPath:  "path",
-				}).
-				WithCandidateVersion("candidate", nil).WithCandidateVersion("candidate", nil).
 				WithCurrentWeight("baseline", 25).WithCurrentWeight("candidate", 75).
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
 				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
@@ -260,7 +243,6 @@ var _ = Describe("Generated Code", func() {
 			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Weights, experiment.Spec.Strategy.Weights.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Actions, experiment.Spec.Strategy.Actions.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Actions["start"], experiment.Spec.Strategy.Actions["start"].DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Spec.VersionInfo, experiment.Spec.VersionInfo.DeepCopy())).Should(BeTrue())
 			// Expect(reflect.DeepEqual(experiment.Spec.VersionInfo.Baseline, experiment.Spec.VersionInfo.Baseline.DeepCopy())).Should(BeTrue())
 
 			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())

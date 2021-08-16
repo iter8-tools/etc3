@@ -63,15 +63,16 @@ var DefaultBlueGreenSplit = []int32{0, 100}
 
 // GetNumberOfCandidates returns the number of candidates in VersionInfo
 func (s *ExperimentSpec) GetNumberOfCandidates() int {
-	if s.VersionInfo == nil {
+	numVersions := len(s.Versions)
+	if numVersions == 0 {
 		return 0
 	}
-	return len((*s.VersionInfo).Candidates)
+	return numVersions - 1
 }
 
 // HasBaseline determines if a baseline has been identified in a s.VersionInfo
 func (s *ExperimentSpec) HasBaseline() bool {
-	return !(s.VersionInfo == nil)
+	return len(s.Versions) > 0
 }
 
 // GetNumberOfBaseline returns the number of baselines in VersionInfo (1 if present, 0 otherwise)

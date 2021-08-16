@@ -60,10 +60,6 @@ type ExperimentSpec struct {
 	// +kubebuilder:validation:MinItems:=1
 	Versions []string `json:"versions" yaml:"versions"`
 
-	// VersionInfo is information about versions that is typically provided by the domain start handler
-	// +optional
-	VersionInfo *VersionInfo `json:"versionInfo,omitempty" yaml:"versionInfo,omitempty"`
-
 	// Strategy identifies the type of experiment and its properties
 	Strategy Strategy `json:"strategy" yaml:"strategy"`
 
@@ -85,31 +81,6 @@ type MetricInfo struct {
 	// MetricObj is the referenced metric
 	// +kubebuilder:validation:EmbeddedResource
 	MetricObj Metric `json:"metricObj" yaml:"metricObj"`
-}
-
-// VersionInfo is information about versions that is typically provided by the domain start handler.
-type VersionInfo struct {
-	// Baseline is baseline version
-	Baseline VersionDetail `json:"baseline" yaml:"baseline"`
-
-	// Candidates is list candidate versions
-	// +optional
-	Candidates []VersionDetail `json:"candidates,omitempty" yaml:"candidates,omitempty"`
-}
-
-// VersionDetail is detail about a single version
-type VersionDetail struct {
-
-	// Name is a name for the version
-	Name string `json:"name" yaml:"name"`
-
-	// Variables is a list of variables that can be used by handlers and in metrics queries
-	// +optional
-	Variables []NamedValue `json:"variables,omitempty" yaml:"variables,omitempty"`
-
-	// WeightObjRef is a reference to another kubernetes object
-	// +optional
-	WeightObjRef *corev1.ObjectReference `json:"weightObjRef,omitempty" yaml:"weightObjRef,omitempty"`
 }
 
 // Strategy identifies the type of experiment and its properties

@@ -158,10 +158,10 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// when we advance for the first time, we exit to force update; will be retriggered
 	if ok := r.advanceStage(ctx, instance, v2beta1.ExperimentStageRunning); ok {
 		log.Info("Updating stage advance to: Running")
-		if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
-			r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
-			return r.failExperiment(ctx, instance, nil)
-		}
+		// if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
+		// 	r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
+		// 	return r.failExperiment(ctx, instance, nil)
+		// }
 		return r.endRequest(ctx, instance)
 	}
 
@@ -424,11 +424,11 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 			result, err := r.endExperiment(ctx, instance, "Experiment Completed")
 			return stop, result, err
 		case HandlerTypeLoop:
-			// we update Status.CurrentWeightDistribution then allow reconcile to continue
-			if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
-				r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
-				return stop, dummyResult, err
-			}
+			// // we update Status.CurrentWeightDistribution then allow reconcile to continue
+			// if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
+			// 	r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
+			// 	return stop, dummyResult, err
+			// }
 			return !stop, dummyResult, nil
 		default: // HandlerTypeStart
 			// allow reconcile to continue

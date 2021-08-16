@@ -103,17 +103,17 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 		return r.rollbackExperiment(ctx, instance)
 	}
 
-	// update weight distribution
-	if err := redistributeWeight(ctx, instance, r.RestConfig); err != nil {
-		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
-		return r.failExperiment(ctx, instance, err)
-	}
+	// // update weight distribution
+	// if err := redistributeWeight(ctx, instance, r.RestConfig); err != nil {
+	// 	r.recordExperimentFailed(ctx, instance, v2beta1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
+	// 	return r.failExperiment(ctx, instance, err)
+	// }
 
-	// after weights have been redistributed, update Status.CurrentWeightDistribution
-	if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
-		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
-		return r.failExperiment(ctx, instance, nil)
-	}
+	// // after weights have been redistributed, update Status.CurrentWeightDistribution
+	// if err := updateObservedWeights(ctx, instance, r.RestConfig); err != nil {
+	// 	r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "Specification of version weightObjectRef invalid: %s", err.Error())
+	// 	return r.failExperiment(ctx, instance, nil)
+	// }
 
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)

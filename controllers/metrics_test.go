@@ -118,7 +118,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it starts Running")
 			// this assumes that it runs for a while
 			Eventually(func() bool {
-				return containsSubString(events, "Advanced to Running") //v2beta1.ReasonStageAdvanced)
+				return issuedEvent("Advanced to Running") //v2beta1.ReasonStageAdvanced)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -134,7 +134,6 @@ var _ = Describe("Metrics", func() {
 				WithAction(handler, []v2beta1.TaskSpec{}).
 				WithRequestCount(metricsNamespace+"/request-count").
 				WithDuration(30, iterations, loops).
-				WithBaselineVersion("baseline", nil).
 				Build()
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -146,7 +145,7 @@ var _ = Describe("Metrics", func() {
 		// experiment (in default ns) refers to metric "request-count" (not in default namespace)
 		It("Should fail to read metrics", func() {
 			By("Creating experiment")
-			testName = "invalid-metric"
+			testName = "non-existing-metric-1"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithRequestCount("request-count").
@@ -155,8 +154,8 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonMetricUnavailable) &&
-					containsSubString(events, "default/request-count")
+				return issuedEvent(v2beta1.ReasonMetricUnavailable) &&
+					issuedEvent("default/request-count")
 			}, 5).Should(BeTrue())
 			Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
@@ -165,7 +164,7 @@ var _ = Describe("Metrics", func() {
 		// experiment (in default ns) refers to metric "iter8/request-count" (not in iter8 namespace)
 		It("Should fail to read metrics", func() {
 			By("Creating experiment")
-			testName = "invalid-metric"
+			testName = "non-existing-metric-2"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithRequestCount("iter8/request-count").
@@ -174,9 +173,8 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonMetricUnavailable)
+				return issuedEvent(v2beta1.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
-			Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
 	})
 
@@ -195,7 +193,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it fails")
 			// this depends on an experiment that should run for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonMetricUnavailable)
+				return issuedEvent(v2beta1.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 			// Eventually(func() bool { return fails(testName, testNamespace) }, 5).Should(BeTrue())
 		})
@@ -217,7 +215,7 @@ var _ = Describe("Metrics", func() {
 			By("Checking that it starts Running")
 			// this assumes that it runs for a while
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonStageAdvanced)
+				return issuedEvent(v2beta1.ReasonStageAdvanced)
 			}, 5).Should(BeTrue())
 		})
 	})
