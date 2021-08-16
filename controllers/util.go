@@ -53,3 +53,12 @@ func CompletePath(prefix string, suffix string) string {
 	_, testFilename, _, _ := runtime.Caller(1) // one step up the call stack
 	return filepath.Join(filepath.Dir(testFilename), prefix, suffix)
 }
+
+func versionIndex(version string, instance *v2beta1.Experiment) (index int, ok bool) {
+	for i, v := range instance.Spec.Versions {
+		if v == version {
+			return i, true
+		}
+	}
+	return -1, false
+}

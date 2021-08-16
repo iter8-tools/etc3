@@ -154,22 +154,10 @@ var _ = BeforeSuite(func(done Done) {
 
 	testTransport := &testHTTP{
 		analysis: &v2beta1.Analysis{
-			AggregatedMetrics: &v2beta1.AggregatedMetricsAnalysis{
-				AnalysisMetaData: v2beta1.AnalysisMetaData{},
-				Data:             map[string]v2beta1.AggregatedMetricsData{},
-			},
-			WinnerAssessment: &v2beta1.WinnerAssessmentAnalysis{
-				AnalysisMetaData: v2beta1.AnalysisMetaData{},
-				Data:             v2beta1.WinnerAssessmentData{},
-			},
-			VersionAssessments: &v2beta1.VersionAssessmentAnalysis{
-				AnalysisMetaData: v2beta1.AnalysisMetaData{},
-				Data:             map[string]v2beta1.BooleanList{},
-			},
-			Weights: &v2beta1.WeightsAnalysis{
-				AnalysisMetaData: v2beta1.AnalysisMetaData{},
-				Data:             []v2beta1.WeightData{},
-			},
+			Metrics:    []map[string]v2beta1.QuantityList{},
+			Winner:     &v2beta1.Winner{},
+			Objectives: []v2beta1.BooleanList{},
+			Weights:    []int32{},
 		},
 	}
 
@@ -239,7 +227,7 @@ func hasValue(name string, ns string, check check) bool {
 }
 
 func ctx() context.Context {
-	return context.WithValue(context.Background(), LoggerKey, ctrl.Log)
+	return context.WithValue(context.Background(), LoggerKey, lg)
 }
 
 // Helper functions to check and remove string from a slice of strings.

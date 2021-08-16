@@ -21,7 +21,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -53,17 +52,13 @@ var _ = Describe("Reading Weights Using internal method observeWeight", func() {
 			}
 		})
 		It("A FieldPath into an array returns a valid value", func() {
-			objRef.FieldPath = ".status.currentWeightDistribution[2].value"
+			objRef.FieldPath = ".status.currentWeightDistribution[2]"
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			time.Sleep(3 * time.Second)
 			exp := v2beta1.Experiment{}
 			Expect(k8sClient.Get(ctx(), types.NamespacedName{Namespace: namespace, Name: name}, &exp)).Should(Succeed())
-			exp.Status.CurrentWeightDistribution = []v2beta1.WeightData{
-				{Name: "v1", Value: 10},
-				{Name: "v2", Value: 20},
-				{Name: "v3", Value: 30},
-				{Name: "v4", Value: 40},
-			}
+			exp.Status.CurrentWeightDistribution = []int32{10, 20, 30, 40}
+
 			Expect(k8sClient.Status().Update(ctx(), &exp)).Should(Succeed())
 			value, _ := observeWeight(ctx(), objRef, namespace, cfg)
 			Expect(*value).To(Equal(int32(30)))
@@ -166,10 +161,8 @@ var _ = Describe("Updating weights from reconcile", func() {
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2beta1.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 2 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
-						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
-						exp.Status.CurrentWeightDistribution[1].Value == 3
+						exp.Status.CurrentWeightDistribution[0] == 3 &&
+						exp.Status.CurrentWeightDistribution[1] == 3
 				})
 			}, 5).Should(BeTrue())
 		})
@@ -196,10 +189,8 @@ var _ = Describe("Updating weights from reconcile", func() {
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2beta1.Experiment) bool {
 					return len(exp.Status.CurrentWeightDistribution) == 2 &&
-						exp.Status.CurrentWeightDistribution[0].Name == "baseline" &&
-						exp.Status.CurrentWeightDistribution[0].Value == 3 &&
-						exp.Status.CurrentWeightDistribution[1].Name == "candidate" &&
-						exp.Status.CurrentWeightDistribution[1].Value == 97
+						exp.Status.CurrentWeightDistribution[0] == 3 &&
+						exp.Status.CurrentWeightDistribution[1] == 97
 				})
 			}, 5).Should(BeTrue())
 		})
@@ -245,7 +236,7 @@ var _ = Describe("patch", func() {
 		var objRef *corev1.ObjectReference
 		JustBeforeEach(func() {
 			bldr = v2beta1.NewExperiment(name, namespace).
-				WithVersion("baseline").WithVersion("candidate").
+				WithVersion("v1").WithVersion("v2").
 				WithDuration(10, 5, 3)
 
 			objRef = &corev1.ObjectReference{
@@ -268,16 +259,7 @@ var _ = Describe("patch", func() {
 			Expect(k8sClient.Get(ctx(), types.NamespacedName{Namespace: namespace, Name: name}, &exp)).Should(Succeed())
 			By("Updating experiment with recommended weights")
 			exp.Status.Analysis = &v2beta1.Analysis{
-				Weights: &v2beta1.WeightsAnalysis{
-					AnalysisMetaData: v2beta1.AnalysisMetaData{
-						Provenance: "provenance",
-						Timestamp:  metav1.Now(),
-					},
-					Data: []v2beta1.WeightData{
-						{Name: "v1", Value: 14},
-						{Name: "v2", Value: 16},
-					},
-				},
+				Weights: []int32{14, 16},
 			}
 			Expect(k8sClient.Status().Update(ctx(), &exp)).Should(Succeed())
 			By("calling redistributeWeight")

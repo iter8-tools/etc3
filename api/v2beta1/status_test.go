@@ -81,12 +81,9 @@ var _ = Describe("Winner Determination", func() {
 		Specify("Version recommended for promotion is current baseline", func() {
 			winner := "winner"
 			experiment.Status.Analysis = &Analysis{
-				WinnerAssessment: &WinnerAssessmentAnalysis{
-					AnalysisMetaData: AnalysisMetaData{},
-					Data: WinnerAssessmentData{
-						WinnerFound: false,
-						Winner:      &winner,
-					},
+				Winner: &Winner{
+					WinnerFound: false,
+					Winner:      &winner,
 				},
 			}
 			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)
@@ -97,12 +94,9 @@ var _ = Describe("Winner Determination", func() {
 		Specify("Version recommended for promotion is winner", func() {
 			winner := "winner"
 			experiment.Status.Analysis = &Analysis{
-				WinnerAssessment: &WinnerAssessmentAnalysis{
-					AnalysisMetaData: AnalysisMetaData{},
-					Data: WinnerAssessmentData{
-						WinnerFound: true,
-						Winner:      &winner,
-					},
+				Winner: &Winner{
+					WinnerFound: true,
+					Winner:      &winner,
 				},
 			}
 			experiment.Status.SetVersionRecommendedForPromotion(experiment.Spec.VersionInfo.Baseline.Name)

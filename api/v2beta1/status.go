@@ -179,16 +179,16 @@ func (s *ExperimentStatus) SetVersionRecommendedForPromotion(currentBaseline str
 }
 
 func identfiedWinner(analysis *Analysis) *string {
-	if analysis == nil || analysis.WinnerAssessment == nil {
+	if analysis == nil || analysis.Winner == nil {
 		return nil
 	}
-	if !analysis.WinnerAssessment.Data.WinnerFound {
+	if !analysis.Winner.WinnerFound {
 		return nil
 	}
-	if analysis.WinnerAssessment.Data.Winner == nil {
+	if analysis.Winner.Winner == nil {
 		return nil
 	}
-	return analysis.WinnerAssessment.Data.Winner
+	return analysis.Winner.Winner
 }
 
 // MarkCondition sets a condition with a status, reason and message.

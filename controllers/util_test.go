@@ -43,3 +43,19 @@ func TestContext(t *testing.T) {
 	assert.Equal(t, lg, Logger(ctx))
 	assert.True(t, reflect.DeepEqual(OriginalStatus(ctx), &status))
 }
+
+func TestVersionIndex(t *testing.T) {
+	e := v2beta1.NewExperiment("test", "namespace").WithVersion("v1").WithVersion("v2").Build()
+	i, ok := versionIndex("v1", e)
+	assert.True(t, ok)
+	assert.Equal(t, i, 0)
+
+	i, ok = versionIndex("v2", e)
+	assert.True(t, ok)
+	assert.Equal(t, i, 1)
+
+	i, ok = versionIndex("v3", e)
+	assert.False(t, ok)
+	assert.Equal(t, i, -1)
+
+}
