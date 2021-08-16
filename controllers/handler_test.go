@@ -105,7 +105,8 @@ var _ = Describe("Handlers Run", func() {
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2beta1.Experiment) bool {
-					return exp.Status.GetCompletedIterations() == iterations*loops
+					return exp.Status.GetCompletedIterations() == iterations*loops &&
+						exp.Status.GetCompletedLoops() == loops
 				})
 			}, 20).Should(BeTrue())
 		})

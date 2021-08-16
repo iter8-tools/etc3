@@ -128,6 +128,8 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 	if loop, ok := completedLoop(instance); ok {
 		r.recordExperimentProgress(ctx, instance, v2beta1.ReasonIterationCompleted, "Completed Loop %d", loop)
 
+		instance.Status.IncrementCompletedLoops()
+
 		if quit, result, err := r.launchHandlerWrapper(
 			ctx, instance, HandlerTypeLoop, handlerLaunchModifier{loop: &loop}); quit {
 			return result, err

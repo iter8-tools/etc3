@@ -159,6 +159,7 @@ var _ = Describe("Experiment Validation", func() {
 					return exp.Status.StartTime != nil &&
 						exp.Status.LastUpdateTime != nil &&
 						exp.Status.CompletedIterations != nil &&
+						exp.Status.CompletedLoops != nil &&
 						len(exp.Status.Conditions) == 2
 				})
 			}).Should(BeTrue())

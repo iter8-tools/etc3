@@ -283,10 +283,15 @@ type ExperimentStatus struct {
 	// TestingPattern identifies the type of experiment being executed
 	TestingPattern *TestingPatternType `json:"testingPattern,omitempty" yaml:"testingPattern,omitempty"`
 
-	// CurrentIteration is the current iteration number.
+	// CompletedIterations is the number of completed iterations.
 	// It is undefined until the experiment starts.
 	// +optional
 	CompletedIterations *int32 `json:"completedIterations,omitempty" yaml:"completedIterations,omitempty"`
+
+	// CurrentLoops is the number of loops that have completed
+	// It is undefined until the experiment starts.
+	// +optional
+	CompletedLoops *int32 `json:"completedLoops,omitempty" yaml:"completedLoops,omitempty"`
 
 	// CurrentWeightDistribution is currently applied traffic weights
 	// +optional
