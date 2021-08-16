@@ -223,20 +223,13 @@ var _ = Describe("Generated Code", func() {
 			experiment.InitializeStatus()
 			winner := "winner"
 			q := resource.Quantity{}
-			ss := int32(1)
 			experiment.Status.Analysis = &Analysis{
-				Metrics: &map[string]MetricsData{
-					"metric1": {
-						Max: &q,
-						Min: &q,
-						Data: map[string]MetricsVersionData{
-							"metric": {
-								Min:        &q,
-								Max:        &q,
-								Value:      &q,
-								SampleSize: &ss,
-							},
-						},
+				Metrics: []map[string]QuantityList{
+					{
+						"metric1": []resource.Quantity{q},
+					},
+					{
+						"metric1": []resource.Quantity{q},
 					},
 				},
 				Winner: &Winner{

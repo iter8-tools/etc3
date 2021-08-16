@@ -154,7 +154,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	testTransport := &testHTTP{
 		analysis: &v2beta1.Analysis{
-			Metrics:    &map[string]v2beta1.MetricsData{},
+			Metrics:    []map[string]v2beta1.QuantityList{},
 			Winner:     &v2beta1.Winner{},
 			Objectives: []v2beta1.BooleanList{},
 			Weights:    []int32{},

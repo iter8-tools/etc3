@@ -337,7 +337,7 @@ type ExperimentCondition struct {
 // Analysis is data from an analytics provider
 type Analysis struct {
 	// Metrics
-	Metrics *map[string]MetricsData `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+	Metrics []map[string]QuantityList `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 
 	// Winner
 	Winner *Winner `json:"winner,omitempty" yaml:"winner,omitempty"`
@@ -355,6 +355,9 @@ type Analysis struct {
 // BooleanList ..
 type BooleanList []bool
 
+// QuantityList ..
+type QuantityList []resource.Quantity
+
 // Winner ..
 type Winner struct {
 	// WinnerFound whether or not a winning version has been identified
@@ -363,40 +366,6 @@ type Winner struct {
 	// Winner if found
 	// +optional
 	Winner *string `json:"winner,omitempty" yaml:"winner,omitempty"`
-}
-
-// MetricsData ..
-type MetricsData struct {
-	// Max value observed for this metric across all versions
-	// +optional
-	Max *resource.Quantity `json:"max,omitempty" yaml:"max,omitempty"`
-
-	// Min value observed for this metric across all versions
-	// +optional
-	Min *resource.Quantity `json:"min,omitempty" yaml:"min,omitempty"`
-
-	// Data is a map from version name to the most recent aggregated metrics data for that version
-	Data map[string]MetricsVersionData `json:"data" yaml:"data"`
-}
-
-// MetricsVersionData ..
-type MetricsVersionData struct {
-	// Max value observed for this metric for this version
-	// +optional
-	Max *resource.Quantity `json:"max,omitempty" yaml:"max,omitempty"`
-
-	// Min value observed for this metric for this version
-	// +optional
-	Min *resource.Quantity `json:"min,omitempty" yaml:"min,omitempty"`
-
-	// Value of the metric observed for this version
-	// +optional
-	Value *resource.Quantity `json:"value,omitempty" yaml:"value,omitempty"`
-
-	// SampleSize is the size of the sample used for computing this metric.
-	// This field is applicable only to Gauge metrics
-	// +kubebuilder:validation:Minimum:=0
-	SampleSize *int32 `json:"sampleSize,omitempty" yaml:"sampleSize,omitempty"`
 }
 
 func init() {

@@ -384,69 +384,19 @@ spec:
                 description: Analysis returned by the last analyis
                 properties:
                   metrics:
-                    additionalProperties:
-                      description: MetricsData ..
-                      properties:
-                        data:
-                          additionalProperties:
-                            description: MetricsVersionData ..
-                            properties:
-                              max:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                description: Max value observed for this metric for
-                                  this version
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              min:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                description: Min value observed for this metric for
-                                  this version
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              sampleSize:
-                                description: SampleSize is the size of the sample
-                                  used for computing this metric. This field is applicable
-                                  only to Gauge metrics
-                                format: int32
-                                minimum: 0
-                                type: integer
-                              value:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                description: Value of the metric observed for this
-                                  version
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                            type: object
-                          description: Data is a map from version name to the most
-                            recent aggregated metrics data for that version
-                          type: object
-                        max:
-                          anyOf:
-                          - type: integer
-                          - type: string
-                          description: Max value observed for this metric across all
-                            versions
-                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                          x-kubernetes-int-or-string: true
-                        min:
-                          anyOf:
-                          - type: integer
-                          - type: string
-                          description: Min value observed for this metric across all
-                            versions
-                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                          x-kubernetes-int-or-string: true
-                      required:
-                      - data
-                      type: object
                     description: Metrics
-                    type: object
+                    items:
+                      additionalProperties:
+                        description: QuantityList ..
+                        items:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        type: array
+                      type: object
+                    type: array
                   objectives:
                     description: Objectives if not empty, the length of the outer
                       slice must match the length of Spec.Versions if not empty, the
