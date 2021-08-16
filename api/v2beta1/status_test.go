@@ -36,6 +36,22 @@ var _ = Describe("CurrentIterations", func() {
 			Expect(experiment.Status.GetCompletedIterations()).Should(Equal(int32(2)))
 		})
 	})
+	Context("Loop Utilities", func() {
+		It("Work as Expected", func() {
+			By("Creating an experiment")
+			experiment := NewExperiment("test", "default").Build()
+
+			By("Verifying that no loops have been completed")
+			Expect(experiment.Status.GetCompletedLoops()).Should(Equal(int32(0)))
+
+			By("Incrementing the number of completed loops")
+			experiment.Status.IncrementCompletedLoops()
+			experiment.Status.IncrementCompletedLoops()
+
+			By("Checking that the number incremented")
+			Expect(experiment.Status.GetCompletedLoops()).Should(Equal(int32(2)))
+		})
+	})
 })
 
 var _ = Describe("Winner Determination", func() {

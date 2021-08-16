@@ -594,8 +594,13 @@ spec:
                     type: object
                 type: object
               completedIterations:
-                description: CurrentIteration is the current iteration number. It
-                  is undefined until the experiment starts.
+                description: CompletedIterations is the number of completed iterations.
+                  It is undefined until the experiment starts.
+                format: int32
+                type: integer
+              completedLoops:
+                description: CurrentLoops is the number of loops that have completed
+                  It is undefined until the experiment starts.
                 format: int32
                 type: integer
               conditions:

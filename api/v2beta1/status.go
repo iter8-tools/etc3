@@ -26,6 +26,8 @@ import (
 const (
 	//DefaultCompletedIterations is the number of iterations that have completed; ie, 0
 	DefaultCompletedIterations = 0
+	//DefaultCompletedLoops is the number of loops that have completed; ie, 0
+	DefaultCompletedLoops = 0
 )
 
 func (s *ExperimentStatus) addCondition(conditionType ExperimentConditionType, status corev1.ConditionStatus) *ExperimentCondition {
@@ -83,6 +85,9 @@ func (e *Experiment) InitializeStatus() {
 
 	completedIterations := int32(0)
 	e.Status.CompletedIterations = &completedIterations
+
+	completedLoops := int32(0)
+	e.Status.CompletedLoops = &completedLoops
 }
 
 // TestingPattern assigns a "testing pattern" to the experiment. Note that if the
@@ -138,6 +143,24 @@ func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
 	}
 	*s.CompletedIterations++
 	return *s.CompletedIterations
+}
+
+// GetCompletedLoops ..
+func (s *ExperimentStatus) GetCompletedLoops() int32 {
+	if s.CompletedLoops == nil {
+		return 0
+	}
+	return *s.CompletedLoops
+}
+
+// IncrementCompletedLoops ..
+func (s *ExperimentStatus) IncrementCompletedLoops() int32 {
+	if s.CompletedLoops == nil {
+		iteration := int32(DefaultCompletedLoops)
+		s.CompletedLoops = &iteration
+	}
+	*s.CompletedLoops++
+	return *s.CompletedLoops
 }
 
 // SetVersionRecommendedForPromotion sets a version recommended for promotion to either:

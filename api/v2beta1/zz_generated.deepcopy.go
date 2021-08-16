@@ -513,6 +513,11 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.CompletedLoops != nil {
+		in, out := &in.CompletedLoops, &out.CompletedLoops
+		*out = new(int32)
+		**out = **in
+	}
 	if in.CurrentWeightDistribution != nil {
 		in, out := &in.CurrentWeightDistribution, &out.CurrentWeightDistribution
 		*out = make([]WeightData, len(*in))
