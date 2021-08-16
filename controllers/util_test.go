@@ -31,12 +31,12 @@ func TestContext(t *testing.T) {
 	ctx = context.WithValue(ctx, LoggerKey, lg)
 
 	iterations := int32(5)
-	recommendation := "winner"
+	loops := int32(2)
 	message := "message"
 	status := v2beta1.ExperimentStatus{
-		CompletedIterations:            &iterations,
-		VersionRecommendedForPromotion: &recommendation,
-		Message:                        &message,
+		CompletedIterations: &iterations,
+		CompletedLoops:      &loops,
+		Message:             &message,
 	}
 	ctx = context.WithValue(ctx, OriginalStatusKey, &status)
 

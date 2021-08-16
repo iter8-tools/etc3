@@ -115,9 +115,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 		return r.failExperiment(ctx, instance, nil)
 	}
 
-	// update status.versionRecommendedForPromotion if a new winner identified
-	instance.Status.SetVersionRecommendedForPromotion(instance.Spec.Versions[0])
-
 	// update completedIterations counter and record completion
 	r.completeIteration(ctx, instance)
 	r.recordExperimentProgress(ctx, instance, v2beta1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)

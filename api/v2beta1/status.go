@@ -163,34 +163,6 @@ func (s *ExperimentStatus) IncrementCompletedLoops() int32 {
 	return *s.CompletedLoops
 }
 
-// SetVersionRecommendedForPromotion sets a version recommended for promotion to either:
-// the recommended winner or the current baseline
-func (s *ExperimentStatus) SetVersionRecommendedForPromotion(currentBaseline string) {
-	recommendation := identfiedWinner(s.Analysis)
-	if recommendation == nil {
-		recommendation = &currentBaseline
-	}
-	if s.VersionRecommendedForPromotion == nil {
-		s.VersionRecommendedForPromotion = recommendation
-	}
-	if *s.VersionRecommendedForPromotion != *recommendation {
-		s.VersionRecommendedForPromotion = recommendation
-	}
-}
-
-func identfiedWinner(analysis *Analysis) *string {
-	if analysis == nil || analysis.Winner == nil {
-		return nil
-	}
-	if !analysis.Winner.WinnerFound {
-		return nil
-	}
-	if analysis.Winner.Winner == nil {
-		return nil
-	}
-	return analysis.Winner.Winner
-}
-
 // MarkCondition sets a condition with a status, reason and message.
 // The reason and method are also combined to set status.Message
 // Note that we compare all fields to determine if we are actually changing anything.

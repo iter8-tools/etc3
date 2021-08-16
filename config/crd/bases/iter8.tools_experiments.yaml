@@ -691,12 +691,6 @@ spec:
                 - Hybrid-A/B
                 - Hybrid-A/B/N
                 type: string
-              versionRecommendedForPromotion:
-                description: VersionRecommendedForPromotion is the version recommended
-                  as the baseline after the experiment completes. Will be set to the
-                  winner (status.analysis[].data.winner) or to the current baseline
-                  in the case of a rollback.
-                type: string
             type: object
         type: object
     served: true

@@ -171,14 +171,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return r.failExperiment(ctx, instance, nil)
 	}
 
-	// If not set, set an initial status.versionRecommendedForPromotion
-	instance.Status.SetVersionRecommendedForPromotion(instance.Spec.Versions[0])
-
-	// INITIAL WEIGHT DISTRIBUTION (FixedSplit only)
-	// if instance.Spec.GetAlgorithm() == v2beta1.AlgorithmTypeFixedSplit {
-	// 	redistributeWeight (ctx, instance, instance.Spec.GetWeightDistribution())
-	// }
-
 	// EXECUTE ITERATION
 	return r.doIteration(ctx, instance)
 }

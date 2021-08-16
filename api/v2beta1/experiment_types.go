@@ -301,12 +301,6 @@ type ExperimentStatus struct {
 	// +optional
 	Analysis *Analysis `json:"analysis,omitempty" yaml:"analysis,omitempty"`
 
-	// VersionRecommendedForPromotion is the version recommended as the baseline after the experiment completes.
-	// Will be set to the winner (status.analysis[].data.winner)
-	// or to the current baseline in the case of a rollback.
-	// +optional
-	VersionRecommendedForPromotion *string `json:"versionRecommendedForPromotion,omitempty" yaml:"versionRecommendedForPromotion,omitempty"`
-
 	// Message specifies message to show in the kubectl printer
 	// +optional
 	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
