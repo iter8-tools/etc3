@@ -420,11 +420,6 @@ func (in *ExperimentStatus) DeepCopyInto(out *ExperimentStatus) {
 		*out = new(Analysis)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.VersionRecommendedForPromotion != nil {
-		in, out := &in.VersionRecommendedForPromotion, &out.VersionRecommendedForPromotion
-		*out = new(string)
-		**out = **in
-	}
 	if in.Message != nil {
 		in, out := &in.Message, &out.Message
 		*out = new(string)
