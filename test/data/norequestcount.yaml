@@ -8,5 +8,5 @@ spec:
   criteria:
     objectives: []
   duration:
-    intervalSeconds: 1
-    iterationsPerLoop: 1
+    minIntervalBetweenLoops: 1
+    maxLoops: 1

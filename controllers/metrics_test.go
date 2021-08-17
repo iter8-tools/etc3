@@ -127,13 +127,13 @@ var _ = Describe("Metrics", func() {
 		Specify("experiment teminated in a failed state", func() {
 			By("Creating an experiment with a start handler")
 			name := "has-failing-handler"
-			iterations, loops := int32(2), int32(1)
+			loops := int32(2)
 			handler := "start"
 			experiment := v2beta1.NewExperiment(name, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithAction(handler, []v2beta1.TaskSpec{}).
 				WithRequestCount(metricsNamespace+"/request-count").
-				WithDuration(30, iterations, loops).
+				WithDuration(30, loops).
 				Build()
 
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())

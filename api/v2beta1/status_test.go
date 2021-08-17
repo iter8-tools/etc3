@@ -19,23 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CurrentIterations", func() {
-	Context("Iteration Utilities", func() {
-		It("Work as Expected", func() {
-			By("Creating an experiment")
-			experiment := NewExperiment("test", "default").Build()
-
-			By("Verifying that no iterations have been completed")
-			Expect(experiment.Status.GetCompletedIterations()).Should(Equal(int32(0)))
-
-			By("Incrementing the number of completed iterations")
-			experiment.Status.IncrementCompletedIterations()
-			experiment.Status.IncrementCompletedIterations()
-
-			By("Checking that the number incremented")
-			Expect(experiment.Status.GetCompletedIterations()).Should(Equal(int32(2)))
-		})
-	})
+var _ = Describe("CurrentLoops", func() {
 	Context("Loop Utilities", func() {
 		It("Work as Expected", func() {
 			By("Creating an experiment")

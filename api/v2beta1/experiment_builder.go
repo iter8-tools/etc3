@@ -51,14 +51,13 @@ func (b *ExperimentBuilder) WithVersion(version string) *ExperimentBuilder {
 }
 
 // WithDuration ..
-func (b *ExperimentBuilder) WithDuration(interval int32, iterationsPerLoop int32, maxLoops int32) *ExperimentBuilder {
+func (b *ExperimentBuilder) WithDuration(interval int32, maxLoops int32) *ExperimentBuilder {
 
 	if b.Spec.Duration == nil {
 		b.Spec.Duration = &Duration{}
 	}
 
-	b.Spec.Duration.IntervalSeconds = &interval
-	b.Spec.Duration.IterationsPerLoop = &iterationsPerLoop
+	b.Spec.Duration.MinIntervalBetweenLoops = &interval
 	b.Spec.Duration.MaxLoops = &maxLoops
 
 	return b

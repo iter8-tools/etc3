@@ -66,7 +66,7 @@ const (
 // A set of reason setting the experiment condition status
 const (
 	ReasonExperimentInitialized      = "ExperimentInitialized"
-	ReasonIterationCompleted         = "IterationUpdate"
+	ReasonLoopCompleted              = "LoopUpdate"
 	ReasonExperimentCompleted        = "ExperimentCompleted"
 	ReasonAnalyticsServiceError      = "AnalyticsServiceError"
 	ReasonMetricUnavailable          = "MetricUnavailable"
@@ -92,7 +92,7 @@ const (
 	// ExperimentStageRunning indicates an experiment is running
 	ExperimentStageRunning ExperimentStageType = "Running"
 
-	// ExperimentStageFinishing indicates an experiment has completed its iterations and is
+	// ExperimentStageFinishing indicates an experiment has completed its loops and is
 	// running any termination handler (either success or  failure)
 	ExperimentStageFinishing ExperimentStageType = "Finishing"
 

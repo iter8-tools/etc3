@@ -171,8 +171,8 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return r.failExperiment(ctx, instance, nil)
 	}
 
-	// EXECUTE ITERATION
-	return r.doIteration(ctx, instance)
+	// EXECUTE LOOP
+	return r.doLoop(ctx, instance)
 }
 
 // SetupWithManager is the method called when setting up the experiment reconciler with the controller manager.
@@ -271,7 +271,7 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2beta1
 	err := r.updateStatus(ctx, instance)
 
 	if len(interval) > 0 {
-		log.Info("Requeue for next iteration", "interval", interval, "iterations", instance.Status.GetCompletedIterations())
+		log.Info("Requeue for next loop", "interval", interval, "loops", instance.Status.GetCompletedLoops())
 		return ctrl.Result{RequeueAfter: interval[0]}, err
 	}
 	return ctrl.Result{}, err
