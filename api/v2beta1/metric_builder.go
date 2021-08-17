@@ -99,14 +99,14 @@ func (b *MetricBuilder) WithSecret(name string) *MetricBuilder {
 }
 
 // WithHeaderTemplates ..
-func (b *MetricBuilder) WithHeaderTemplates(headerTemplates []NamedValue) *MetricBuilder {
-	b.Spec.HeaderTemplates = headerTemplates
+func (b *MetricBuilder) WithHeader(headers []NamedValue) *MetricBuilder {
+	b.Spec.Headers = headers
 	return b
 }
 
 // WithURLTemplate ..
-func (b *MetricBuilder) WithURLTemplate(urlTemplate *string) *MetricBuilder {
-	b.Spec.URLTemplate = urlTemplate
+func (b *MetricBuilder) WithURL(urlTemplate *string) *MetricBuilder {
+	b.Spec.URL = urlTemplate
 	return b
 }
 

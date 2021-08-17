@@ -71,7 +71,7 @@ var _ = Describe("Metrics Are Created When Valid", func() {
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			WithMock([]NamedLevel{
 				{
 					Name:  "sample-app-v1",
@@ -108,7 +108,7 @@ var _ = Describe("Metrics with method", func() {
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			Build()
 
 		It("the method field is preserved", func() {
@@ -134,7 +134,7 @@ var _ = Describe("Metrics with method", func() {
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			Build()
 
 		It("the method field is defaulted to GET", func() {
@@ -168,7 +168,7 @@ var _ = Describe("Metrics with authtype", func() {
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			Build()
 
 		It("the authtype field is preserved", func() {
@@ -194,7 +194,7 @@ var _ = Describe("Metrics with authtype", func() {
 			WithSampleSize("namespace/name").
 			WithProvider("provider").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			Build()
 
 		It("the AuthType field is not defaulted", func() {

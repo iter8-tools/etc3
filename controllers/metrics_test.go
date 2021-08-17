@@ -48,7 +48,7 @@ var _ = Describe("Metrics", func() {
 			}}).
 			WithProvider("prometheus").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			Build()
 		Expect(k8sClient.Create(ctx(), m)).Should(Succeed())
 		goodObjective2Metric = v2beta1.NewMetric("objective-with-good-reference-2", metricsNamespace).
@@ -59,7 +59,7 @@ var _ = Describe("Metrics", func() {
 			}}).
 			WithProvider("prometheus").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjective2Metric)).Should(Succeed())
@@ -72,7 +72,7 @@ var _ = Describe("Metrics", func() {
 			}}).
 			WithProvider("prometheus").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			WithSampleSize(metricsNamespace + "/request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), goodObjectiveMetric)).Should(Succeed())
@@ -85,7 +85,7 @@ var _ = Describe("Metrics", func() {
 			}}).
 			WithProvider("prometheus").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			WithSampleSize("request-count").
 			Build()
 		Expect(k8sClient.Create(ctx(), badObjectiveMetric)).Should(Succeed())
@@ -97,7 +97,7 @@ var _ = Describe("Metrics", func() {
 			}}).
 			WithProvider("prometheus").
 			WithJQExpression(&jqe).
-			WithURLTemplate(&url).
+			WithURL(&url).
 			Build()
 		Expect(k8sClient.Create(ctx(), rewardMetric)).Should(Succeed())
 	})

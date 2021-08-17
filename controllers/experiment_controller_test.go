@@ -77,7 +77,7 @@ var _ = Describe("Experiment Validation", func() {
 				}}).
 				WithProvider("prometheus").
 				WithJQExpression(&jqe).
-				WithURLTemplate(&url).
+				WithURL(&url).
 				Build()
 			// ns := &corev1.Namespace{
 			// 	ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
@@ -101,7 +101,7 @@ var _ = Describe("Experiment Validation", func() {
 				}}).
 				WithProvider("prometheus").
 				WithJQExpression(&jqe).
-				WithURLTemplate(&url).
+				WithURL(&url).
 				Build()
 			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
 			By("creating an indicator")
@@ -113,7 +113,7 @@ var _ = Describe("Experiment Validation", func() {
 				}}).
 				WithProvider("prometheus").
 				WithJQExpression(&jqe).
-				WithURLTemplate(&url).
+				WithURL(&url).
 				Build()
 			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
 			By("creating an objective")
@@ -125,7 +125,7 @@ var _ = Describe("Experiment Validation", func() {
 				}}).
 				WithProvider("prometheus").
 				WithJQExpression(&jqe).
-				WithURLTemplate(&url).
+				WithURL(&url).
 				Build()
 			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
 			By("creating an objective that is not in the cluster")
@@ -137,7 +137,7 @@ var _ = Describe("Experiment Validation", func() {
 				}}).
 				WithProvider("prometheus").
 				WithJQExpression(&jqe).
-				WithURLTemplate(&url).
+				WithURL(&url).
 				Build()
 
 			By("Creating a new Experiment")
@@ -234,7 +234,7 @@ var _ = Describe("Missing criteria.requestCount", func() {
 				WithType("Gauge").
 				WithProvider("provider").
 				WithJQExpression(&jqe).
-				WithURLTemplate(&url).
+				WithURL(&url).
 				WithSampleSize("requestcount").
 				Build()
 			Expect(k8sClient.Create(ctx(), metric)).Should(Succeed())

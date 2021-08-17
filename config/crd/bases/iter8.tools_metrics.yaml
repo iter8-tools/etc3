@@ -60,12 +60,12 @@ spec:
               description:
                 description: Text description of the metric
                 type: string
-              headerTemplates:
-                description: HeaderTemplates are key/value pairs corresponding to
-                  HTTP request headers and their values. Value may be templated, in
-                  which Iter8 will attempt to substitute placeholders in the template
-                  at query time using Secret. Placeholder substitution will be attempted
-                  only when Secret != nil.
+              headers:
+                description: Headers are key/value pairs corresponding to HTTP request
+                  headers and their values. Value may be templated, in which Iter8
+                  will attempt to substitute placeholders in the template at query
+                  time using Secret. Placeholder substitution will be attempted only
+                  when Secret != nil.
                 items:
                   description: NamedValue name/value to be used in constructing a
                     REST query to backend metrics server
@@ -169,13 +169,13 @@ spec:
               units:
                 description: Units of the metric. Used for informational purposes.
                 type: string
-              urlTemplate:
-                description: URLTemplate is a template for the URL queried during
-                  the HTTP request. Typically, URLTemplate is expected to be the actual
-                  URL without any placeholders. However, as indicated by its name,
-                  URLTemplate may be templated. In this case, Iter8 will attempt to
-                  substitute placeholders in the URLTemplate at query time using Secret.
-                  Placeholder substitution will be attempted only when Secret != nil.
+              url:
+                description: URL is a template for the URL queried during the HTTP
+                  request. Typically, URL is expected to be the actual URL without
+                  any placeholders. However, as indicated by its name, URL may be
+                  templated. In this case, Iter8 will attempt to substitute placeholders
+                  in the URL at query time using Secret. Placeholder substitution
+                  will be attempted only when Secret != nil.
                 type: string
             type: object
         type: object

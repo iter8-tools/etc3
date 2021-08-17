@@ -594,13 +594,13 @@ func (in *MetricSpec) DeepCopyInto(out *MetricSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.HeaderTemplates != nil {
-		in, out := &in.HeaderTemplates, &out.HeaderTemplates
+	if in.Headers != nil {
+		in, out := &in.Headers, &out.Headers
 		*out = make([]NamedValue, len(*in))
 		copy(*out, *in)
 	}
-	if in.URLTemplate != nil {
-		in, out := &in.URLTemplate, &out.URLTemplate
+	if in.URL != nil {
+		in, out := &in.URL, &out.URL
 		*out = new(string)
 		**out = **in
 	}

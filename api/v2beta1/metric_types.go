@@ -142,19 +142,19 @@ type MetricSpec struct {
 	// +optional
 	Secret *string `json:"secret,omitempty" yaml:"secret,omitempty"`
 
-	// HeaderTemplates are key/value pairs corresponding to HTTP request headers and their values.
+	// Headers are key/value pairs corresponding to HTTP request headers and their values.
 	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using Secret.
 	// Placeholder substitution will be attempted only when Secret != nil.
 	// +optional
-	HeaderTemplates []NamedValue `json:"headerTemplates,omitempty" yaml:"headerTemplates,omitempty"`
+	Headers []NamedValue `json:"headers,omitempty" yaml:"headers,omitempty"`
 
-	// URLTemplate is a template for the URL queried during the HTTP request.
-	// Typically, URLTemplate is expected to be the actual URL without any placeholders.
-	// However, as indicated by its name, URLTemplate may be templated.
-	// In this case, Iter8 will attempt to substitute placeholders in the URLTemplate at query time using Secret.
+	// URL is a template for the URL queried during the HTTP request.
+	// Typically, URL is expected to be the actual URL without any placeholders.
+	// However, as indicated by its name, URL may be templated.
+	// In this case, Iter8 will attempt to substitute placeholders in the URL at query time using Secret.
 	// Placeholder substitution will be attempted only when Secret != nil.
 	// +optional
-	URLTemplate *string `json:"urlTemplate,omitempty" yaml:"urlTemplate,omitempty"`
+	URL *string `json:"url,omitempty" yaml:"url,omitempty"`
 
 	// Mock enables mocking of metric values, which is useful in tests and tutorial/documentation.
 	// Iter8 metrics can be either counter (which keep increasing over time) or gauge (which can increase or decrease over time).
