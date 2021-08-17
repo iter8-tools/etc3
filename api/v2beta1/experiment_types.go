@@ -111,22 +111,6 @@ type TaskSpec struct {
 	With map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
 }
 
-// Weights modify the behavior of the traffic split algorithm.
-type Weights struct {
-	// MaxCandidateWeight is the maximum percent of traffic that should be sent to the
-	// candidate versions during an experiment
-	// +kubebuilder:validation:Minimum:=0
-	// +kubebuilder:validation:Maximum:=100
-	// +optional
-	MaxCandidateWeight *int32 `json:"maxCandidateWeight,omitempty" yaml:"maxCandidateWeight,omitempty"`
-
-	// MaxCandidateWeightIncrement the maximum permissible increase in traffic to a candidate in one loop
-	// +kubebuilder:validation:Minimum:=0
-	// +kubebuilder:validation:Maximum:=100
-	// +optional
-	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty" yaml:"maxCandidateWeightIncrement,omitempty"`
-}
-
 // Criteria is list of criteria to be evaluated throughout the experiment
 type Criteria struct {
 
