@@ -102,37 +102,6 @@ var _ = Describe("Initialization", func() {
 	})
 })
 
-var _ = Describe("VersionInfo", func() {
-	Context("When count versions", func() {
-		builder := NewExperiment("test", "default")
-		It("should count correctly", func() {
-			experiment := builder.DeepCopy().Build()
-			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(0))
-			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(0))
-
-			experiment = builder.DeepCopy().WithVersion("v1").
-				Build()
-			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
-			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(0))
-
-			experiment = builder.DeepCopy().
-				WithVersion("v1").
-				WithVersion("v2").
-				Build()
-			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
-			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(1))
-
-			experiment = builder.DeepCopy().
-				WithVersion("v1").
-				WithVersion("v2").
-				WithVersion("v3").
-				Build()
-			Expect(experiment.Spec.GetNumberOfBaseline()).Should(Equal(1))
-			Expect(experiment.Spec.GetNumberOfCandidates()).Should(Equal(2))
-		})
-	})
-})
-
 var _ = Describe("Criteria", func() {
 	var jqe string = "expr"
 

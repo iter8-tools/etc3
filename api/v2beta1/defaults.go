@@ -61,28 +61,6 @@ const (
 // DefaultBlueGreenSplit is the default split to be used for bluegreen experiment
 var DefaultBlueGreenSplit = []int32{0, 100}
 
-// GetNumberOfCandidates returns the number of candidates in VersionInfo
-func (s *ExperimentSpec) GetNumberOfCandidates() int {
-	numVersions := len(s.Versions)
-	if numVersions == 0 {
-		return 0
-	}
-	return numVersions - 1
-}
-
-// HasBaseline determines if a baseline has been identified in a s.VersionInfo
-func (s *ExperimentSpec) HasBaseline() bool {
-	return len(s.Versions) > 0
-}
-
-// GetNumberOfBaseline returns the number of baselines in VersionInfo (1 if present, 0 otherwise)
-func (s *ExperimentSpec) GetNumberOfBaseline() int {
-	if s.HasBaseline() {
-		return 1
-	}
-	return 0
-}
-
 //////////////////////////////////////////////////////////////////////
 // spec.strategy.handlers
 //////////////////////////////////////////////////////////////////////
