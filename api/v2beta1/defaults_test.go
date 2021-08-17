@@ -52,9 +52,6 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultIntervalSeconds)))
 			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
-			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(DefaultMaxCandidateWeight))
-			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(DefaultMaxCandidateWeightIncrement))
-			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(DefaultDeploymentPattern))
 			Expect(experiment.Spec.GetRequestCount()).Should(BeNil())
 			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(DefaultStartHandler))
 			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(DefaultFinishHandler))
@@ -89,9 +86,6 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultIntervalSeconds)))
 			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
-			Expect(experiment.Spec.GetMaxCandidateWeight()).Should(Equal(DefaultMaxCandidateWeight))
-			Expect(experiment.Spec.GetMaxCandidateWeightIncrement()).Should(Equal(DefaultMaxCandidateWeightIncrement))
-			Expect(experiment.Spec.GetDeploymentPattern()).Should(Equal(DefaultDeploymentPattern))
 			Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
 			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(DefaultStartHandler))
 			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(DefaultFinishHandler))
@@ -159,7 +153,6 @@ var _ = Describe("Generated Code", func() {
 			testStr := "test"
 			experimentBuilder := NewExperiment("test", "default").
 				WithVersion("baseline").WithVersion("candidate").
-				WithDeploymentPattern(DeploymentPatternFixedSplit).
 				WithDuration(3, 2, 1).
 				WithCurrentWeight("baseline", 25).WithCurrentWeight("candidate", 75).
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
@@ -172,7 +165,7 @@ var _ = Describe("Generated Code", func() {
 				WithRequestCount("request-count").
 				WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
 				WithIndicator(*NewMetric("indicator", "default").WithJQExpression(&jqe).Build()).
-				WithObjective(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), nil, nil, false)
+				WithObjective(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), nil, nil)
 			experiment := experimentBuilder.Build()
 			experiment.InitializeStatus()
 			winner := "winner"
@@ -209,9 +202,8 @@ var _ = Describe("Generated Code", func() {
 			Expect(reflect.DeepEqual(experiment.Spec.Criteria, experiment.Spec.Criteria.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Duration, experiment.Spec.Duration.DeepCopy())).Should(BeTrue())
 			// Expect(reflect.DeepEqual(experiment.Spec.Strategy, experiment.Spec.Strategy.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Weights, experiment.Spec.Strategy.Weights.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Actions, experiment.Spec.Strategy.Actions.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Spec.Strategy.Actions["start"], experiment.Spec.Strategy.Actions["start"].DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Actions, experiment.Spec.Actions.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Actions["start"], experiment.Spec.Actions["start"].DeepCopy())).Should(BeTrue())
 			// Expect(reflect.DeepEqual(experiment.Spec.VersionInfo.Baseline, experiment.Spec.VersionInfo.Baseline.DeepCopy())).Should(BeTrue())
 
 			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())

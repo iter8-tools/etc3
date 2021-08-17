@@ -40,7 +40,7 @@ var _ = Describe("Experiment", func() {
 		{
 			file:      "expspec.yaml",
 			feature:   "with strategy containing actions",
-			fieldPath: []string{"spec", "strategy", "actions", "start"},
+			fieldPath: []string{"spec", "actions", "start"},
 		},
 	}
 

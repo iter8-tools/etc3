@@ -50,13 +50,6 @@ func (b *ExperimentBuilder) WithVersion(version string) *ExperimentBuilder {
 	return b
 }
 
-// WithDeploymentPattern ..
-func (b *ExperimentBuilder) WithDeploymentPattern(deploymentPattern DeploymentPatternType) *ExperimentBuilder {
-	b.Spec.Strategy.DeploymentPattern = &deploymentPattern
-
-	return b
-}
-
 // WithDuration ..
 func (b *ExperimentBuilder) WithDuration(interval int32, iterationsPerLoop int32, maxLoops int32) *ExperimentBuilder {
 
@@ -129,10 +122,10 @@ func (b *ExperimentBuilder) WithCondition(condition ExperimentConditionType, sta
 
 // WithAction ..
 func (b *ExperimentBuilder) WithAction(key string, tasks []TaskSpec) *ExperimentBuilder {
-	if b.Spec.Strategy.Actions == nil {
-		b.Spec.Strategy.Actions = make(ActionMap)
+	if b.Spec.Actions == nil {
+		b.Spec.Actions = make(ActionMap)
 	}
-	b.Spec.Strategy.Actions[key] = tasks
+	b.Spec.Actions[key] = tasks
 	return b
 }
 
@@ -160,16 +153,15 @@ func (b *ExperimentBuilder) WithIndicator(metric Metric) *ExperimentBuilder {
 }
 
 // WithObjective ..
-func (b *ExperimentBuilder) WithObjective(metric Metric, upper *resource.Quantity, lower *resource.Quantity, rollback bool) *ExperimentBuilder {
+func (b *ExperimentBuilder) WithObjective(metric Metric, upper *resource.Quantity, lower *resource.Quantity) *ExperimentBuilder {
 	if b.Spec.Criteria == nil {
 		b.Spec.Criteria = &Criteria{}
 	}
 	name := metric.Namespace + "/" + metric.Name
 	b.Spec.Criteria.Objectives = append(b.Spec.Criteria.Objectives, Objective{
-		Metric:            name,
-		UpperLimit:        upper,
-		LowerLimit:        lower,
-		RollbackOnFailure: &rollback,
+		Metric:     name,
+		UpperLimit: upper,
+		LowerLimit: lower,
 	})
 	return b
 }

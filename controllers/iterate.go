@@ -98,11 +98,6 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 
 	instance.Status.Analysis = analysis
 
-	// Handle failure of objective (possibly rollback)
-	if r.mustRollback(ctx, instance) {
-		return r.rollbackExperiment(ctx, instance)
-	}
-
 	// // update weight distribution
 	// if err := redistributeWeight(ctx, instance, r.RestConfig); err != nil {
 	// 	r.recordExperimentFailed(ctx, instance, v2beta1.ReasonWeightRedistributionFailed, "Failure redistributing weights: %s", err.Error())
@@ -142,38 +137,4 @@ func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *
 	*instance.Status.CompletedIterations++
 	now := metav1.Now()
 	instance.Status.LastUpdateTime = &now
-}
-
-// mustRollback determines if the experiment should be rolled back.
-func (r *ExperimentReconciler) mustRollback(ctx context.Context, instance *v2beta1.Experiment) bool {
-	return len(r.versionsMustRollback(ctx, instance)) > 0
-}
-
-// versionsMustRollback identifies any versions that to be rollbacked:
-//   - Is there an objective for which rollbackOnFailure set to true AND
-//   -    there is a version for which this objective is failing
-// Returns list of versions that failed an objective
-// Assumes the analysis has already been added to status.analysis (avoids another input parameter)
-func (r *ExperimentReconciler) versionsMustRollback(ctx context.Context, instance *v2beta1.Experiment) []string {
-	log := Logger(ctx)
-	log.Info("mustRollbackVersions() called")
-	defer log.Info("mustRollbackVersions() ended")
-
-	deploymentPattern := instance.Spec.GetDeploymentPattern()
-	failedVersions := make([]string, 0)
-	if instance.Spec.Criteria == nil {
-		// there are no criteria
-		return failedVersions
-	}
-	for criteriaIndex, o := range instance.Spec.Criteria.Objectives {
-		if o.GetRollbackOnFailure(deploymentPattern) {
-			// need to rollback on failure; did some version fail for this objective?
-			for versionIndex, version := range instance.Spec.Versions {
-				if instance.Status.Analysis.Objectives[versionIndex][criteriaIndex] {
-					failedVersions = append(failedVersions, version)
-				}
-			}
-		}
-	}
-	return failedVersions
 }

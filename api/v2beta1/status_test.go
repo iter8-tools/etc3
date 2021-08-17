@@ -112,7 +112,7 @@ var _ = Describe("Winner Determination", func() {
 				experiment = NewExperiment("test", "default").
 					WithVersion("v1").WithVersion("v2").
 					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
-					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil, false).
+					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil).
 					Build()
 				Expect(experiment.TestingPattern()).To(Equal(TestingPatternHybridAB))
 			})
@@ -122,7 +122,7 @@ var _ = Describe("Winner Determination", func() {
 				experiment = NewExperiment("test", "default").
 					WithVersion("v1").WithVersion("v2").WithVersion("v3").
 					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
-					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil, false).
+					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil).
 					Build()
 				Expect(experiment.TestingPattern()).To(Equal(TestingPatternHybridABN))
 			})

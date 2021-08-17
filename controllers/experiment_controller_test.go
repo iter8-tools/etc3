@@ -148,8 +148,8 @@ var _ = Describe("Experiment Validation", func() {
 				WithRequestCount("request-count").
 				WithReward(*reward, v2beta1.PreferredDirectionHigher).
 				WithIndicator(*indicator).
-				WithObjective(*objective, nil, nil, false).
-				WithObjective(*fake, nil, nil, true).
+				WithObjective(*objective, nil, nil).
+				WithObjective(*fake, nil, nil).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 
@@ -181,7 +181,6 @@ var _ = Describe("Experiment proceeds", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithDuration(initialInterval, expectedIterations, 1).
-				WithDeploymentPattern(v2beta1.DeploymentPatternFixedSplit).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 

@@ -49,6 +49,39 @@ spec:
           spec:
             description: ExperimentSpec defines the desired state of Experiment
             properties:
+              actions:
+                additionalProperties:
+                  description: Action is a slice of task specifications.
+                  items:
+                    description: TaskSpec contains the specification of a task.
+                    properties:
+                      if:
+                        description: If specifies if this task should be executed.
+                          Task will be evaluated if condition specified by if evaluates
+                          to true, and not otherwise.
+                        type: string
+                      run:
+                        description: Run is identifies the bash script to be run.
+                          TaskSpec must include exactly one of the two fields, run
+                          or task.
+                        type: string
+                      task:
+                        description: Task uniquely identifies the task to be executed.
+                          Examples include 'common/bash', etc.
+                        type: string
+                      with:
+                        additionalProperties:
+                          x-kubernetes-preserve-unknown-fields: true
+                        description: With holds inputs to this task. Different task
+                          require different types of inputs. Hence, this data is held
+                          as json.RawMessage to be decoded by individual task libraries.
+                        type: object
+                    type: object
+                  type: array
+                description: Actions define the collections of tasks that are executed
+                  by handlers. Specifically, start and finish actions are invoked
+                  by start and finish handlers respectively.
+                type: object
               criteria:
                 description: Criteria contains a list of Criterion for assessing the
                   candidates Note that the number of rewards that can be/must be specified
@@ -86,11 +119,6 @@ spec:
                             default domain namespace (defined as a property of iter8
                             when installed). The experiment namespace takes precedence.
                           type: string
-                        rollback_on_failure:
-                          description: RollbackOnFailure indicates that if the criterion
-                            is not met, the experiment should be ended default is
-                            false
-                          type: boolean
                         upperLimit:
                           anyOf:
                           - type: integer
@@ -159,73 +187,6 @@ spec:
                     minimum: 1
                     type: integer
                 type: object
-              strategy:
-                description: Strategy identifies the type of experiment and its properties
-                properties:
-                  actions:
-                    additionalProperties:
-                      description: Action is a slice of task specifications.
-                      items:
-                        description: TaskSpec contains the specification of a task.
-                        properties:
-                          if:
-                            description: If specifies if this task should be executed.
-                              Task will be evaluated if condition specified by if
-                              evaluates to true, and not otherwise.
-                            type: string
-                          run:
-                            description: Run is identifies the bash script to be run.
-                              TaskSpec must include exactly one of the two fields,
-                              run or task.
-                            type: string
-                          task:
-                            description: Task uniquely identifies the task to be executed.
-                              Examples include 'common/bash', etc.
-                            type: string
-                          with:
-                            additionalProperties:
-                              x-kubernetes-preserve-unknown-fields: true
-                            description: With holds inputs to this task. Different
-                              task require different types of inputs. Hence, this
-                              data is held as json.RawMessage to be decoded by individual
-                              task libraries.
-                            type: object
-                        type: object
-                      type: array
-                    description: Actions define the collections of tasks that are
-                      executed by handlers. Specifically, start and finish actions
-                      are invoked by start and finish handlers respectively.
-                    type: object
-                  deploymentPattern:
-                    description: DeploymentPattern is the deployment pattern of an
-                      experiment. It takes effect when the testing pattern is one
-                      of Canary, A/B or A/B/n. It defaults to Progressive.
-                    enum:
-                    - FixedSplit
-                    - Progressive
-                    - BlueGreen
-                    type: string
-                  weights:
-                    description: Weights modify the behavior of the traffic split
-                      algorithm. Defaults depend on the experiment type.
-                    properties:
-                      maxCandidateWeight:
-                        description: MaxCandidateWeight is the maximum percent of
-                          traffic that should be sent to the candidate versions during
-                          an experiment
-                        format: int32
-                        maximum: 100
-                        minimum: 0
-                        type: integer
-                      maxCandidateWeightIncrement:
-                        description: MaxCandidateWeightIncrement the maximum permissible
-                          increase in traffic to a candidate in one iteration
-                        format: int32
-                        maximum: 100
-                        minimum: 0
-                        type: integer
-                    type: object
-                type: object
               versions:
                 description: Versions is list of version labels
                 items:
@@ -233,7 +194,6 @@ spec:
                 minItems: 1
                 type: array
             required:
-            - strategy
             - versions
             type: object
           status:

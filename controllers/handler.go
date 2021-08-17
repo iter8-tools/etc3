@@ -84,7 +84,7 @@ func (r *ExperimentReconciler) GetHandler(instance *v2beta1.Experiment, t Handle
 	// If not, return nil (no handler). Otherwise, return the handler.
 	// This approach is an optimization (we won't start jobs that do basically nothing).
 	// It also helps writing test cases because we don't fail immediately after the start handler.
-	if _, ok := instance.Spec.Strategy.Actions[*hdlr]; !ok {
+	if _, ok := instance.Spec.Actions[*hdlr]; !ok {
 		// no actions for this handler, return nil
 		return nil
 	}
