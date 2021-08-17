@@ -181,14 +181,14 @@ spec:
                     minimum: 1
                     type: integer
                 type: object
-              versions:
-                description: Versions is list of version labels
+              versionInfo:
+                description: VersionInfo is list of version labels
                 items:
                   type: string
                 minItems: 1
                 type: array
             required:
-            - versions
+            - versionInfo
             type: object
           status:
             description: ExperimentStatus defines the observed state of Experiment

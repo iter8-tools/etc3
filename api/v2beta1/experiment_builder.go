@@ -45,7 +45,7 @@ func (b *ExperimentBuilder) Build() *Experiment {
 
 // With Version ..
 func (b *ExperimentBuilder) WithVersion(version string) *ExperimentBuilder {
-	b.Spec.Versions = append(b.Spec.Versions, version)
+	b.Spec.VersionInfo = append(b.Spec.VersionInfo, version)
 
 	return b
 }
@@ -79,10 +79,10 @@ func (b *ExperimentBuilder) WithRequestCount(requestCount string) *ExperimentBui
 func (b *ExperimentBuilder) WithCurrentWeight(name string, weight int32) *ExperimentBuilder {
 
 	if len(b.Status.CurrentWeightDistribution) == 0 {
-		b.Status.CurrentWeightDistribution = make([]int32, len(b.Spec.Versions))
+		b.Status.CurrentWeightDistribution = make([]int32, len(b.Spec.VersionInfo))
 	}
 
-	for i, w := range b.Spec.Versions {
+	for i, w := range b.Spec.VersionInfo {
 		if w == name {
 			b.Status.CurrentWeightDistribution[i] = weight
 			return b
@@ -100,10 +100,10 @@ func (b *ExperimentBuilder) WithRecommendedWeight(name string, weight int32) *Ex
 	}
 
 	if len(b.Status.Analysis.Weights) == 0 {
-		b.Status.Analysis.Weights = make([]int32, len(b.Spec.Versions))
+		b.Status.Analysis.Weights = make([]int32, len(b.Spec.VersionInfo))
 	}
 
-	for i, w := range b.Spec.Versions {
+	for i, w := range b.Spec.VersionInfo {
 		if w == name {
 			b.Status.Analysis.Weights[i] = weight
 			return b

@@ -90,7 +90,7 @@ func (e *Experiment) InitializeStatus() {
 func (e *Experiment) TestingPattern() TestingPatternType {
 	if e.Status.TestingPattern == nil {
 		// set e.Status.TestingPattern
-		numVersions := len(e.Spec.Versions)
+		numVersions := len(e.Spec.VersionInfo)
 		hasReward := e.Spec.Criteria != nil && len(e.Spec.Criteria.Rewards) > 0
 		hasObjectives := e.Spec.Criteria != nil && len(e.Spec.Criteria.Objectives) > 0
 

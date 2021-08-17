@@ -4,7 +4,7 @@ metadata:
   name: exp
   namespace: default
 spec:
-  versions: ["baseline", "candidate"]
+  versionInfo: ["baseline", "candidate"]
   actions:
     loop:
     - task: library/task

@@ -55,7 +55,7 @@ func CompletePath(prefix string, suffix string) string {
 }
 
 func versionIndex(version string, instance *v2beta1.Experiment) (index int, ok bool) {
-	for i, v := range instance.Spec.Versions {
+	for i, v := range instance.Spec.VersionInfo {
 		if v == version {
 			return i, true
 		}

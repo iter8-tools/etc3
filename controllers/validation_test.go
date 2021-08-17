@@ -86,7 +86,7 @@ var _ = Describe("Validation of VersionInfo", func() {
 				WithReward(*v2beta1.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				WithReward(*v2beta1.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				Build()
-			Expect(len(experiment.Spec.Versions)).Should(Equal(2))
+			Expect(len(experiment.Spec.VersionInfo)).Should(Equal(2))
 			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
 			Expect(len(experiment.Spec.Criteria.Rewards)).Should(Equal(2))
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())

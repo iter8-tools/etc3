@@ -125,7 +125,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
 	// See IsExperimentValid() for list of validations done
 	// TODO move to validating web hook
-	if !r.IsExperimentValid(ctx, instance) {
+	if !r.IsExperimentValid(ctx, instance) || !r.IsVersionInfoValid(ctx, instance) {
 		return r.failExperiment(ctx, instance, nil)
 	}
 
@@ -163,12 +163,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		// 	return r.failExperiment(ctx, instance, nil)
 		// }
 		return r.endRequest(ctx, instance)
-	}
-
-	// VERSION VALIDATION (versionInfo should be created by start handler)
-	// See IsVersionInfoValid() for list of validations done
-	if !r.IsVersionInfoValid(ctx, instance) {
-		return r.failExperiment(ctx, instance, nil)
 	}
 
 	// EXECUTE LOOP

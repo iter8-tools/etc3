@@ -4,7 +4,7 @@ metadata:
   name: norealcriteria
   namespace: default
 spec:
-  versions: ["baseline"]
+  versionInfo: ["baseline"]
   criteria:
     objectives: []
   duration:

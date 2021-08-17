@@ -56,9 +56,9 @@ type ExperimentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Versions is list of version labels
+	// VersionInfo is list of version labels
 	// +kubebuilder:validation:MinItems:=1
-	Versions []string `json:"versions" yaml:"versions"`
+	VersionInfo []string `json:"versionInfo" yaml:"versionInfo"`
 
 	// Actions define the collections of tasks that are executed by handlers.
 	// Specifically, start and finish actions are invoked by start and finish handlers respectively.
