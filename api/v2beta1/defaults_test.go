@@ -42,15 +42,13 @@ var _ = Describe("Initialization", func() {
 		Specify("status values should be unset", func() {
 			Expect(experiment.Status.StartTime).Should(BeNil())
 			Expect(experiment.Status.LastUpdateTime).Should(BeNil())
-			Expect(experiment.Status.CompletedIterations).Should(BeNil())
 			Expect(experiment.Status.CompletedLoops).Should(BeNil())
 			Expect(len(experiment.Status.Conditions)).Should(Equal(0))
 			Expect(experiment.Status.TestingPattern).Should(BeNil())
 		})
 		Specify("methods on spec should handle nil gracefully", func() {
-			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(DefaultIterationsPerLoop))
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(DefaultMaxLoops))
-			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultIntervalSeconds)))
+			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultMinIntervalBetweenLoops)))
 			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
 			Expect(experiment.Spec.GetRequestCount()).Should(BeNil())
 			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(DefaultStartHandler))
@@ -72,7 +70,6 @@ var _ = Describe("Initialization", func() {
 			By("Inspecting Status")
 			Expect(experiment.Status.StartTime).ShouldNot(BeNil())
 			Expect(experiment.Status.LastUpdateTime).ShouldNot(BeNil())
-			Expect(experiment.Status.CompletedIterations).ShouldNot(BeNil())
 			Expect(experiment.Status.CompletedLoops).ShouldNot(BeNil())
 			Expect(len(experiment.Status.Conditions)).Should(Equal(2))
 			Expect(experiment.Status.GetCondition(ExperimentConditionExperimentCompleted).IsTrue()).Should(Equal(false))
@@ -82,9 +79,8 @@ var _ = Describe("Initialization", func() {
 
 			By("Initializing Spec")
 			experiment.Spec.InitializeSpec()
-			Expect(experiment.Spec.GetIterationsPerLoop()).Should(Equal(DefaultIterationsPerLoop))
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(DefaultMaxLoops))
-			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultIntervalSeconds)))
+			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultMinIntervalBetweenLoops)))
 			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
 			Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
 			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(DefaultStartHandler))
@@ -153,7 +149,7 @@ var _ = Describe("Generated Code", func() {
 			testStr := "test"
 			experimentBuilder := NewExperiment("test", "default").
 				WithVersion("baseline").WithVersion("candidate").
-				WithDuration(3, 2, 1).
+				WithDuration(3, 2).
 				WithCurrentWeight("baseline", 25).WithCurrentWeight("candidate", 75).
 				WithRecommendedWeight("baseline", 0).WithRecommendedWeight("candidate", 100).
 				WithCurrentWeight("baseline", 30).WithRecommendedWeight("baseline", 10).
@@ -204,7 +200,6 @@ var _ = Describe("Generated Code", func() {
 			// Expect(reflect.DeepEqual(experiment.Spec.Strategy, experiment.Spec.Strategy.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Actions, experiment.Spec.Actions.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Actions["start"], experiment.Spec.Actions["start"].DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Spec.VersionInfo.Baseline, experiment.Spec.VersionInfo.Baseline.DeepCopy())).Should(BeTrue())
 
 			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())

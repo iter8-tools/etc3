@@ -33,7 +33,7 @@ import (
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="type",type="string",JSONPath=".status.testingPattern"
 // +kubebuilder:printcolumn:name="stage",type="string",JSONPath=".status.stage"
-// +kubebuilder:printcolumn:name="completed iterations",type="string",JSONPath=".status.completedIterations"
+// +kubebuilder:printcolumn:name="completed loops",type="string",JSONPath=".status.completedLoops"
 // +kubebuilder:printcolumn:name="message",type="string",JSONPath=".status.message"
 type Experiment struct {
 	metav1.TypeMeta   `json:",inline" yaml:",inline"`
@@ -56,9 +56,9 @@ type ExperimentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Versions is list of version labels
+	// VersionInfo is list of version labels
 	// +kubebuilder:validation:MinItems:=1
-	Versions []string `json:"versions" yaml:"versions"`
+	VersionInfo []string `json:"versionInfo" yaml:"versionInfo"`
 
 	// Actions define the collections of tasks that are executed by handlers.
 	// Specifically, start and finish actions are invoked by start and finish handlers respectively.
@@ -120,7 +120,7 @@ type Weights struct {
 	// +optional
 	MaxCandidateWeight *int32 `json:"maxCandidateWeight,omitempty" yaml:"maxCandidateWeight,omitempty"`
 
-	// MaxCandidateWeightIncrement the maximum permissible increase in traffic to a candidate in one iteration
+	// MaxCandidateWeightIncrement the maximum permissible increase in traffic to a candidate in one loop
 	// +kubebuilder:validation:Minimum:=0
 	// +kubebuilder:validation:Maximum:=100
 	// +optional
@@ -139,11 +139,11 @@ type Criteria struct {
 	// +optional
 	Rewards []Reward `json:"rewards,omitempty" yaml:"rewards,omitempty"`
 
-	// Indicators is a list of metrics to be measured and reported on each iteration of the experiment.
+	// Indicators is a list of metrics to be measured and reported on each loop of the experiment.
 	// +optional
 	Indicators []string `json:"indicators,omitempty" yaml:"indicators,omitempty"`
 
-	// Objectives is a list of conditions on metrics that must be tested on each iteration of the experiment.
+	// Objectives is a list of conditions on metrics that must be tested on each loop of the experiment.
 	// Failure of an objective might reduces the likelihood that a version will be selected as the winning version.
 	// Failure of an objective might also trigger an experiment rollback.
 	// +optional
@@ -189,16 +189,10 @@ type Duration struct {
 	// Default is 20 (seconds)
 	// +kubebuilder:validation:Minimum:=1
 	// +optional
-	IntervalSeconds *int32 `json:"intervalSeconds,omitempty" yaml:"intervalSeconds,omitempty"`
-
-	// IterationsPerLoop is the maximum number of iterations
-	// Default is 15
-	// +kubebuilder:validation:Minimum:=1
-	// +optional
-	IterationsPerLoop *int32 `json:"iterationsPerLoop,omitempty" yaml:"iterationsPerLoop,omitempty"`
+	MinIntervalBetweenLoops *int32 `json:"minIntervalBetweenLoops,omitempty" yaml:"minIntervalBetweenLoops,omitempty"`
 
 	// MaxLoops is the maximum number of loops
-	// Default is 1
+	// Default is 15
 	// Reserved for future use
 	// +kubebuilder:validation:Minimum:=1
 	// +optional
@@ -220,7 +214,7 @@ type ExperimentStatus struct {
 	// matches
 	StartTime *metav1.Time `json:"startTime,omitempty" yaml:"startTime,omitempty"`
 
-	// LastUpdateTime is the last time iteration has been updated
+	// LastUpdateTime is the last time a loop has been updated
 	// +optional
 	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty" yaml:"lastUpdateTime,omitempty"`
 
@@ -230,11 +224,6 @@ type ExperimentStatus struct {
 
 	// TestingPattern identifies the type of experiment being executed
 	TestingPattern *TestingPatternType `json:"testingPattern,omitempty" yaml:"testingPattern,omitempty"`
-
-	// CompletedIterations is the number of completed iterations.
-	// It is undefined until the experiment starts.
-	// +optional
-	CompletedIterations *int32 `json:"completedIterations,omitempty" yaml:"completedIterations,omitempty"`
 
 	// CurrentLoops is the number of loops that have completed
 	// It is undefined until the experiment starts.

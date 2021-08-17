@@ -23,8 +23,8 @@ spec:
     - jsonPath: .status.stage
       name: stage
       type: string
-    - jsonPath: .status.completedIterations
-      name: completed iterations
+    - jsonPath: .status.completedLoops
+      name: completed loops
       type: string
     - jsonPath: .status.message
       name: message
@@ -89,16 +89,16 @@ spec:
                 properties:
                   indicators:
                     description: Indicators is a list of metrics to be measured and
-                      reported on each iteration of the experiment.
+                      reported on each loop of the experiment.
                     items:
                       type: string
                     type: array
                   objectives:
                     description: Objectives is a list of conditions on metrics that
-                      must be tested on each iteration of the experiment. Failure
-                      of an objective might reduces the likelihood that a version
-                      will be selected as the winning version. Failure of an objective
-                      might also trigger an experiment rollback.
+                      must be tested on each loop of the experiment. Failure of an
+                      objective might reduces the likelihood that a version will be
+                      selected as the winning version. Failure of an objective might
+                      also trigger an experiment rollback.
                     items:
                       description: Objective is a service level objective
                       properties:
@@ -168,33 +168,27 @@ spec:
               duration:
                 description: Duration describes how long the experiment will last.
                 properties:
-                  intervalSeconds:
+                  maxLoops:
+                    description: MaxLoops is the maximum number of loops Default is
+                      15 Reserved for future use
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  minIntervalBetweenLoops:
                     description: IntervalSeconds is the length of an interval of the
                       experiment in seconds Default is 20 (seconds)
                     format: int32
                     minimum: 1
                     type: integer
-                  iterationsPerLoop:
-                    description: IterationsPerLoop is the maximum number of iterations
-                      Default is 15
-                    format: int32
-                    minimum: 1
-                    type: integer
-                  maxLoops:
-                    description: MaxLoops is the maximum number of loops Default is
-                      1 Reserved for future use
-                    format: int32
-                    minimum: 1
-                    type: integer
                 type: object
-              versions:
-                description: Versions is list of version labels
+              versionInfo:
+                description: VersionInfo is list of version labels
                 items:
                   type: string
                 minItems: 1
                 type: array
             required:
-            - versions
+            - versionInfo
             type: object
           status:
             description: ExperimentStatus defines the observed state of Experiment
@@ -247,11 +241,6 @@ spec:
                     - winnerFound
                     type: object
                 type: object
-              completedIterations:
-                description: CompletedIterations is the number of completed iterations.
-                  It is undefined until the experiment starts.
-                format: int32
-                type: integer
               completedLoops:
                 description: CurrentLoops is the number of loops that have completed
                   It is undefined until the experiment starts.
@@ -295,7 +284,7 @@ spec:
                   type: integer
                 type: array
               lastUpdateTime:
-                description: LastUpdateTime is the last time iteration has been updated
+                description: LastUpdateTime is the last time a loop has been updated
                 format: date-time
                 type: string
               message:

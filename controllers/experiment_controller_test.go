@@ -41,26 +41,26 @@ var _ = Describe("Experiment Validation", func() {
 
 	ctx := context.Background()
 
-	Context("When creating an experiment with an invalid spec.duration.maxIteration", func() {
+	Context("When creating an experiment with an invalid spec.duration.maxLoops", func() {
 		testName := "test-invalid-duration"
 		testNamespace := "default"
 		It("Should fail to create experiment", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithDuration(10, 0, 1).
+				WithDuration(10, 0).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).ShouldNot(Succeed())
 		})
 	})
 
-	Context("When creating an experiment with a valid spec.duration.maxIteration", func() {
+	Context("When creating an experiment with a valid spec.duration.maxLoops", func() {
 		testName := "test-valid-duration"
 		testNamespace := "default"
 		It("Should succeed in creating experiment", func() {
 			ctx := context.Background()
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithDuration(10, 1, 1).
+				WithDuration(10, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 		})
@@ -158,7 +158,6 @@ var _ = Describe("Experiment Validation", func() {
 				return hasValue(testName, testNamespace, func(exp *v2beta1.Experiment) bool {
 					return exp.Status.StartTime != nil &&
 						exp.Status.LastUpdateTime != nil &&
-						exp.Status.CompletedIterations != nil &&
 						exp.Status.CompletedLoops != nil &&
 						len(exp.Status.Conditions) == 2
 				})
@@ -175,12 +174,12 @@ var _ = Describe("Experiment proceeds", func() {
 		testNamespace := "default"
 		It("Experiment should complete", func() {
 			By("Creating Experiment with 10s interval")
-			expectedIterations := int32(2)
+			expectedLoops := int32(2)
 			initialInterval := int32(5)
 			modifiedInterval := int32(10)
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithDuration(initialInterval, expectedIterations, 1).
+				WithDuration(initialInterval, expectedLoops).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 
@@ -188,7 +187,7 @@ var _ = Describe("Experiment proceeds", func() {
 			time.Sleep(2 * time.Second)
 			createdExperiment := &v2beta1.Experiment{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: testName, Namespace: testNamespace}, createdExperiment)).Should(Succeed())
-			createdExperiment.Spec.Duration.IntervalSeconds = &modifiedInterval
+			createdExperiment.Spec.Duration.MinIntervalBetweenLoops = &modifiedInterval
 			Expect(k8sClient.Update(ctx, createdExperiment)).Should(Succeed())
 
 			Eventually(func() bool {
@@ -196,9 +195,9 @@ var _ = Describe("Experiment proceeds", func() {
 				if err != nil {
 					return false
 				}
-				return createdExperiment.Status.GetCompletedIterations() == expectedIterations
+				return createdExperiment.Status.GetCompletedLoops() == expectedLoops
 				// return true
-			}, 2*modifiedInterval*expectedIterations).Should(BeTrue())
+			}, 2*modifiedInterval*expectedLoops).Should(BeTrue())
 
 		})
 	})
@@ -272,7 +271,7 @@ var _ = Describe("Loop Execution", func() {
 			testName = "loops"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").
-				WithDuration(1, 1, 3).
+				WithDuration(1, 3).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it loops exactly 3 times")

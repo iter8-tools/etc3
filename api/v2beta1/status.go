@@ -24,8 +24,6 @@ import (
 )
 
 const (
-	//DefaultCompletedIterations is the number of iterations that have completed; ie, 0
-	DefaultCompletedIterations = 0
 	//DefaultCompletedLoops is the number of loops that have completed; ie, 0
 	DefaultCompletedLoops = 0
 )
@@ -83,9 +81,6 @@ func (e *Experiment) InitializeStatus() {
 
 	e.TestingPattern()
 
-	completedIterations := int32(DefaultCompletedIterations)
-	e.Status.CompletedIterations = &completedIterations
-
 	completedLoops := int32(DefaultCompletedLoops)
 	e.Status.CompletedLoops = &completedLoops
 }
@@ -95,7 +90,7 @@ func (e *Experiment) InitializeStatus() {
 func (e *Experiment) TestingPattern() TestingPatternType {
 	if e.Status.TestingPattern == nil {
 		// set e.Status.TestingPattern
-		numVersions := len(e.Spec.Versions)
+		numVersions := len(e.Spec.VersionInfo)
 		hasReward := e.Spec.Criteria != nil && len(e.Spec.Criteria.Rewards) > 0
 		hasObjectives := e.Spec.Criteria != nil && len(e.Spec.Criteria.Objectives) > 0
 
@@ -127,24 +122,6 @@ func (e *Experiment) TestingPattern() TestingPatternType {
 	return *e.Status.TestingPattern
 }
 
-// GetCompletedIterations ..
-func (s *ExperimentStatus) GetCompletedIterations() int32 {
-	if s.CompletedIterations == nil {
-		return 0
-	}
-	return *s.CompletedIterations
-}
-
-// IncrementCompletedIterations ..
-func (s *ExperimentStatus) IncrementCompletedIterations() int32 {
-	if s.CompletedIterations == nil {
-		iteration := int32(DefaultCompletedIterations)
-		s.CompletedIterations = &iteration
-	}
-	*s.CompletedIterations++
-	return *s.CompletedIterations
-}
-
 // GetCompletedLoops ..
 func (s *ExperimentStatus) GetCompletedLoops() int32 {
 	if s.CompletedLoops == nil {
@@ -156,8 +133,8 @@ func (s *ExperimentStatus) GetCompletedLoops() int32 {
 // IncrementCompletedLoops ..
 func (s *ExperimentStatus) IncrementCompletedLoops() int32 {
 	if s.CompletedLoops == nil {
-		iteration := int32(DefaultCompletedLoops)
-		s.CompletedLoops = &iteration
+		loop := int32(DefaultCompletedLoops)
+		s.CompletedLoops = &loop
 	}
 	*s.CompletedLoops++
 	return *s.CompletedLoops

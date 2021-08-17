@@ -28,32 +28,18 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func moreIterationsNeeded(instance *v2beta1.Experiment) bool {
-	// Are there more iterations to execute
-	return *instance.Status.CompletedIterations < instance.Spec.GetIterationsPerLoop()*instance.Spec.GetMaxLoops()
-}
-
-// determine if a loop is completed by determing if the number of iterations executed
-// is a multiple of duration.iterationsPerLoop
-func completedLoop(instance *v2beta1.Experiment) (int, bool) {
-	if instance.Status.GetCompletedIterations()%instance.Spec.GetIterationsPerLoop() == 0 {
-		return int(instance.Status.GetCompletedIterations() / instance.Spec.GetIterationsPerLoop()), true
-	}
-	return -1, false
-}
-
-func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx context.Context, instance *v2beta1.Experiment) bool {
+func (r *ExperimentReconciler) sufficientTimePassedSincePreviousLoop(ctx context.Context, instance *v2beta1.Experiment) bool {
 	log := Logger(ctx)
 
-	// Is this the first iteration or has enough time passed since last iteration?
-	if *instance.Status.CompletedIterations == 0 || instance.Status.LastUpdateTime == nil {
+	// Is this the first loop or has enough time passed since last loop?
+	if instance.Status.GetCompletedLoops() == 0 || instance.Status.LastUpdateTime == nil {
 		return true
 	}
 
 	now := time.Now()
 	interval := instance.Spec.GetIntervalAsDuration()
 	expectedTime := instance.Status.LastUpdateTime.Add(interval)
-	log.Info("sufficientTimePassedSincePreviousIteration", "lastUpdateTime", instance.Status.LastUpdateTime, "interval", interval, "sum", expectedTime, "now", now)
+	log.Info("sufficientTimePassedSincePreviousLoop", "lastUpdateTime", instance.Status.LastUpdateTime, "interval", interval, "sum", expectedTime, "now", now)
 
 	if now.Before(expectedTime) {
 		// is it close enough?
@@ -64,20 +50,20 @@ func (r *ExperimentReconciler) sufficientTimePassedSincePreviousIteration(ctx co
 	return true
 }
 
-func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta1.Experiment) (ctrl.Result, error) {
+func (r *ExperimentReconciler) doLoop(ctx context.Context, instance *v2beta1.Experiment) (ctrl.Result, error) {
 	log := Logger(ctx)
-	log.Info("doIteration called")
-	defer log.Info("doIteration completed")
+	log.Info("doLoop called")
+	defer log.Info("doLoop completed")
 
-	// If we've already executed as many iterations as requested, we  should finish the experiment
+	// If we've already executed as many loops as requested, we  should finish the experiment
 	// Check here since may have executed a loop handler
-	if !moreIterationsNeeded(instance) {
+	if instance.Spec.GetMaxLoops() <= instance.Status.GetCompletedLoops() {
 		return r.finishExperiment(ctx, instance)
 	}
 
-	if !r.sufficientTimePassedSincePreviousIteration(ctx, instance) {
-		// not enough time has passed since the last iteration, wait
-		return ctrl.Result{}, errors.New("insufficient time has passed since previous iteration")
+	if !r.sufficientTimePassedSincePreviousLoop(ctx, instance) {
+		// not enough time has passed since the last loop, wait
+		return ctrl.Result{}, errors.New("insufficient time has passed since previous loop")
 	}
 
 	// TODO  GET CURRENT WEIGHTS (from cluster)
@@ -110,31 +96,21 @@ func (r *ExperimentReconciler) doIteration(ctx context.Context, instance *v2beta
 	// 	return r.failExperiment(ctx, instance, nil)
 	// }
 
-	// update completedIterations counter and record completion
-	r.completeIteration(ctx, instance)
-	r.recordExperimentProgress(ctx, instance, v2beta1.ReasonIterationCompleted, "Completed Iteration %d", *instance.Status.CompletedIterations)
+	// END of loop processing: update counter and call loop handler
 
-	// if we are at the end of a loop (we've executed Duration.IterationsPerLoop iterations)
-	// then call a loop handler if one is defined.
-	// Note that we on the last loop, we will not execute this code; we called returned just above.
-	if loop, ok := completedLoop(instance); ok {
-		r.recordExperimentProgress(ctx, instance, v2beta1.ReasonIterationCompleted, "Completed Loop %d", loop)
-
-		instance.Status.IncrementCompletedLoops()
-
-		if quit, result, err := r.launchHandlerWrapper(
-			ctx, instance, HandlerTypeLoop, handlerLaunchModifier{loop: &loop}); quit {
-			return result, err
-		}
-	}
-
-	// Not of loop or there is no loop handler --> schedule next iteration
-	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
-}
-
-func (r *ExperimentReconciler) completeIteration(ctx context.Context, instance *v2beta1.Experiment) {
-	// update completedIterations counter
-	*instance.Status.CompletedIterations++
+	// update completedLoops counter and udpate time
+	loops := int(instance.Status.IncrementCompletedLoops())
 	now := metav1.Now()
 	instance.Status.LastUpdateTime = &now
+	r.recordExperimentProgress(ctx, instance, v2beta1.ReasonLoopCompleted, "Completed Loop %d", instance.Status.GetCompletedLoops())
+
+	// Call a loop handler if one is defined.
+	// Note that we on the last loop, we will not execute this code; we called returned just above.
+	if quit, result, err := r.launchHandlerWrapper(
+		ctx, instance, HandlerTypeLoop, handlerLaunchModifier{loop: &loops}); quit {
+		return result, err
+	}
+
+	// Not of loop or there is no loop handler --> schedule next loop
+	return r.endRequest(ctx, instance, instance.Spec.GetIntervalAsDuration())
 }

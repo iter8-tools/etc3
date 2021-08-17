@@ -30,13 +30,11 @@ func TestContext(t *testing.T) {
 	lg := ctrl.Log.WithName("etc3").WithName("util").WithName("test")
 	ctx = context.WithValue(ctx, LoggerKey, lg)
 
-	iterations := int32(5)
 	loops := int32(2)
 	message := "message"
 	status := v2beta1.ExperimentStatus{
-		CompletedIterations: &iterations,
-		CompletedLoops:      &loops,
-		Message:             &message,
+		CompletedLoops: &loops,
+		Message:        &message,
 	}
 	ctx = context.WithValue(ctx, OriginalStatusKey, &status)
 

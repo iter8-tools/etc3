@@ -37,15 +37,12 @@ const (
 	// DefaultLoopHandler is the prefix of the default loop handler
 	DefaultLoopHandler string = "loop"
 
-	// DefaultIntervalSeconds is default interval duration as a string
-	DefaultIntervalSeconds = 20
-
-	// DefaultIterationsPerLoop is the default number of iterations, 15
-	DefaultIterationsPerLoop int32 = 15
+	// DefaultMinIntervalBetweenLoops is default interval duration as a string
+	DefaultMinIntervalBetweenLoops = 20
 
 	// DefaultMaxLoops is the default maximum number of loops, 1
 	// reserved for future use
-	DefaultMaxLoops int32 = 1
+	DefaultMaxLoops int32 = 15
 )
 
 // DefaultBlueGreenSplit is the default split to be used for bluegreen experiment
@@ -91,10 +88,10 @@ func (s *ExperimentSpec) GetLoopHandler() *string {
 
 // GetIntervalSeconds returns specified(or default) interval for each duration
 func (s *ExperimentSpec) GetIntervalSeconds() int32 {
-	if s.Duration == nil || s.Duration.IntervalSeconds == nil {
-		return DefaultIntervalSeconds
+	if s.Duration == nil || s.Duration.MinIntervalBetweenLoops == nil {
+		return DefaultMinIntervalBetweenLoops
 	}
-	return *s.Duration.IntervalSeconds
+	return *s.Duration.MinIntervalBetweenLoops
 }
 
 // GetIntervalAsDuration returns spec.duration.intervalSeconds as a time.Duration (in ns)
@@ -107,18 +104,10 @@ func (s *ExperimentSpec) InitializeInterval() {
 	if s.Duration == nil {
 		s.Duration = &Duration{}
 	}
-	if s.Duration.IntervalSeconds == nil {
-		interval := int32(DefaultIntervalSeconds)
-		s.Duration.IntervalSeconds = &interval
+	if s.Duration.MinIntervalBetweenLoops == nil {
+		interval := int32(DefaultMinIntervalBetweenLoops)
+		s.Duration.MinIntervalBetweenLoops = &interval
 	}
-}
-
-// GetIterationsPerLoop returns the specified (or default) iterations
-func (s *ExperimentSpec) GetIterationsPerLoop() int32 {
-	if s.Duration == nil || s.Duration.IterationsPerLoop == nil {
-		return DefaultIterationsPerLoop
-	}
-	return *s.Duration.IterationsPerLoop
 }
 
 // GetMaxLoops returns specified (or default) max mumber of loops
@@ -129,18 +118,7 @@ func (s *ExperimentSpec) GetMaxLoops() int32 {
 	return *s.Duration.MaxLoops
 }
 
-// InitializeIterationsPerLoop sets duration.iterationsPerLoop to the default if not already set
-func (s *ExperimentSpec) InitializeIterationsPerLoop() {
-	if s.Duration == nil {
-		s.Duration = &Duration{}
-	}
-	if s.Duration.IterationsPerLoop == nil {
-		iterations := s.GetIterationsPerLoop()
-		s.Duration.IterationsPerLoop = &iterations
-	}
-}
-
-// InitializeMaxLoops sets duration.iterationsPerLoop to the default if not already set
+// InitializeMaxLoops sets duration.maxLoops to the default if not already set
 func (s *ExperimentSpec) InitializeMaxLoops() {
 	if s.Duration == nil {
 		s.Duration = &Duration{}
@@ -154,7 +132,6 @@ func (s *ExperimentSpec) InitializeMaxLoops() {
 // InitializeDuration initializes spec.durations if not already set
 func (s *ExperimentSpec) InitializeDuration() {
 	s.InitializeInterval()
-	s.InitializeIterationsPerLoop()
 	s.InitializeMaxLoops()
 }
 

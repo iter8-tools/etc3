@@ -43,11 +43,11 @@ var _ = Describe("Handlers Run", func() {
 			By("Defining an experiment with a start handler")
 			name := "has-start-handler"
 			handler := "start"
-			iterations, loops := int32(2), int32(1)
+			loops := int32(1)
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithVersion("baseline").
 				WithAction("start", []v2beta1.TaskSpec{}).
-				WithDuration(1, iterations, loops).
+				WithDuration(1, loops).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 
@@ -76,11 +76,11 @@ var _ = Describe("Handlers Run", func() {
 			// for simplicity, no start handler
 			name := "has-finish-handler"
 			handler := "finish"
-			iterations, loops := int32(2), int32(1)
+			loops := int32(1)
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithVersion("baseline").
 				WithAction("finish", []v2beta1.TaskSpec{}).
-				WithDuration(1, iterations, loops).
+				WithDuration(1, loops).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the finish handler jobs are created")
@@ -103,8 +103,7 @@ var _ = Describe("Handlers Run", func() {
 			By("Checking that the experiment has executed all iterations")
 			Eventually(func() bool {
 				return hasValue(name, namespace, func(exp *v2beta1.Experiment) bool {
-					return exp.Status.GetCompletedIterations() == iterations*loops &&
-						exp.Status.GetCompletedLoops() == loops
+					return exp.Status.GetCompletedLoops() == loops
 				})
 			}, 20).Should(BeTrue())
 		})
@@ -114,12 +113,12 @@ var _ = Describe("Handlers Run", func() {
 			By("Defining an experiment with a loop handler")
 			name := "has-loop-handler"
 			handler := "loop"
-			iterations, loops := int32(1), int32(2)
+			loops := int32(2)
 			testLoop := 1
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithVersion("baseline").
 				WithAction("loop", []v2beta1.TaskSpec{}).
-				WithDuration(1, iterations, loops).
+				WithDuration(1, loops).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the loop handler jobs are created")
@@ -141,5 +140,4 @@ var _ = Describe("Handlers Run", func() {
 			}, 10).Should(BeTrue())
 		})
 	})
-
 })

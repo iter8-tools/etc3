@@ -125,7 +125,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// VALIDATE EXPERIMENT: basic validation of experiment object
 	// See IsExperimentValid() for list of validations done
 	// TODO move to validating web hook
-	if !r.IsExperimentValid(ctx, instance) {
+	if !r.IsExperimentValid(ctx, instance) || !r.IsVersionInfoValid(ctx, instance) {
 		return r.failExperiment(ctx, instance, nil)
 	}
 
@@ -165,14 +165,8 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return r.endRequest(ctx, instance)
 	}
 
-	// VERSION VALIDATION (versionInfo should be created by start handler)
-	// See IsVersionInfoValid() for list of validations done
-	if !r.IsVersionInfoValid(ctx, instance) {
-		return r.failExperiment(ctx, instance, nil)
-	}
-
-	// EXECUTE ITERATION
-	return r.doIteration(ctx, instance)
+	// EXECUTE LOOP
+	return r.doLoop(ctx, instance)
 }
 
 // SetupWithManager is the method called when setting up the experiment reconciler with the controller manager.
@@ -271,7 +265,7 @@ func (r *ExperimentReconciler) endRequest(ctx context.Context, instance *v2beta1
 	err := r.updateStatus(ctx, instance)
 
 	if len(interval) > 0 {
-		log.Info("Requeue for next iteration", "interval", interval, "iterations", instance.Status.GetCompletedIterations())
+		log.Info("Requeue for next loop", "interval", interval, "loops", instance.Status.GetCompletedLoops())
 		return ctrl.Result{RequeueAfter: interval[0]}, err
 	}
 	return ctrl.Result{}, err

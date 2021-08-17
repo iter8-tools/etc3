@@ -4,7 +4,7 @@ metadata:
   name: exp
   namespace: default
 spec:
-  versions: ["baseline", "candidate"]
+  versionInfo: ["baseline", "candidate"]
   actions:
     loop:
     - task: library/task
@@ -29,5 +29,5 @@ spec:
     - metric: error-rate
       upperLimit: "0.01"
   duration:
-    intervalSeconds: 15
-    maxIterations: 12
+    minIntervalBetweenLoops: 15
+    maxLoops: 12

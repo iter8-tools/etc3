@@ -4,9 +4,9 @@ metadata:
   name: norealcriteria
   namespace: default
 spec:
-  versions: ["baseline"]
+  versionInfo: ["baseline"]
   criteria:
     objectives: []
   duration:
-    intervalSeconds: 1
-    iterationsPerLoop: 1
+    minIntervalBetweenLoops: 1
+    maxLoops: 1

@@ -34,7 +34,7 @@ func (r *ExperimentReconciler) IsExperimentValid(ctx context.Context, instance *
 // DONE Verify that the number of rewards (spec.criteria.rewards) is acceptable
 func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance *v2beta1.Experiment) bool {
 	// Verify at least one version
-	if len(instance.Spec.Versions) < 1 {
+	if len(instance.Spec.VersionInfo) < 1 {
 		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonInvalidExperiment, "There must be at least one version")
 		return false
 	}
@@ -56,7 +56,7 @@ func (r *ExperimentReconciler) IsVersionInfoValid(ctx context.Context, instance 
 
 func versionsUnique(s v2beta1.ExperimentSpec) bool {
 	versions := []string{}
-	for _, v := range s.Versions {
+	for _, v := range s.VersionInfo {
 		if containsString(versions, v) {
 			return false
 		}
@@ -91,7 +91,7 @@ func validNumberOfRewards(s v2beta1.ExperimentSpec) bool {
 	if s.Criteria != nil {
 		numRewards = len(s.Criteria.Rewards)
 	}
-	numVersions := len(s.Versions)
+	numVersions := len(s.VersionInfo)
 
 	// if numVersions is 1 then should be no reward
 	// if numVersions is 2 then can be 1 reward or not
