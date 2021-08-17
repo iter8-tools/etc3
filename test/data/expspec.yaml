@@ -5,22 +5,21 @@ metadata:
   namespace: default
 spec:
   versions: ["baseline", "candidate"]
-  strategy:
-    actions:
-      loop:
-      - task: library/task
-      start:
-      - task: kfserving/setup-experiment
-      - task: default/initialize-weights
-      - task: kfserving/readiness-check
-      finish:
-      - task: library/exec
-        with:
-          cmd: kubectl
-          args:
-          - apply
-          - -k
-          - https://github.com/my-org/my-repo/path/to/overlays/{{ Status.VersionRecommendedForPromotion }}
+  actions:
+    loop:
+    - task: library/task
+    start:
+    - task: kfserving/setup-experiment
+    - task: default/initialize-weights
+    - task: kfserving/readiness-check
+    finish:
+    - task: library/exec
+      with:
+        cmd: kubectl
+        args:
+        - apply
+        - -k
+        - https://github.com/my-org/my-repo/path/to/overlays/{{ Status.VersionRecommendedForPromotion }}
   criteria:
     indicators:
     - 95th-percentile-tail-latency

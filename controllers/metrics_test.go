@@ -111,7 +111,7 @@ var _ = Describe("Metrics", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithRequestCount(metricsNamespace+"/request-count").
-				WithObjective(*goodObjectiveMetric, nil, nil, false).
+				WithObjective(*goodObjectiveMetric, nil, nil).
 				WithReward(*rewardMetric, v2beta1.PreferredDirectionHigher).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -187,7 +187,7 @@ var _ = Describe("Metrics", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithRequestCount(metricsNamespace+"/request-count").
-				WithObjective(*badObjectiveMetric, nil, nil, false).
+				WithObjective(*badObjectiveMetric, nil, nil).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it fails")
@@ -209,7 +209,7 @@ var _ = Describe("Metrics", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithRequestCount(metricsNamespace+"/objective-with-good-reference-2").
-				WithObjective(*goodObjective2Metric, nil, nil, false).
+				WithObjective(*goodObjective2Metric, nil, nil).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it starts Running")
@@ -228,7 +228,7 @@ var _ = Describe("Metrics", func() {
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
 				WithRequestCount(metricsNamespace+"/request-count").
-				WithObjective(*goodObjective2Metric, nil, nil, false).
+				WithObjective(*goodObjective2Metric, nil, nil).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("that the metrics are read")
@@ -244,8 +244,8 @@ var _ = Describe("Metrics", func() {
 			By("Defining experiment with requestcount specified with and without namespace")
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").WithVersion("candidate").
-				WithRequestCount(metricsNamespace+"/request-count").   // specified with namespace
-				WithObjective(*goodObjective2Metric, nil, nil, false). // specifid without namespace
+				WithRequestCount(metricsNamespace+"/request-count"). // specified with namespace
+				WithObjective(*goodObjective2Metric, nil, nil).      // specifid without namespace
 				Build()
 			By("reading the metrics")
 			Expect(reconciler.ReadMetrics(ctx(), experiment)).Should(BeTrue())

@@ -60,8 +60,10 @@ type ExperimentSpec struct {
 	// +kubebuilder:validation:MinItems:=1
 	Versions []string `json:"versions" yaml:"versions"`
 
-	// Strategy identifies the type of experiment and its properties
-	Strategy Strategy `json:"strategy" yaml:"strategy"`
+	// Actions define the collections of tasks that are executed by handlers.
+	// Specifically, start and finish actions are invoked by start and finish handlers respectively.
+	// +optional
+	Actions ActionMap `json:"actions,omitempty" yaml:"actions,omitempty"`
 
 	// Criteria contains a list of Criterion for assessing the candidates
 	// Note that the number of rewards that can be/must be specified depends on the testing pattern
@@ -81,26 +83,6 @@ type MetricInfo struct {
 	// MetricObj is the referenced metric
 	// +kubebuilder:validation:EmbeddedResource
 	MetricObj Metric `json:"metricObj" yaml:"metricObj"`
-}
-
-// Strategy identifies the type of experiment and its properties
-// The behavior of the experiment can be modified by setting advanced properties.
-type Strategy struct {
-	// DeploymentPattern is the deployment pattern of an experiment.
-	// It takes effect when the testing pattern is one of Canary, A/B or A/B/n.
-	// It defaults to Progressive.
-	// +optional
-	DeploymentPattern *DeploymentPatternType `json:"deploymentPattern,omitempty" yaml:"deploymentPattern,omitempty"`
-
-	// Actions define the collections of tasks that are executed by handlers.
-	// Specifically, start and finish actions are invoked by start and finish handlers respectively.
-	// +optional
-	Actions ActionMap `json:"actions,omitempty" yaml:"actions,omitempty"`
-
-	// Weights modify the behavior of the traffic split algorithm.
-	// Defaults depend on the experiment type.
-	// +optional
-	Weights *Weights `json:"weights,omitempty" yaml:"weights,omitempty"`
 }
 
 // ActionMap type for containing a collection of actions.
@@ -199,11 +181,6 @@ type Objective struct {
 	// UpperLimit is the minimum acceptable value of the metric.
 	// +optional
 	LowerLimit *resource.Quantity `json:"lowerLimit,omitempty" yaml:"lowerLimit,omitempty"`
-
-	// RollbackOnFailure indicates that if the criterion is not met, the experiment should be ended
-	// default is false
-	// +optional
-	RollbackOnFailure *bool `json:"rollback_on_failure,omitempty" yaml:"rollback_on_failure,omitempty"`
 }
 
 // Duration of an experiment

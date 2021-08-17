@@ -37,16 +37,6 @@ const (
 	// DefaultLoopHandler is the prefix of the default loop handler
 	DefaultLoopHandler string = "loop"
 
-	// DefaultMaxCandidateWeight is the default traffic percentage used in experiment, which is 100
-	DefaultMaxCandidateWeight int32 = 100
-
-	// DefaultMaxCandidateWeightIncrement is the default maxIncrement for traffic update, which is 10
-	DefaultMaxCandidateWeightIncrement int32 = 10
-
-	// DefaultDeploymentPattern is the default deployment pattern for experiments
-	// It takes effect when the testing pattern is canary, A/B or A/B/n
-	DefaultDeploymentPattern DeploymentPatternType = DeploymentPatternProgressive
-
 	// DefaultIntervalSeconds is default interval duration as a string
 	DefaultIntervalSeconds = 20
 
@@ -93,77 +83,6 @@ func (s *ExperimentSpec) GetFailureHandler() *string {
 func (s *ExperimentSpec) GetLoopHandler() *string {
 	handler := DefaultLoopHandler
 	return &handler
-}
-
-//////////////////////////////////////////////////////////////////////
-// spec.strategy.weights
-//////////////////////////////////////////////////////////////////////
-
-// GetMaxCandidateWeight return spec.strategy.weights.maxCandidateWeight if set
-// Otherwise it returns DefaultMaxCandidateWeight (100)
-func (s *ExperimentSpec) GetMaxCandidateWeight() int32 {
-	if s.Strategy.Weights == nil || s.Strategy.Weights.MaxCandidateWeight == nil {
-		return DefaultMaxCandidateWeight
-	}
-	return *s.Strategy.Weights.MaxCandidateWeight
-}
-
-// InitializeMaxCandidateWeight initializes spec.strategy.weights.maxCandiateWeight if not already set
-func (s *ExperimentSpec) InitializeMaxCandidateWeight() {
-	if s.Strategy.Weights == nil {
-		s.Strategy.Weights = &Weights{}
-	}
-	if s.Strategy.Weights.MaxCandidateWeight == nil {
-		weight := s.GetMaxCandidateWeight()
-		s.Strategy.Weights.MaxCandidateWeight = &weight
-	}
-}
-
-// GetMaxCandidateWeightIncrement return spec.strategy.weights.maxCandidateWeightIncrement if set
-// Otherwise it returns DefaultMaxCandidateWeightIncrement (10)
-func (s *ExperimentSpec) GetMaxCandidateWeightIncrement() int32 {
-	if s.Strategy.Weights == nil || s.Strategy.Weights.MaxCandidateWeightIncrement == nil {
-		return DefaultMaxCandidateWeightIncrement
-	}
-	return *s.Strategy.Weights.MaxCandidateWeightIncrement
-}
-
-// InitializeMaxCandidateWeightIncrement initializes spec.strategy.weights.maxCandidateWeightIncrement if not already set
-func (s *ExperimentSpec) InitializeMaxCandidateWeightIncrement() {
-	if s.Strategy.Weights == nil {
-		s.Strategy.Weights = &Weights{}
-	}
-	if s.Strategy.Weights.MaxCandidateWeightIncrement == nil {
-		increment := s.GetMaxCandidateWeightIncrement()
-		s.Strategy.Weights.MaxCandidateWeightIncrement = &increment
-	}
-}
-
-// GetDeploymentPattern returns spec.strategy.deploymentPattern if set
-func (s *ExperimentSpec) GetDeploymentPattern() DeploymentPatternType {
-	if s.Strategy.DeploymentPattern == nil {
-		return DefaultDeploymentPattern
-	}
-	return *s.Strategy.DeploymentPattern
-}
-
-// InitializeDeploymentPattern initializes spec.strategy.deploymentPattern if not already set
-func (s *ExperimentSpec) InitializeDeploymentPattern() {
-	if s.Strategy.DeploymentPattern == nil {
-		deploymentPattern := s.GetDeploymentPattern()
-		s.Strategy.DeploymentPattern = &deploymentPattern
-	}
-}
-
-// InitializeWeights initializes weights if not already set
-func (s *ExperimentSpec) InitializeWeights() {
-	s.InitializeMaxCandidateWeight()
-	s.InitializeMaxCandidateWeightIncrement()
-	s.InitializeDeploymentPattern()
-	// Must wait until versionInfo has been defined by start handler before
-	// initializing weight distribution because need to know the candidates
-	// s.InitializeWeightDistribution()
-
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -272,40 +191,15 @@ func (s *ExperimentSpec) InitializeRequestCount() {
 // objective
 //////////////////////////////////////////////////////////////////////
 
-// GetRollbackOnFailure identifies if the experiment should be rolledback on failure of an objective
-func (o *Objective) GetRollbackOnFailure(deploymentPattern DeploymentPatternType) bool {
-	if o.RollbackOnFailure == nil {
-		return deploymentPattern == DeploymentPatternBlueGreen
-	}
-	return *o.RollbackOnFailure
-}
-
-// InitializeObjectives initializes the rollbackOnFailure field of all objectives if
-// the strategy type is "bluegreen"
-func (s *ExperimentSpec) InitializeObjectives() {
-	if s.Criteria == nil {
-		return
-	}
-
-	for _, o := range s.Criteria.Objectives {
-		if s.GetDeploymentPattern() == DeploymentPatternBlueGreen && o.RollbackOnFailure == nil {
-			rollback := true
-			o.RollbackOnFailure = &rollback
-		}
-	}
-}
-
 // InitializeCriteria initializes any criteria details not already set
 func (s *ExperimentSpec) InitializeCriteria() {
 	if s.Criteria != nil {
 		s.InitializeRequestCount()
-		s.InitializeObjectives()
 	}
 }
 
 // InitializeSpec initializes values in Spec to default values if not already set
 func (s *ExperimentSpec) InitializeSpec() {
-	s.InitializeWeights()
 	s.InitializeDuration()
 	s.InitializeCriteria()
 }

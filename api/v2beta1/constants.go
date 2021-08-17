@@ -37,21 +37,6 @@ const (
 	TestingPatternHybridABN TestingPatternType = "Hybrid-A/B/N"
 )
 
-// DeploymentPatternType identifies the deployment patterns that can be used
-// +kubebuilder:validation:Enum=FixedSplit;Progressive;BlueGreen
-type DeploymentPatternType string
-
-const (
-	// DeploymentPatternFixedSplit indicates the deployment pattern is fixed split
-	DeploymentPatternFixedSplit DeploymentPatternType = "FixedSplit"
-
-	// DeploymentPatternProgressive indicates that the deployment pattern progressive
-	DeploymentPatternProgressive DeploymentPatternType = "Progressive"
-
-	// DeploymentPatternBlueGreen indicates that the deployment pattern is blue-green
-	DeploymentPatternBlueGreen DeploymentPatternType = "BlueGreen"
-)
-
 // PreferredDirectionType defines the valid values for reward.PreferredDirection
 // +kubebuilder:validation:Enum=High;Low
 type PreferredDirectionType string

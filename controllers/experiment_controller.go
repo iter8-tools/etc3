@@ -310,20 +310,6 @@ func (r *ExperimentReconciler) finishExperiment(ctx context.Context, instance *v
 	return r.endExperiment(ctx, instance, "Experiment completed successfully")
 }
 
-func (r *ExperimentReconciler) rollbackExperiment(ctx context.Context, instance *v2beta1.Experiment) (ctrl.Result, error) {
-	log := Logger(ctx)
-	log.Info("rollbackExperiment called")
-	defer log.Info("rollbackExperiment ended")
-
-	if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeRollback,
-		handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2beta1.ExperimentStageFinishing) }},
-	); stop {
-		return result, err
-	}
-
-	return r.endExperiment(ctx, instance, "Experiment rolled back")
-}
-
 func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2beta1.Experiment, err error) (ctrl.Result, error) {
 	log := Logger(ctx)
 	log.Info("failExperiment called")
