@@ -48,7 +48,6 @@ var _ = Describe("Handlers Run", func() {
 				WithVersion("baseline").
 				WithAction("start", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
-				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 
@@ -82,7 +81,6 @@ var _ = Describe("Handlers Run", func() {
 				WithVersion("baseline").
 				WithAction("finish", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
-				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the finish handler jobs are created")
@@ -122,7 +120,6 @@ var _ = Describe("Handlers Run", func() {
 				WithVersion("baseline").
 				WithAction("loop", []v2beta1.TaskSpec{}).
 				WithDuration(1, iterations, loops).
-				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that the loop handler jobs are created")

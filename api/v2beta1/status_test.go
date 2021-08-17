@@ -59,9 +59,6 @@ var _ = Describe("Winner Determination", func() {
 	BeforeEach(func() {
 		experiment = NewExperiment("test", "default").
 			WithVersion("baseline").WithVersion("candidate").WithVersion("winner").
-			WithBaselineVersion("baseline", nil).
-			WithCandidateVersion("candiate", nil).
-			WithCandidateVersion("winner", nil).
 			Build()
 	})
 

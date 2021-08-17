@@ -21,11 +21,6 @@ spec:
           - apply
           - -k
           - https://github.com/my-org/my-repo/path/to/overlays/{{ Status.VersionRecommendedForPromotion }}
-  versionInfo:
-    baseline:
-      name: baseline
-    candidates:
-    - name: candidate
   criteria:
     indicators:
     - 95th-percentile-tail-latency

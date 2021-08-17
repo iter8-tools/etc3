@@ -47,7 +47,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		It("should be valid when exactly 1 version is specified", func() {
 			experiment := bldr.
 				WithVersion("baseline").
-				WithBaselineVersion("baseline", nil).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
@@ -55,8 +54,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		It("should be valid when 2 versions are specified", func() {
 			experiment := bldr.
 				WithVersion("baseline").WithVersion("candidate-1").
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate-1", nil).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
 		})
@@ -64,7 +61,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 		It("should be invalid when there is a reward (1 version)", func() {
 			experiment := bldr.
 				WithVersion("baseline").
-				WithBaselineVersion("baseline", nil).
 				WithReward(*v2beta1.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
@@ -80,8 +76,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be valid when there is a single reward", func() {
 			experiment := bldr.
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate-1", nil).
 				WithReward(*v2beta1.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
@@ -89,8 +83,6 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be invalid when there is are multiple rewards", func() {
 			experiment := bldr.
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate-1", nil).
 				WithReward(*v2beta1.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				WithReward(*v2beta1.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				Build()
@@ -110,18 +102,18 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be invalid when no reward", func() {
 			experiment := bldr.
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate-1", nil).
-				WithCandidateVersion("candidate-2", nil).
+				WithVersion("baseline").
+				WithVersion("candidate-1").
+				WithVersion("candidate-2").
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 
 		It("should be valid when 1 reward", func() {
 			experiment := bldr.
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate-1", nil).
-				WithCandidateVersion("candidate-2", nil).
+				WithVersion("baseline").
+				WithVersion("candidate-1").
+				WithVersion("candidate-2").
 				WithReward(*v2beta1.NewMetric("metric", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				Build()
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeTrue())
@@ -129,9 +121,9 @@ var _ = Describe("Validation of VersionInfo", func() {
 
 		It("should be invalid when more than 1 reward", func() {
 			experiment := bldr.
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate-1", nil).
-				WithCandidateVersion("candidate-2", nil).
+				WithVersion("baseline").
+				WithVersion("candidate-1").
+				WithVersion("candidate-2").
 				WithReward(*v2beta1.NewMetric("metric-1", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				WithReward(*v2beta1.NewMetric("metric-2", "default").WithJQExpression(&jqe).Build(), v2beta1.PreferredDirectionHigher).
 				Build()
@@ -142,13 +134,8 @@ var _ = Describe("Validation of VersionInfo", func() {
 	Context("Experiment has common names", func() {
 		experiment := v2beta1.NewExperiment("abn-test", testNamespace).
 			WithVersion("baseline").WithVersion("candidate").WithVersion("candidate").
-			WithBaselineVersion("baseline", nil).
-			WithCandidateVersion("candidate", nil).
 			Build()
 		It("should fail", func() {
-			By("adding another canidate with the same name")
-			experiment.Spec.VersionInfo.Candidates = append(experiment.Spec.VersionInfo.Candidates,
-				v2beta1.VersionDetail{Name: "candidate"})
 			Expect(reconciler.IsVersionInfoValid(ctx, experiment)).Should(BeFalse())
 		})
 	})

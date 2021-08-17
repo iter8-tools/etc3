@@ -182,8 +182,6 @@ var _ = Describe("Experiment proceeds", func() {
 				WithVersion("baseline").WithVersion("candidate").
 				WithDuration(initialInterval, expectedIterations, 1).
 				WithDeploymentPattern(v2beta1.DeploymentPatternFixedSplit).
-				WithBaselineVersion("baseline", nil).
-				WithCandidateVersion("candidate", nil).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
 
@@ -218,7 +216,7 @@ var _ = Describe("Empty Criteria section", func() {
 		Specify("The experiment should read the (non-existent) metrics", func() {
 			Expect(k8sClient.Create(ctx(), &experiment)).Should(Succeed())
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonExperimentCompleted)
+				return issuedEvent(v2beta1.ReasonExperimentCompleted)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -250,7 +248,7 @@ var _ = Describe("Missing criteria.requestCount", func() {
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			// will fail because samplesize reference is not available
 			Eventually(func() bool {
-				return containsSubString(events, v2beta1.ReasonMetricUnavailable)
+				return issuedEvent(v2beta1.ReasonMetricUnavailable)
 			}, 5).Should(BeTrue())
 		})
 	})
@@ -275,16 +273,15 @@ var _ = Describe("Loop Execution", func() {
 			testName = "loops"
 			experiment := v2beta1.NewExperiment(testName, testNamespace).
 				WithVersion("baseline").
-				WithBaselineVersion("baseline", nil).
 				WithDuration(1, 1, 3).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
 			By("Checking that it loops exactly 3 times")
 			Eventually(func() bool {
-				return containsSubString(events, "Completed Loop 3")
+				return issuedEvent("Completed Loop 3")
 			}, 5).Should(BeTrue())
 			Eventually(func() bool {
-				return containsSubString(events, "Completed Loop 4")
+				return issuedEvent("Completed Loop 4")
 			}, 1).Should(BeFalse())
 
 		})
