@@ -36,9 +36,6 @@ func TestRemoveString(t *testing.T) {
 }
 
 var _ = Describe("Experiment Validation", func() {
-	var jqe string = "expr"
-	var url string = "url"
-
 	ctx := context.Background()
 
 	Context("When creating an experiment with an invalid spec.duration.maxLoops", func() {
@@ -63,105 +60,6 @@ var _ = Describe("Experiment Validation", func() {
 				WithDuration(10, 1).
 				Build()
 			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
-		})
-	})
-
-	Context("When creating a valid new Experiment", func() {
-		It("Should successfully complete late initialization", func() {
-			By("Providing a request-count metric")
-			m := v2beta1.NewMetric("request-count", "iter8").
-				WithType(v2beta1.CounterMetricType).
-				WithParams([]v2beta1.NamedValue{{
-					Name:  "param",
-					Value: "value",
-				}}).
-				WithProvider("prometheus").
-				WithJQExpression(&jqe).
-				WithURL(&url).
-				Build()
-			// ns := &corev1.Namespace{
-			// 	ObjectMeta: metav1.ObjectMeta{Name: "iter8"},
-			// }
-			// Expect(k8sClient.Create(ctx, ns)).Should(Succeed())
-			Expect(k8sClient.Create(ctx, m)).Should(Succeed())
-			// createdMetric := &v2beta1.Metric{}
-			// Eventually(func() bool {
-			// 	err := k8sClient.Get(ctx, types.NamespacedName{Name: "request-count", Namespace: "iter8"}, createdMetric)
-			// 	if err != nil {
-			// 		return false
-			// 	}
-			// 	return true
-			// }).Should(BeTrue())
-			By("creating a reward metric")
-			reward := v2beta1.NewMetric("reward", "default").
-				WithType(v2beta1.CounterMetricType).
-				WithParams([]v2beta1.NamedValue{{
-					Name:  "param",
-					Value: "value",
-				}}).
-				WithProvider("prometheus").
-				WithJQExpression(&jqe).
-				WithURL(&url).
-				Build()
-			Expect(k8sClient.Create(ctx, reward)).Should(Succeed())
-			By("creating an indicator")
-			indicator := v2beta1.NewMetric("indicataor", "default").
-				WithType(v2beta1.CounterMetricType).
-				WithParams([]v2beta1.NamedValue{{
-					Name:  "param",
-					Value: "value",
-				}}).
-				WithProvider("prometheus").
-				WithJQExpression(&jqe).
-				WithURL(&url).
-				Build()
-			Expect(k8sClient.Create(ctx, indicator)).Should(Succeed())
-			By("creating an objective")
-			objective := v2beta1.NewMetric("objective", "default").
-				WithType(v2beta1.CounterMetricType).
-				WithParams([]v2beta1.NamedValue{{
-					Name:  "param",
-					Value: "value",
-				}}).
-				WithProvider("prometheus").
-				WithJQExpression(&jqe).
-				WithURL(&url).
-				Build()
-			Expect(k8sClient.Create(ctx, objective)).Should(Succeed())
-			By("creating an objective that is not in the cluster")
-			fake := v2beta1.NewMetric("fake", "default").
-				WithType(v2beta1.CounterMetricType).
-				WithParams([]v2beta1.NamedValue{{
-					Name:  "param",
-					Value: "value",
-				}}).
-				WithProvider("prometheus").
-				WithJQExpression(&jqe).
-				WithURL(&url).
-				Build()
-
-			By("Creating a new Experiment")
-			testName := "late-initialization"
-			testNamespace := "default"
-			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithVersion("baseline").WithVersion("candidate").
-				WithRequestCount("request-count").
-				WithReward(*reward, v2beta1.PreferredDirectionHigher).
-				WithIndicator(*indicator).
-				WithObjective(*objective, nil, nil).
-				WithObjective(*fake, nil, nil).
-				Build()
-			Expect(k8sClient.Create(ctx, experiment)).Should(Succeed())
-
-			By("Getting experiment after late initialization has run (spec.Duration !=- nil)")
-			Eventually(func() bool {
-				return hasValue(testName, testNamespace, func(exp *v2beta1.Experiment) bool {
-					return exp.Status.StartTime != nil &&
-						exp.Status.LastUpdateTime != nil &&
-						exp.Status.CompletedLoops != nil &&
-						len(exp.Status.Conditions) == 2
-				})
-			}).Should(BeTrue())
 		})
 	})
 })
@@ -219,37 +117,6 @@ var _ = Describe("Empty Criteria section", func() {
 		})
 	})
 
-})
-
-var _ = Describe("Missing criteria.requestCount", func() {
-	var jqe string = "expr"
-	var url string = "url"
-
-	var testNamespace string = "default"
-	Context("When there is no criteria.requestCount", func() {
-		Specify("The controller should read the other metrics", func() {
-			var testName string = "norequestcount"
-			By("Defining a Gauge metric that references requestcount")
-			metric := v2beta1.NewMetric("referencesrequestcount", "default").
-				WithType("Gauge").
-				WithProvider("provider").
-				WithJQExpression(&jqe).
-				WithURL(&url).
-				WithSampleSize("requestcount").
-				Build()
-			Expect(k8sClient.Create(ctx(), metric)).Should(Succeed())
-			By("Defining an experiment with no request count")
-			experiment := v2beta1.NewExperiment(testName, testNamespace).
-				WithVersion("baseline").
-				WithIndicator(*metric).
-				Build()
-			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			// will fail because samplesize reference is not available
-			Eventually(func() bool {
-				return issuedEvent(v2beta1.ReasonMetricUnavailable)
-			}, 5).Should(BeTrue())
-		})
-	})
 })
 
 var _ = Describe("Loop Execution", func() {

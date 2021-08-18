@@ -120,3 +120,42 @@ func stageIndex(value ExperimentStageType, stages []ExperimentStageType) int {
 	}
 	return -1
 }
+
+// MetricType identifies the type of the metric.
+// +kubebuilder:validation:Enum=Counter;Gauge
+type MetricType string
+
+const (
+	// CounterMetricType corresponds to Prometheus Counter metric type
+	CounterMetricType MetricType = "Counter"
+
+	// GaugeMetricType is an enhancement of Prometheus Gauge metric type
+	GaugeMetricType MetricType = "Gauge"
+)
+
+// AuthType identifies the type of authentication used in the HTTP request
+// +kubebuilder:validation:Enum=Basic;Bearer;APIKey
+type AuthType string
+
+const (
+	// BasicAuthType corresponds to authentication with basic auth
+	BasicAuthType AuthType = "Basic"
+
+	// BearerAuthType corresponds to authentication with bearer token
+	BearerAuthType AuthType = "Bearer"
+
+	// APIKeyAuthType corresponds to authentication with API keys
+	APIKeyAuthType AuthType = "APIKey"
+)
+
+// MethodType identifies the HTTP request method (aka verb) used in the HTTP request
+// +kubebuilder:validation:Enum=GET;POST
+type MethodType string
+
+const (
+	// GETMethodType corresponds to HTTP GET method
+	GETMethodType MethodType = "GET"
+
+	// POSTMethodType corresponds to HTTP POST method
+	POSTMethodType MethodType = "POST"
+)

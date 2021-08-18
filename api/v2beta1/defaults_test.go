@@ -50,10 +50,8 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultMinIntervalBetweenLoops)))
 			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
-			Expect(experiment.Spec.GetRequestCount()).Should(BeNil())
 			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(DefaultStartHandler))
 			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(DefaultFinishHandler))
-			Expect(*experiment.Spec.GetRollbackHandler()).Should(Equal(DefaultRollbackHandler))
 			Expect(*experiment.Spec.GetFailureHandler()).Should(Equal(DefaultFailureHandler))
 			Expect(*experiment.Spec.GetLoopHandler()).Should(Equal(DefaultLoopHandler))
 		})
@@ -62,7 +60,6 @@ var _ = Describe("Initialization", func() {
 	Context("After Initialization", func() {
 		experiment := NewExperiment("experiment", "namespace").
 			WithVersion("baseline").WithVersion("candidate").
-			WithRequestCount("request-count").
 			Build()
 		It("is initialized", func() {
 			By("Initializing Status")
@@ -82,10 +79,8 @@ var _ = Describe("Initialization", func() {
 			Expect(experiment.Spec.GetMaxLoops()).Should(Equal(DefaultMaxLoops))
 			Expect(experiment.Spec.GetIntervalSeconds()).Should(Equal(int32(DefaultMinIntervalBetweenLoops)))
 			Expect(experiment.Spec.GetIntervalAsDuration()).Should(Equal(time.Second * time.Duration(experiment.Spec.GetIntervalSeconds())))
-			Expect(*experiment.Spec.GetRequestCount()).Should(Equal("request-count"))
 			Expect(*experiment.Spec.GetStartHandler()).Should(Equal(DefaultStartHandler))
 			Expect(*experiment.Spec.GetFinishHandler()).Should(Equal(DefaultFinishHandler))
-			Expect(*experiment.Spec.GetRollbackHandler()).Should(Equal(DefaultRollbackHandler))
 			Expect(*experiment.Spec.GetFailureHandler()).Should(Equal(DefaultFailureHandler))
 			Expect(*experiment.Spec.GetLoopHandler()).Should(Equal(DefaultLoopHandler))
 		})
@@ -93,8 +88,6 @@ var _ = Describe("Initialization", func() {
 })
 
 var _ = Describe("Criteria", func() {
-	var jqe string = "expr"
-
 	Context("Criteria", func() {
 		builder := NewExperiment("test", "default").
 			WithVersion("baseline").WithVersion("candidate")
@@ -103,13 +96,7 @@ var _ = Describe("Criteria", func() {
 			Expect(experiment.Spec.Criteria).Should(BeNil())
 
 			experiment = builder.DeepCopy().
-				WithIndicator(*NewMetric("metric", "default").Build()).
-				Build()
-			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
-			Expect(experiment.Spec.Criteria.Rewards).Should(BeEmpty())
-
-			experiment = builder.DeepCopy().
-				WithReward(*NewMetric("metric", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+				WithReward("default/metric", PreferredDirectionHigher).
 				Build()
 			Expect(experiment.Spec.Criteria).ShouldNot(BeNil())
 			Expect(experiment.Spec.Criteria.Rewards).ShouldNot(BeEmpty())
@@ -118,35 +105,10 @@ var _ = Describe("Criteria", func() {
 })
 
 var _ = Describe("Generated Code", func() {
-	var jqe string = "expr"
-
-	Context("When a Metric object is copied", func() {
-		Specify("the copy should be the same as the original", func() {
-			metricBuilder := NewMetric("reward", "default").
-				WithDescription("reward metric").
-				WithParams([]NamedValue{{
-					Name:  "query",
-					Value: "query",
-				}}).
-				WithProvider("prometheus").
-				WithJQExpression(&jqe).
-				WithType(CounterMetricType).
-				WithUnits("ms").
-				WithSampleSize("sample/default")
-			metric := metricBuilder.Build()
-			metricList := MetricList{
-				Items: []Metric{*metric},
-			}
-
-			Expect(reflect.DeepEqual(metricBuilder, metricBuilder.DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(metric, metric.DeepCopyObject())).Should(BeTrue())
-			Expect(len(metricList.Items)).Should(Equal(len(metricList.DeepCopy().Items)))
-		})
-	})
-
 	Context("When an Experiment object is copied", func() {
 		Specify("the copy should be the same as the original", func() {
 			testStr := "test"
+			ifStr := "conditional-expression"
 			experimentBuilder := NewExperiment("test", "default").
 				WithVersion("baseline").WithVersion("candidate").
 				WithDuration(3, 2).
@@ -157,16 +119,15 @@ var _ = Describe("Generated Code", func() {
 				WithAction("start", []TaskSpec{
 					{Task: &testStr},
 					{Run: &testStr},
+					{If: &ifStr},
 				}).
-				WithRequestCount("request-count").
-				WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
-				WithIndicator(*NewMetric("indicator", "default").WithJQExpression(&jqe).Build()).
-				WithObjective(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), nil, nil)
+				WithReward("default/reward", PreferredDirectionHigher).
+				WithObjective("default/reward", nil, nil)
 			experiment := experimentBuilder.Build()
 			experiment.InitializeStatus()
 			winner := "winner"
 			q := resource.Quantity{}
-			experiment.Status.Analysis = &Analysis{
+			analysis := &Analysis{
 				Metrics: []map[string]QuantityList{
 					{
 						"metric1": []resource.Quantity{q},
@@ -185,23 +146,62 @@ var _ = Describe("Generated Code", func() {
 				},
 				Weights: []int32{25, 74},
 			}
+			experiment.Status.Analysis = analysis
 			experimentList := ExperimentList{
 				Items: []Experiment{*experiment},
 			}
+			backendDescription := "backend description"
+			backendAuthType := BasicAuthType
+			backendMethod := POSTMethodType
+			backendProvider := "backend provider"
+			backendJQExpresssion := "expression"
+			backendSecret := "namespace/secret"
+			backendURL := "url"
+			backend := Backend{
+				Name:        "backend",
+				Description: &backendDescription,
+				BackendDetail: BackendDetail{
+					AuthType:     &backendAuthType,
+					Method:       &backendMethod,
+					Provider:     &backendProvider,
+					JQExpression: &backendJQExpresssion,
+					Secret:       &backendSecret,
+					URL:          &backendURL,
+					VersionInfo:  []VersionDetail{},
+				},
+				Metrics: []Metric{},
+			}
+			experiment.Spec.Backends = []Backend{backend}
+			metricDesription := "metric description"
+			metricUnits := "ms"
+			metricType := GaugeMetricType
+			metricBody := "body"
+			metric := Metric{
+				Name:        "metric name",
+				Description: &metricDesription,
+				Params:      []NamedValue{},
+				Units:       &metricUnits,
+				Type:        &metricType,
+				Body:        &metricBody,
+			}
+			experiment.Spec.Metrics = []Metric{metric}
 
 			Expect(reflect.DeepEqual(experimentBuilder, experimentBuilder.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment, experiment.DeepCopyObject())).Should(BeTrue())
 			// Expect(reflect.DeepEqual(experimentList, experimentList.DeepCopyObject())).Should(BeTrue())
 			Expect(len(experimentList.Items)).Should(Equal(len(experimentList.DeepCopy().Items)))
 
-			// Expect(reflect.DeepEqual(experiment.Spec, experiment.Spec.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec, *experiment.Spec.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Criteria, experiment.Spec.Criteria.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Criteria.Rewards[0], *experiment.Spec.Criteria.Rewards[0].DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Duration, experiment.Spec.Duration.DeepCopy())).Should(BeTrue())
-			// Expect(reflect.DeepEqual(experiment.Spec.Strategy, experiment.Spec.Strategy.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Actions, experiment.Spec.Actions.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Spec.Actions["start"], experiment.Spec.Actions["start"].DeepCopy())).Should(BeTrue())
 
-			// Expect(reflect.DeepEqual(experiment.Status, experiment.Status.DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Backends[0], *experiment.Spec.Backends[0].DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Metrics[0], *experiment.Spec.Metrics[0].DeepCopy())).Should(BeTrue())
+
+			Expect(reflect.DeepEqual(experiment.Status, *experiment.Status.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis.Winner, experiment.Status.Analysis.Winner.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Conditions[0], experiment.Status.Conditions[0].DeepCopy())).Should(BeTrue())

@@ -142,16 +142,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 	log.Info("Start Handling Complete")
 
-	// using spec.criteria, read the metrics objects into status.metrics
-	if shouldReadMetrics(instance) {
-		if ok := r.ReadMetrics(ctx, instance); !ok {
-			return r.failExperiment(ctx, instance, nil)
-		}
-		// we updated status if we read metrics
-		// endRequest writes the change the to cluster and retriggers reconcile
-		return r.endRequest(ctx, instance)
-	}
-
 	// advance stage from Initializing to Running
 	// when we advance for the first time, we've just finished the start handler (if there is one),
 	// so we update Status.CurrentWeightDistribution
@@ -399,7 +389,7 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 		return stop, result, err
 	case HandlerStatusComplete:
 		switch handlerType {
-		case HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback:
+		case HandlerTypeFinish, HandlerTypeFailure:
 			// terminal handler completed; we end the experiment
 			result, err := r.endExperiment(ctx, instance, "Experiment Completed")
 			return stop, result, err
