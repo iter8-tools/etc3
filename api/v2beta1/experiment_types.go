@@ -306,9 +306,6 @@ type Metric struct {
 	// Body may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
 	// +optional
 	Body *string `json:"body,omitempty" yaml:"body,omitempty"`
-
-	// BackendDetail are overrides to backend
-	BackendDetail `json:",inline" yaml:",inline"`
 }
 
 type BackendDetail struct {

@@ -32,7 +32,7 @@ spec:
     units: "ms"
     type: Gauge
     body: maybe empty
-    
+
   - name: "backend-1/objective-metric"
     description: "objective-metric description"
     params:
@@ -41,15 +41,6 @@ spec:
     units: "ms"
     type: Gauge
     body: maybe empty
-    # a metric definition can also override fields set in backend
-    versionInfo:
-    - variable-1: v1-value-1-override
-    - variable-1: v2-value-1-override
-    authType: Bearer
-    method: GET
-    provider: provider override
-    jqExpression: "jqExpr"
-    secret: "default/my-override-secret"
 
   criteria:
     reward:

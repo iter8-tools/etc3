@@ -138,14 +138,6 @@ spec:
                       items:
                         description: Metric ..
                         properties:
-                          authType:
-                            description: AuthType is the type of authentication used
-                              in the HTTP request
-                            enum:
-                            - Basic
-                            - Bearer
-                            - APIKey
-                            type: string
                           body:
                             description: Body is the string used to construct the
                               (json) body of the HTTP request Body may be templated,
@@ -154,41 +146,6 @@ spec:
                             type: string
                           description:
                             description: Text description of the metric
-                            type: string
-                          headers:
-                            description: Headers are key/value pairs corresponding
-                              to HTTP request headers and their values. Value may
-                              be templated, in which Iter8 will attempt to substitute
-                              placeholders in the template at query time using Secret.
-                              Placeholder substitution will be attempted only when
-                              Secret != nil.
-                            items:
-                              description: NamedValue name/value to be used in constructing
-                                a REST query to backend metrics server
-                              properties:
-                                name:
-                                  description: Name of parameter
-                                  type: string
-                                value:
-                                  description: Value of parameter
-                                  type: string
-                              required:
-                              - name
-                              - value
-                              type: object
-                            type: array
-                          jqExpression:
-                            description: JQExpression defines the jq expression used
-                              by Iter8 to extract the metric value from the (JSON)
-                              response returned by the HTTP URL queried by Iter8.
-                              An empty string is a valid jq expression.
-                            type: string
-                          method:
-                            description: Method is the HTTP method used in the HTTP
-                              request
-                            enum:
-                            - GET
-                            - POST
                             type: string
                           name:
                             description: Name is label of metric
@@ -213,16 +170,6 @@ spec:
                               - value
                               type: object
                             type: array
-                          provider:
-                            description: Provider identifies the type of metric database.
-                              Used for informational purposes.
-                            type: string
-                          secret:
-                            description: Secret is a reference to the Kubernetes secret.
-                              Secret contains data used for HTTP authentication. Secret
-                              may also contain data used for placeholder substitution
-                              in HeaderTemplates and URLTemplate.
-                            type: string
                           type:
                             description: Type of the metric
                             enum:
@@ -233,23 +180,6 @@ spec:
                             description: Units of the metric. Used for informational
                               purposes.
                             type: string
-                          url:
-                            description: URL is a template for the URL queried during
-                              the HTTP request. Typically, URL is expected to be the
-                              actual URL without any placeholders. However, as indicated
-                              by its name, URL may be templated. In this case, Iter8
-                              will attempt to substitute placeholders in the URL at
-                              query time using Secret. Placeholder substitution will
-                              be attempted only when Secret != nil.
-                            type: string
-                          versionInfo:
-                            description: VersionInfo is map of name/value pairs for
-                              substitution into Body and Params
-                            items:
-                              additionalProperties:
-                                type: string
-                              type: object
-                            type: array
                         required:
                         - name
                         type: object
@@ -376,14 +306,6 @@ spec:
                 items:
                   description: Metric ..
                   properties:
-                    authType:
-                      description: AuthType is the type of authentication used in
-                        the HTTP request
-                      enum:
-                      - Basic
-                      - Bearer
-                      - APIKey
-                      type: string
                     body:
                       description: Body is the string used to construct the (json)
                         body of the HTTP request Body may be templated, in which Iter8
@@ -392,39 +314,6 @@ spec:
                       type: string
                     description:
                       description: Text description of the metric
-                      type: string
-                    headers:
-                      description: Headers are key/value pairs corresponding to HTTP
-                        request headers and their values. Value may be templated,
-                        in which Iter8 will attempt to substitute placeholders in
-                        the template at query time using Secret. Placeholder substitution
-                        will be attempted only when Secret != nil.
-                      items:
-                        description: NamedValue name/value to be used in constructing
-                          a REST query to backend metrics server
-                        properties:
-                          name:
-                            description: Name of parameter
-                            type: string
-                          value:
-                            description: Value of parameter
-                            type: string
-                        required:
-                        - name
-                        - value
-                        type: object
-                      type: array
-                    jqExpression:
-                      description: JQExpression defines the jq expression used by
-                        Iter8 to extract the metric value from the (JSON) response
-                        returned by the HTTP URL queried by Iter8. An empty string
-                        is a valid jq expression.
-                      type: string
-                    method:
-                      description: Method is the HTTP method used in the HTTP request
-                      enum:
-                      - GET
-                      - POST
                       type: string
                     name:
                       description: Name is label of metric
@@ -449,16 +338,6 @@ spec:
                         - value
                         type: object
                       type: array
-                    provider:
-                      description: Provider identifies the type of metric database.
-                        Used for informational purposes.
-                      type: string
-                    secret:
-                      description: Secret is a reference to the Kubernetes secret.
-                        Secret contains data used for HTTP authentication. Secret
-                        may also contain data used for placeholder substitution in
-                        HeaderTemplates and URLTemplate.
-                      type: string
                     type:
                       description: Type of the metric
                       enum:
@@ -468,23 +347,6 @@ spec:
                     units:
                       description: Units of the metric. Used for informational purposes.
                       type: string
-                    url:
-                      description: URL is a template for the URL queried during the
-                        HTTP request. Typically, URL is expected to be the actual
-                        URL without any placeholders. However, as indicated by its
-                        name, URL may be templated. In this case, Iter8 will attempt
-                        to substitute placeholders in the URL at query time using
-                        Secret. Placeholder substitution will be attempted only when
-                        Secret != nil.
-                      type: string
-                    versionInfo:
-                      description: VersionInfo is map of name/value pairs for substitution
-                        into Body and Params
-                      items:
-                        additionalProperties:
-                          type: string
-                        type: object
-                      type: array
                   required:
                   - name
                   type: object

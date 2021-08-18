@@ -28,10 +28,9 @@ var _ = Describe("Experiment", func() {
 
 	Context("When experiment has backend and metrics", func() {
 		It("should create the experiment", func() {
-			By("reading experiment " + "metrics/withbackend.yaml")
+			By("reading experiment " + "withbackend.yaml")
 			s := Experiment{}
-			path.Join("..", "..", "test", "data", "metrics/withbackend.yaml")
-			Expect(readExperimentFromFile(path.Join("..", "..", "test", "data", "metrics/withbackend.yaml"), &s)).To(Succeed())
+			Expect(readExperimentFromFile(path.Join("..", "..", "test", "data", "withbackend.yaml"), &s)).To(Succeed())
 
 			By("creating the experiment")
 			Expect(k8sClient.Create(ctx, &s)).Should(Succeed())
@@ -60,14 +59,6 @@ var _ = Describe("Experiment", func() {
 			Expect(*exp.Spec.Metrics[0].Units).Should(Equal("ms"))
 			Expect(*exp.Spec.Metrics[0].Type).Should(Equal(GaugeMetricType))
 			Expect(*exp.Spec.Metrics[0].Body).Should(Equal("maybe empty"))
-			Expect(exp.Spec.Metrics[0].AuthType).Should(BeNil())
-			Expect(exp.Spec.Metrics[0].Method).Should(BeNil())
-			Expect(exp.Spec.Metrics[0].Provider).Should(BeNil())
-			Expect(exp.Spec.Metrics[0].JQExpression).Should(BeNil())
-			Expect(exp.Spec.Metrics[0].Secret).Should(BeNil())
-			Expect(len(exp.Spec.Metrics[0].Headers)).Should(Equal(0))
-			Expect(exp.Spec.Metrics[0].URL).Should(BeNil())
-			Expect(len(exp.Spec.Metrics[0].VersionInfo)).Should(Equal(0))
 
 			Expect(exp.Spec.Metrics[1].Name).Should(Equal("backend-1/objective-metric"))
 			Expect(*exp.Spec.Metrics[1].Description).Should(Equal("objective-metric description"))
@@ -75,14 +66,6 @@ var _ = Describe("Experiment", func() {
 			Expect(*exp.Spec.Metrics[1].Units).Should(Equal("ms"))
 			Expect(*exp.Spec.Metrics[1].Type).Should(Equal(GaugeMetricType))
 			Expect(*exp.Spec.Metrics[1].Body).Should(Equal("maybe empty"))
-			Expect(*exp.Spec.Metrics[1].AuthType).Should(Equal(BearerAuthType))
-			Expect(*exp.Spec.Metrics[1].Method).Should(Equal(GETMethodType))
-			Expect(*exp.Spec.Metrics[1].Provider).Should(Equal("provider override"))
-			Expect(*exp.Spec.Metrics[1].JQExpression).Should(Equal("jqExpr"))
-			Expect(*exp.Spec.Metrics[1].Secret).Should(Equal("default/my-override-secret"))
-			Expect(len(exp.Spec.Metrics[1].Headers)).Should(Equal(0))
-			Expect(exp.Spec.Metrics[1].URL).Should(BeNil())
-			Expect(len(exp.Spec.Metrics[1].VersionInfo)).Should(Equal(2))
 
 			By("deleting the experiment")
 			Expect(k8sClient.Delete(ctx, &s)).Should(Succeed())
@@ -91,10 +74,9 @@ var _ = Describe("Experiment", func() {
 
 	Context("When experiment has no metrics", func() {
 		It("should create the experiment", func() {
-			By("reading experiment " + "metrics/nometrics.yaml")
+			By("reading experiment " + "nometrics.yaml")
 			s := Experiment{}
-			path.Join("..", "..", "test", "data", "metrics/nometrics.yaml")
-			Expect(readExperimentFromFile(path.Join("..", "..", "test", "data", "metrics/nometrics.yaml"), &s)).To(Succeed())
+			Expect(readExperimentFromFile(path.Join("..", "..", "test", "data", "nometrics.yaml"), &s)).To(Succeed())
 
 			By("creating the experiment")
 			Expect(k8sClient.Create(ctx, &s)).Should(Succeed())
