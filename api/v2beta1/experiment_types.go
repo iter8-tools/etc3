@@ -75,7 +75,6 @@ type ExperimentSpec struct {
 	Duration *Duration `json:"duration,omitempty" yaml:"duration,omitempty"`
 
 	// Backend is details of metrics backend or overrides to a backend defined in a configmap
-	// +kubebuilder:pruning:PreserveUnknownFields
 	Backends []Backend `json:"backends,omitempty" yaml:"backends,omitempty"`
 
 	// Metrics are metrics definitions used by Criteria; may override predefined metrics

@@ -218,7 +218,6 @@ spec:
                   - name
                   type: object
                 type: array
-                x-kubernetes-preserve-unknown-fields: true
               criteria:
                 description: Criteria contains a list of Criterion for assessing the
                   candidates Note that the number of rewards that can be/must be specified
