@@ -43,9 +43,9 @@ spec:
     body: maybe empty
 
   criteria:
-    reward:
+    rewards:
     - metric: "category-1/reward-metric"
-      preferredDirection: high
+      preferredDirection: High
     objectives:
     - metric: "category-1/objective-metric"
       upperLimit: "1.0"
