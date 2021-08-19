@@ -184,7 +184,7 @@ var _ = Describe("Generated Code", func() {
 				Type:        &metricType,
 				Body:        &metricBody,
 			}
-			experiment.Spec.Metrics = []Metric{metric}
+			experiment.Spec.Backends[0].Metrics = []Metric{metric}
 
 			Expect(reflect.DeepEqual(experimentBuilder, experimentBuilder.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment, experiment.DeepCopyObject())).Should(BeTrue())
@@ -199,7 +199,7 @@ var _ = Describe("Generated Code", func() {
 			Expect(reflect.DeepEqual(experiment.Spec.Actions["start"], experiment.Spec.Actions["start"].DeepCopy())).Should(BeTrue())
 
 			Expect(reflect.DeepEqual(experiment.Spec.Backends[0], *experiment.Spec.Backends[0].DeepCopy())).Should(BeTrue())
-			Expect(reflect.DeepEqual(experiment.Spec.Metrics[0], *experiment.Spec.Metrics[0].DeepCopy())).Should(BeTrue())
+			Expect(reflect.DeepEqual(experiment.Spec.Backends[0].Metrics[0], *experiment.Spec.Backends[0].Metrics[0].DeepCopy())).Should(BeTrue())
 
 			Expect(reflect.DeepEqual(experiment.Status, *experiment.Status.DeepCopy())).Should(BeTrue())
 			Expect(reflect.DeepEqual(experiment.Status.Analysis, experiment.Status.Analysis.DeepCopy())).Should(BeTrue())

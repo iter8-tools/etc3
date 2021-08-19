@@ -299,57 +299,6 @@ spec:
                     minimum: 1
                     type: integer
                 type: object
-              metrics:
-                description: Metrics are metrics definitions used by Criteria; may
-                  override predefined metrics
-                items:
-                  description: Metric ..
-                  properties:
-                    body:
-                      description: Body is the string used to construct the (json)
-                        body of the HTTP request Body may be templated, in which Iter8
-                        will attempt to substitute placeholders in the template at
-                        query time using version information.
-                      type: string
-                    description:
-                      description: Text description of the metric
-                      type: string
-                    name:
-                      description: Name is label of metric
-                      type: string
-                    params:
-                      description: Params are key/value pairs corresponding to HTTP
-                        request parameters Value may be templated, in which Iter8
-                        will attempt to substitute placeholders in the template at
-                        query time using version information.
-                      items:
-                        description: NamedValue name/value to be used in constructing
-                          a REST query to backend metrics server
-                        properties:
-                          name:
-                            description: Name of parameter
-                            type: string
-                          value:
-                            description: Value of parameter
-                            type: string
-                        required:
-                        - name
-                        - value
-                        type: object
-                      type: array
-                    type:
-                      description: Type of the metric
-                      enum:
-                      - Counter
-                      - Gauge
-                      type: string
-                    units:
-                      description: Units of the metric. Used for informational purposes.
-                      type: string
-                  required:
-                  - name
-                  type: object
-                type: array
               versionInfo:
                 description: VersionInfo is list of version labels
                 items:

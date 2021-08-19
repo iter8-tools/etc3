@@ -76,9 +76,6 @@ type ExperimentSpec struct {
 
 	// Backend is details of metrics backend or overrides to a backend defined in a configmap
 	Backends []Backend `json:"backends,omitempty" yaml:"backends,omitempty"`
-
-	// Metrics are metrics definitions used by Criteria; may override predefined metrics
-	Metrics []Metric `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
 // ActionMap type for containing a collection of actions.
