@@ -28,9 +28,6 @@ const (
 	// DefaultFinishHandler is the prefix of the default finish handler
 	DefaultFinishHandler string = "finish"
 
-	// DefaultFailureHandler is the prefix of the default failure handler
-	DefaultFailureHandler string = "finish"
-
 	// DefaultLoopHandler is the prefix of the default loop handler
 	DefaultLoopHandler string = "loop"
 
@@ -58,12 +55,6 @@ func (s *ExperimentSpec) GetStartHandler() *string {
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
 func (s *ExperimentSpec) GetFinishHandler() *string {
 	handler := DefaultFinishHandler
-	return &handler
-}
-
-/// GetFailureHandler returns the handler to be called if there is a failure during experiment execution
-func (s *ExperimentSpec) GetFailureHandler() *string {
-	handler := DefaultFailureHandler
 	return &handler
 }
 

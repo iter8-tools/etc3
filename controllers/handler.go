@@ -40,8 +40,6 @@ const (
 	HandlerTypeStart HandlerType = "Start"
 	// HandlerTypeFinish is the type of a finish handler
 	HandlerTypeFinish HandlerType = "Finish"
-	// HandlerTypeFailure is the type of a failure handler
-	HandlerTypeFailure HandlerType = "Failure"
 	// HandlerTypeLoop is the type of a loop handler
 	HandlerTypeLoop HandlerType = "Loop"
 
@@ -57,7 +55,6 @@ const (
 var allHandlerTypes []HandlerType = []HandlerType{
 	HandlerTypeStart,
 	HandlerTypeFinish,
-	HandlerTypeFailure,
 	HandlerTypeLoop,
 }
 
@@ -69,8 +66,6 @@ func (r *ExperimentReconciler) GetHandler(instance *v2beta1.Experiment, t Handle
 		hdlr = instance.Spec.GetStartHandler()
 	case HandlerTypeFinish:
 		hdlr = instance.Spec.GetFinishHandler()
-	case HandlerTypeFailure:
-		hdlr = instance.Spec.GetFailureHandler()
 	default: // case HandlerTypeLoop:
 		hdlr = instance.Spec.GetLoopHandler()
 	}
