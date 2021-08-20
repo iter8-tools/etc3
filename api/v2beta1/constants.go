@@ -69,8 +69,6 @@ const (
 	ReasonLoopCompleted              = "LoopUpdate"
 	ReasonExperimentCompleted        = "ExperimentCompleted"
 	ReasonAnalyticsServiceError      = "AnalyticsServiceError"
-	ReasonMetricUnavailable          = "MetricUnavailable"
-	ReasonMetricsUnreadable          = "MetricsUnreadable"
 	ReasonHandlerLaunched            = "HandlerLaunched"
 	ReasonHandlerCompleted           = "HandlerCompleted"
 	ReasonHandlerFailed              = "HandlerFailed"
@@ -85,8 +83,7 @@ const (
 type ExperimentStageType string
 
 const (
-	// ExperimentStageInitializing indicates an experiment has acquired access to the target
-	// and a start handler, if  any, is running
+	// ExperimentStageInitializing indicates an experiment is initializing; start tasks may be executing
 	ExperimentStageInitializing ExperimentStageType = "Initializing"
 
 	// ExperimentStageRunning indicates an experiment is running
