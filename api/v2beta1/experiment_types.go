@@ -73,16 +73,9 @@ type ExperimentSpec struct {
 	// Duration describes how long the experiment will last.
 	// +optional
 	Duration *Duration `json:"duration,omitempty" yaml:"duration,omitempty"`
-}
 
-// MetricInfo is name/value pair; entry for list of metrics
-type MetricInfo struct {
-	// Name is identifier for metric.  Can be of the form "name" or "namespace/name"
-	Name string `json:"name" yaml:"name"`
-
-	// MetricObj is the referenced metric
-	// +kubebuilder:validation:EmbeddedResource
-	MetricObj Metric `json:"metricObj" yaml:"metricObj"`
+	// Backend is details of metrics backend or overrides to a backend defined in a configmap
+	Backends []Backend `json:"backends,omitempty" yaml:"backends,omitempty"`
 }
 
 // ActionMap type for containing a collection of actions.
@@ -111,48 +104,16 @@ type TaskSpec struct {
 	With map[string]apiextensionsv1.JSON `json:"with,omitempty" yaml:"with,omitempty"`
 }
 
-// Weights modify the behavior of the traffic split algorithm.
-type Weights struct {
-	// MaxCandidateWeight is the maximum percent of traffic that should be sent to the
-	// candidate versions during an experiment
-	// +kubebuilder:validation:Minimum:=0
-	// +kubebuilder:validation:Maximum:=100
-	// +optional
-	MaxCandidateWeight *int32 `json:"maxCandidateWeight,omitempty" yaml:"maxCandidateWeight,omitempty"`
-
-	// MaxCandidateWeightIncrement the maximum permissible increase in traffic to a candidate in one loop
-	// +kubebuilder:validation:Minimum:=0
-	// +kubebuilder:validation:Maximum:=100
-	// +optional
-	MaxCandidateWeightIncrement *int32 `json:"maxCandidateWeightIncrement,omitempty" yaml:"maxCandidateWeightIncrement,omitempty"`
-}
-
 // Criteria is list of criteria to be evaluated throughout the experiment
 type Criteria struct {
-
-	// RequestCount identifies metric to be used to count how many requests a version has seen
-	// Typically set by the controller (based on setup configuration) but can be overridden by the user
-	// + optional
-	RequestCount *string `json:"requestCount,omitempty" yaml:"requestCount,omitempty"`
-
 	// Rewards is a list of metrics that should be used to evaluate the reward for a version in the experiment.
 	// +optional
 	Rewards []Reward `json:"rewards,omitempty" yaml:"rewards,omitempty"`
 
-	// Indicators is a list of metrics to be measured and reported on each loop of the experiment.
-	// +optional
-	Indicators []string `json:"indicators,omitempty" yaml:"indicators,omitempty"`
-
 	// Objectives is a list of conditions on metrics that must be tested on each loop of the experiment.
 	// Failure of an objective might reduces the likelihood that a version will be selected as the winning version.
-	// Failure of an objective might also trigger an experiment rollback.
 	// +optional
 	Objectives []Objective `json:"objectives,omitempty" yaml:"objectives,omitempty"`
-
-	// Strength identifies the required degree of support the analytics must provide before it will
-	// assert success for an objective.
-	// +optional
-	Strength apiextensionsv1.JSON `json:"strength,omitempty" yaml:"strength,omitempty"`
 }
 
 // Reward ..
@@ -178,7 +139,7 @@ type Objective struct {
 	// +optional
 	UpperLimit *resource.Quantity `json:"upperLimit,omitempty" yaml:"upperLimit,omitempty"`
 
-	// UpperLimit is the minimum acceptable value of the metric.
+	// LowerLimit is the minimum acceptable value of the metric.
 	// +optional
 	LowerLimit *resource.Quantity `json:"lowerLimit,omitempty" yaml:"lowerLimit,omitempty"`
 }
@@ -241,12 +202,6 @@ type ExperimentStatus struct {
 	// Message specifies message to show in the kubectl printer
 	// +optional
 	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
-
-	// Metrics is a list of all the metrics used in the experiment
-	// It is inserted by the controller from the references in spec.criteria
-	// Key is the name as referenced in spec.criteria
-	// +optional
-	Metrics []MetricInfo `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
 // ExperimentCondition describes a condition of an experiment
@@ -303,6 +258,96 @@ type Winner struct {
 	// +optional
 	Winner *string `json:"winner,omitempty" yaml:"winner,omitempty"`
 }
+
+// Backend ..
+type Backend struct {
+	// Name is label of backend
+	Name string `json:"name" yaml:"name"`
+
+	// Text description of the backend
+	// +optional
+	Description *string `json:"description,omitempty" yaml:"description,omitempty"`
+
+	// BackendDetail
+	BackendDetail `json:",inline" yaml:",inline"`
+
+	// Metrics is list of metrics available from this backend
+	// +optional
+	Metrics []Metric `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+}
+
+// Metric ..
+type Metric struct {
+	// Name is label of metric
+	Name string `json:"name" yaml:"name"`
+
+	// Text description of the metric
+	// +optional
+	Description *string `json:"description,omitempty" yaml:"description,omitempty"`
+
+	// Params are key/value pairs corresponding to HTTP request parameters
+	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
+	// +optional
+	Params map[string]string `json:"params,omitempty" yaml:"params,omitempty"`
+
+	// Units of the metric. Used for informational purposes.
+	// +optional
+	Units *string `json:"units,omitempty" yaml:"units,omitempty"`
+
+	// Type of the metric
+	// +optional
+	Type *MetricType `json:"type,omitempty" yaml:"type,omitempty"`
+
+	// Body is the string used to construct the (json) body of the HTTP request
+	// Body may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
+	// +optional
+	Body *string `json:"body,omitempty" yaml:"body,omitempty"`
+}
+
+type BackendDetail struct {
+	// AuthType is the type of authentication used in the HTTP request
+	// +optional
+	AuthType *AuthType `json:"authType,omitempty" yaml:"authType,omitempty"`
+
+	// Method is the HTTP method used in the HTTP request
+	// +optional
+	Method *MethodType `json:"method,omitempty" yaml:"method,omitempty"`
+
+	// Provider identifies the type of metric database. Used for informational purposes.
+	// +optional
+	Provider *string `json:"provider,omitempty" yaml:"provider,omitempty"`
+
+	// JQExpression defines the jq expression used by Iter8 to extract the metric value from the (JSON) response returned by the HTTP URL queried by Iter8.
+	// An empty string is a valid jq expression.
+	// +optional
+	JQExpression *string `json:"jqExpression,omitempty" yaml:"jqExpression,omitempty"`
+
+	// Secret is a reference to the Kubernetes secret.
+	// Secret contains data used for HTTP authentication.
+	// Secret may also contain data used for placeholder substitution in HeaderTemplates and URLTemplate.
+	// +optional
+	Secret *string `json:"secret,omitempty" yaml:"secret,omitempty"`
+
+	// Headers are key/value pairs corresponding to HTTP request headers and their values.
+	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using Secret.
+	// Placeholder substitution will be attempted only when Secret != nil.
+	// +optional
+	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
+
+	// URL is a template for the URL queried during the HTTP request.
+	// Typically, URL is expected to be the actual URL without any placeholders.
+	// However, as indicated by its name, URL may be templated.
+	// In this case, Iter8 will attempt to substitute placeholders in the URL at query time using Secret.
+	// Placeholder substitution will be attempted only when Secret != nil.
+	// +optional
+	URL *string `json:"url,omitempty" yaml:"url,omitempty"`
+
+	// VersionInfo is map of name/value pairs for substitution into Body and Params
+	// +optional
+	VersionInfo []VersionDetail `json:"versionInfo,omitempty" yaml:"versionInfo,omitempty"`
+}
+
+type VersionDetail map[string]string
 
 func init() {
 	SchemeBuilder.Register(&Experiment{}, &ExperimentList{})

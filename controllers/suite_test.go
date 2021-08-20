@@ -199,17 +199,17 @@ var _ = AfterSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-func fails(name string, ns string) bool {
-	exp := &v2beta1.Experiment{}
-	err := k8sClient.Get(ctx(), types.NamespacedName{Name: name, Namespace: ns}, exp)
-	if err != nil {
-		return false
-	}
-	completed := exp.Status.GetCondition(v2beta1.ExperimentConditionExperimentCompleted).IsTrue()
-	failed := exp.Status.GetCondition(v2beta1.ExperimentConditionExperimentFailed).IsTrue()
+// func fails(name string, ns string) bool {
+// 	exp := &v2beta1.Experiment{}
+// 	err := k8sClient.Get(ctx(), types.NamespacedName{Name: name, Namespace: ns}, exp)
+// 	if err != nil {
+// 		return false
+// 	}
+// 	completed := exp.Status.GetCondition(v2beta1.ExperimentConditionExperimentCompleted).IsTrue()
+// 	failed := exp.Status.GetCondition(v2beta1.ExperimentConditionExperimentFailed).IsTrue()
 
-	return completed && failed
-}
+// 	return completed && failed
+// }
 
 func issuedEvent(message string) bool {
 	return containsSubString(events, message)

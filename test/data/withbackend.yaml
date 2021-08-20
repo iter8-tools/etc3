@@ -1,0 +1,46 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: experiment
+  namespace: default
+spec:
+  versionInfo: ["v1","v2"]
+  backends:
+  - name: "backend-1"
+    description: "backend description"
+    versionInfo:
+    - variable-1: v1-value-1
+      variable-2: v1-value-2
+    - variable-1: v2-value-1
+      variable-2: v2-value-2
+    authType: Basic
+    method: POST
+    provider: provider
+    jqExpression: jq
+    secret: default/my-secret
+    headers:
+      header: "{{.variable-1}}::{{.variable-2}}"
+    url: https://provider.url
+    metrics:
+    - name: "backend-1/reward-metric"
+      description: "reward-metric description"
+      params:
+        params: query with $variable-1 and $variable-2
+      units: "ms"
+      type: Gauge
+      body: maybe empty
+    - name: "backend-1/objective-metric"
+      description: "objective-metric description"
+      params:
+        params: query with $variable-1 and $variable-2
+      units: "ms"
+      type: Gauge
+      body: maybe empty
+
+  criteria:
+    rewards:
+    - metric: "category-1/reward-metric"
+      preferredDirection: High
+    objectives:
+    - metric: "category-1/objective-metric"
+      upperLimit: "1.0"

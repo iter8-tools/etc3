@@ -82,23 +82,128 @@ spec:
                   by handlers. Specifically, start and finish actions are invoked
                   by start and finish handlers respectively.
                 type: object
+              backends:
+                description: Backend is details of metrics backend or overrides to
+                  a backend defined in a configmap
+                items:
+                  description: Backend ..
+                  properties:
+                    authType:
+                      description: AuthType is the type of authentication used in
+                        the HTTP request
+                      enum:
+                      - Basic
+                      - Bearer
+                      - APIKey
+                      type: string
+                    description:
+                      description: Text description of the backend
+                      type: string
+                    headers:
+                      additionalProperties:
+                        type: string
+                      description: Headers are key/value pairs corresponding to HTTP
+                        request headers and their values. Value may be templated,
+                        in which Iter8 will attempt to substitute placeholders in
+                        the template at query time using Secret. Placeholder substitution
+                        will be attempted only when Secret != nil.
+                      type: object
+                    jqExpression:
+                      description: JQExpression defines the jq expression used by
+                        Iter8 to extract the metric value from the (JSON) response
+                        returned by the HTTP URL queried by Iter8. An empty string
+                        is a valid jq expression.
+                      type: string
+                    method:
+                      description: Method is the HTTP method used in the HTTP request
+                      enum:
+                      - GET
+                      - POST
+                      type: string
+                    metrics:
+                      description: Metrics is list of metrics available from this
+                        backend
+                      items:
+                        description: Metric ..
+                        properties:
+                          body:
+                            description: Body is the string used to construct the
+                              (json) body of the HTTP request Body may be templated,
+                              in which Iter8 will attempt to substitute placeholders
+                              in the template at query time using version information.
+                            type: string
+                          description:
+                            description: Text description of the metric
+                            type: string
+                          name:
+                            description: Name is label of metric
+                            type: string
+                          params:
+                            additionalProperties:
+                              type: string
+                            description: Params are key/value pairs corresponding
+                              to HTTP request parameters Value may be templated, in
+                              which Iter8 will attempt to substitute placeholders
+                              in the template at query time using version information.
+                            type: object
+                          type:
+                            description: Type of the metric
+                            enum:
+                            - Counter
+                            - Gauge
+                            type: string
+                          units:
+                            description: Units of the metric. Used for informational
+                              purposes.
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      type: array
+                    name:
+                      description: Name is label of backend
+                      type: string
+                    provider:
+                      description: Provider identifies the type of metric database.
+                        Used for informational purposes.
+                      type: string
+                    secret:
+                      description: Secret is a reference to the Kubernetes secret.
+                        Secret contains data used for HTTP authentication. Secret
+                        may also contain data used for placeholder substitution in
+                        HeaderTemplates and URLTemplate.
+                      type: string
+                    url:
+                      description: URL is a template for the URL queried during the
+                        HTTP request. Typically, URL is expected to be the actual
+                        URL without any placeholders. However, as indicated by its
+                        name, URL may be templated. In this case, Iter8 will attempt
+                        to substitute placeholders in the URL at query time using
+                        Secret. Placeholder substitution will be attempted only when
+                        Secret != nil.
+                      type: string
+                    versionInfo:
+                      description: VersionInfo is map of name/value pairs for substitution
+                        into Body and Params
+                      items:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  type: object
+                type: array
               criteria:
                 description: Criteria contains a list of Criterion for assessing the
                   candidates Note that the number of rewards that can be/must be specified
                   depends on the testing pattern
                 properties:
-                  indicators:
-                    description: Indicators is a list of metrics to be measured and
-                      reported on each loop of the experiment.
-                    items:
-                      type: string
-                    type: array
                   objectives:
                     description: Objectives is a list of conditions on metrics that
                       must be tested on each loop of the experiment. Failure of an
                       objective might reduces the likelihood that a version will be
-                      selected as the winning version. Failure of an objective might
-                      also trigger an experiment rollback.
+                      selected as the winning version.
                     items:
                       description: Objective is a service level objective
                       properties:
@@ -106,7 +211,7 @@ spec:
                           anyOf:
                           - type: integer
                           - type: string
-                          description: UpperLimit is the minimum acceptable value
+                          description: LowerLimit is the minimum acceptable value
                             of the metric.
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
@@ -131,12 +236,6 @@ spec:
                       - metric
                       type: object
                     type: array
-                  requestCount:
-                    description: RequestCount identifies metric to be used to count
-                      how many requests a version has seen Typically set by the controller
-                      (based on setup configuration) but can be overridden by the
-                      user
-                    type: string
                   rewards:
                     description: Rewards is a list of metrics that should be used
                       to evaluate the reward for a version in the experiment.
@@ -159,11 +258,6 @@ spec:
                       - preferredDirection
                       type: object
                     type: array
-                  strength:
-                    description: Strength identifies the required degree of support
-                      the analytics must provide before it will assert success for
-                      an objective.
-                    x-kubernetes-preserve-unknown-fields: true
                 type: object
               duration:
                 description: Duration describes how long the experiment will last.
@@ -290,190 +384,6 @@ spec:
               message:
                 description: Message specifies message to show in the kubectl printer
                 type: string
-              metrics:
-                description: Metrics is a list of all the metrics used in the experiment
-                  It is inserted by the controller from the references in spec.criteria
-                  Key is the name as referenced in spec.criteria
-                items:
-                  description: MetricInfo is name/value pair; entry for list of metrics
-                  properties:
-                    metricObj:
-                      description: MetricObj is the referenced metric
-                      properties:
-                        apiVersion:
-                          description: 'APIVersion defines the versioned schema of
-                            this representation of an object. Servers should convert
-                            recognized schemas to the latest internal value, and may
-                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-                          type: string
-                        kind:
-                          description: 'Kind is a string value representing the REST
-                            resource this object represents. Servers may infer this
-                            from the endpoint the client submits requests to. Cannot
-                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                          type: string
-                        metadata:
-                          type: object
-                        spec:
-                          description: MetricSpec defines the desired state of Metric
-                          properties:
-                            authType:
-                              description: AuthType is the type of authentication
-                                used in the HTTP request
-                              enum:
-                              - Basic
-                              - Bearer
-                              - APIKey
-                              type: string
-                            body:
-                              description: Body is the string used to construct the
-                                (json) body of the HTTP request Body may be templated,
-                                in which Iter8 will attempt to substitute placeholders
-                                in the template at query time using version information.
-                              type: string
-                            description:
-                              description: Text description of the metric
-                              type: string
-                            headerTemplates:
-                              description: HeaderTemplates are key/value pairs corresponding
-                                to HTTP request headers and their values. Value may
-                                be templated, in which Iter8 will attempt to substitute
-                                placeholders in the template at query time using Secret.
-                                Placeholder substitution will be attempted only when
-                                Secret != nil.
-                              items:
-                                description: NamedValue name/value to be used in constructing
-                                  a REST query to backend metrics server
-                                properties:
-                                  name:
-                                    description: Name of parameter
-                                    type: string
-                                  value:
-                                    description: Value of parameter
-                                    type: string
-                                required:
-                                - name
-                                - value
-                                type: object
-                              type: array
-                            jqExpression:
-                              description: JQExpression defines the jq expression
-                                used by Iter8 to extract the metric value from the
-                                (JSON) response returned by the HTTP URL queried by
-                                Iter8. An empty string is a valid jq expression.
-                              type: string
-                            method:
-                              default: GET
-                              description: Method is the HTTP method used in the HTTP
-                                request
-                              enum:
-                              - GET
-                              - POST
-                              type: string
-                            mock:
-                              description: Mock enables mocking of metric values,
-                                which is useful in tests and tutorial/documentation.
-                                Iter8 metrics can be either counter (which keep increasing
-                                over time) or gauge (which can increase or decrease
-                                over time). Mock enables mocking of both.
-                              items:
-                                description: 'NamedLevel contains the name of a version
-                                  and the level of the version to be used in mock
-                                  metric generation. The semantics of level are the
-                                  following: If the metric is a counter, if level
-                                  is x, and time elapsed since the start of the experiment
-                                  is y, then x*y is the metric value. Note: this will
-                                  keep increasing over time as counters do. If the
-                                  metric is gauge, if level is x, the metric value
-                                  is a random value with mean x. Note: due to randomness,
-                                  this stay around x but can go up or down as a gauges
-                                  do.'
-                                properties:
-                                  level:
-                                    anyOf:
-                                    - type: integer
-                                    - type: string
-                                    description: Level of the version
-                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                    x-kubernetes-int-or-string: true
-                                  name:
-                                    description: Name of the version
-                                    type: string
-                                required:
-                                - level
-                                - name
-                                type: object
-                              type: array
-                            params:
-                              description: Params are key/value pairs corresponding
-                                to HTTP request parameters Value may be templated,
-                                in which Iter8 will attempt to substitute placeholders
-                                in the template at query time using version information.
-                              items:
-                                description: NamedValue name/value to be used in constructing
-                                  a REST query to backend metrics server
-                                properties:
-                                  name:
-                                    description: Name of parameter
-                                    type: string
-                                  value:
-                                    description: Value of parameter
-                                    type: string
-                                required:
-                                - name
-                                - value
-                                type: object
-                              type: array
-                            provider:
-                              description: Provider identifies the type of metric
-                                database. Used for informational purposes.
-                              type: string
-                            sampleSize:
-                              description: SampleSize is a reference to a counter
-                                metric resource. The value of the SampleSize metric
-                                denotes the number of data points over which this
-                                metric is computed. This field is relevant only when
-                                Type == Gauge
-                              type: string
-                            secret:
-                              description: Secret is a reference to the Kubernetes
-                                secret. Secret contains data used for HTTP authentication.
-                                Secret may also contain data used for placeholder
-                                substitution in HeaderTemplates and URLTemplate.
-                              type: string
-                            type:
-                              default: Gauge
-                              description: Type of the metric
-                              enum:
-                              - Counter
-                              - Gauge
-                              type: string
-                            units:
-                              description: Units of the metric. Used for informational
-                                purposes.
-                              type: string
-                            urlTemplate:
-                              description: URLTemplate is a template for the URL queried
-                                during the HTTP request. Typically, URLTemplate is
-                                expected to be the actual URL without any placeholders.
-                                However, as indicated by its name, URLTemplate may
-                                be templated. In this case, Iter8 will attempt to
-                                substitute placeholders in the URLTemplate at query
-                                time using Secret. Placeholder substitution will be
-                                attempted only when Secret != nil.
-                              type: string
-                          type: object
-                      type: object
-                      x-kubernetes-embedded-resource: true
-                    name:
-                      description: Name is identifier for metric.  Can be of the form
-                        "name" or "namespace/name"
-                      type: string
-                  required:
-                  - metricObj
-                  - name
-                  type: object
-                type: array
               stage:
                 description: Stage indicates where the experiment is in its process
                   of execution

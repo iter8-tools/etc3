@@ -142,16 +142,6 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 	log.Info("Start Handling Complete")
 
-	// using spec.criteria, read the metrics objects into status.metrics
-	if shouldReadMetrics(instance) {
-		if ok := r.ReadMetrics(ctx, instance); !ok {
-			return r.failExperiment(ctx, instance, nil)
-		}
-		// we updated status if we read metrics
-		// endRequest writes the change the to cluster and retriggers reconcile
-		return r.endRequest(ctx, instance)
-	}
-
 	// advance stage from Initializing to Running
 	// when we advance for the first time, we've just finished the start handler (if there is one),
 	// so we update Status.CurrentWeightDistribution
@@ -313,13 +303,6 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2b
 		log.Error(err, err.Error())
 	}
 
-	// For context see: https://github.com/iter8-tools/etc3/issues/201
-	// if stop, result, err := r.launchHandlerWrapper(ctx, instance, HandlerTypeFailure,
-	// 	handlerLaunchModifier{onSuccessfulLaunch: func() { r.advanceStage(ctx, instance, v2beta1.ExperimentStageFinishing) }},
-	// ); stop {
-	// 	return result, err
-	// }
-
 	return r.endExperiment(ctx, instance, "Experiment failed")
 }
 
@@ -399,7 +382,7 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 		return stop, result, err
 	case HandlerStatusComplete:
 		switch handlerType {
-		case HandlerTypeFinish, HandlerTypeFailure, HandlerTypeRollback:
+		case HandlerTypeFinish:
 			// terminal handler completed; we end the experiment
 			result, err := r.endExperiment(ctx, instance, "Experiment Completed")
 			return stop, result, err
@@ -415,7 +398,7 @@ func (r *ExperimentReconciler) checkHandlerStatus(ctx context.Context, instance 
 			return !stop, dummyResult, nil
 		}
 	case HandlerStatusFailed:
-		// a handler failed; don't call a failure handler; just stop
+		// a handler failed; just stop
 		msg := fmt.Sprintf("%s actions failed", handlerType)
 		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonHandlerFailed, msg)
 		result, err := r.endExperiment(ctx, instance, msg)
@@ -445,7 +428,7 @@ type handlerLaunchModifier struct {
 // Determine if a handler actually exists
 // Run an prerequisite check if one was provided
 // If the handler successfully launches, run any provided modifier
-// If the handler fails to launch, try launching the failure handler
+// If the handler fails to launch, fail
 // Record any succesful launch
 // Return (a) whether or not the caller should stop processing the current Reconcile()
 //        (b) a ctrl.Result to be used by the caller when it should stop
@@ -480,7 +463,7 @@ func (r *ExperimentReconciler) launchHandlerWrapper(
 
 	if err := r.LaunchHandler(ctx, instance, *handler, modifier.loop); err != nil {
 		// An error occurred trying to launch a handler; recommend immediate termination
-		result, err := r.endExperiment(ctx, instance, "failure executing failure handler")
+		result, err := r.endExperiment(ctx, instance, fmt.Sprintf("Failure occurfed while executing %s tasks", handlerType))
 		return stop, result, err
 	}
 

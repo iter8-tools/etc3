@@ -47,7 +47,6 @@ var _ = Describe("Winner Determination", func() {
 	})
 
 	var _ = Describe("TestingPattern", func() {
-		var jqe string = "expr"
 		Context("When experiment has 1 version, no reward", func() {
 			It("TestingPattern should be SLOValidation", func() {
 				experiment = NewExperiment("test", "default").
@@ -77,7 +76,7 @@ var _ = Describe("Winner Determination", func() {
 			It("TestingPattern should be TestingPatternAB", func() {
 				experiment = NewExperiment("test", "default").
 					WithVersion("v1").WithVersion("v2").
-					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+					WithReward("default/reward", PreferredDirectionHigher).
 					Build()
 				Expect(experiment.TestingPattern()).To(Equal(TestingPatternAB))
 			})
@@ -86,7 +85,7 @@ var _ = Describe("Winner Determination", func() {
 			It("TestingPattern should be TestingPatternABN", func() {
 				experiment = NewExperiment("test", "default").
 					WithVersion("v1").WithVersion("v2").WithVersion("v3").
-					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
+					WithReward("default/reward", PreferredDirectionHigher).
 					Build()
 				Expect(experiment.TestingPattern()).To(Equal(TestingPatternABN))
 			})
@@ -95,8 +94,8 @@ var _ = Describe("Winner Determination", func() {
 			It("TestingPattern should be TestingPatternHybridAB", func() {
 				experiment = NewExperiment("test", "default").
 					WithVersion("v1").WithVersion("v2").
-					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
-					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil).
+					WithReward("default/reward", PreferredDirectionHigher).
+					WithObjective("default/objective", nil, nil).
 					Build()
 				Expect(experiment.TestingPattern()).To(Equal(TestingPatternHybridAB))
 			})
@@ -105,8 +104,8 @@ var _ = Describe("Winner Determination", func() {
 			It("TestingPattern should be TestingPatternHybridABN", func() {
 				experiment = NewExperiment("test", "default").
 					WithVersion("v1").WithVersion("v2").WithVersion("v3").
-					WithReward(*NewMetric("reward", "default").WithJQExpression(&jqe).Build(), PreferredDirectionHigher).
-					WithObjective(*NewMetric("objective", "default").WithJQExpression(&jqe).Build(), nil, nil).
+					WithReward("default/reward", PreferredDirectionHigher).
+					WithObjective("default/objective", nil, nil).
 					Build()
 				Expect(experiment.TestingPattern()).To(Equal(TestingPatternHybridABN))
 			})

@@ -63,18 +63,6 @@ func (b *ExperimentBuilder) WithDuration(interval int32, maxLoops int32) *Experi
 	return b
 }
 
-// WithRequestCount ..
-func (b *ExperimentBuilder) WithRequestCount(requestCount string) *ExperimentBuilder {
-
-	if b.Spec.Criteria == nil {
-		b.Spec.Criteria = &Criteria{}
-	}
-
-	b.Spec.Criteria.RequestCount = &requestCount
-
-	return b
-}
-
 // WithCurrentWeight ..
 func (b *ExperimentBuilder) WithCurrentWeight(name string, weight int32) *ExperimentBuilder {
 
@@ -129,36 +117,24 @@ func (b *ExperimentBuilder) WithAction(key string, tasks []TaskSpec) *Experiment
 }
 
 // WithReward ..
-func (b *ExperimentBuilder) WithReward(metric Metric, preferredDirection PreferredDirectionType) *ExperimentBuilder {
+func (b *ExperimentBuilder) WithReward(metric string, preferredDirection PreferredDirectionType) *ExperimentBuilder {
 	if b.Spec.Criteria == nil {
 		b.Spec.Criteria = &Criteria{}
 	}
-	name := metric.Namespace + "/" + metric.Name
 	b.Spec.Criteria.Rewards = append(b.Spec.Criteria.Rewards, Reward{
-		Metric:             name,
+		Metric:             metric,
 		PreferredDirection: preferredDirection,
 	})
 	return b
 }
 
-// WithIndicator ..
-func (b *ExperimentBuilder) WithIndicator(metric Metric) *ExperimentBuilder {
-	if b.Spec.Criteria == nil {
-		b.Spec.Criteria = &Criteria{}
-	}
-	name := metric.Namespace + "/" + metric.Name
-	b.Spec.Criteria.Indicators = append(b.Spec.Criteria.Indicators, name)
-	return b
-}
-
 // WithObjective ..
-func (b *ExperimentBuilder) WithObjective(metric Metric, upper *resource.Quantity, lower *resource.Quantity) *ExperimentBuilder {
+func (b *ExperimentBuilder) WithObjective(metric string, upper *resource.Quantity, lower *resource.Quantity) *ExperimentBuilder {
 	if b.Spec.Criteria == nil {
 		b.Spec.Criteria = &Criteria{}
 	}
-	name := metric.Namespace + "/" + metric.Name
 	b.Spec.Criteria.Objectives = append(b.Spec.Criteria.Objectives, Objective{
-		Metric:     name,
+		Metric:     metric,
 		UpperLimit: upper,
 		LowerLimit: lower,
 	})

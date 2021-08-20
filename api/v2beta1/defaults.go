@@ -28,12 +28,6 @@ const (
 	// DefaultFinishHandler is the prefix of the default finish handler
 	DefaultFinishHandler string = "finish"
 
-	// DefaultFailureHandler is the prefix of the default failure handler
-	DefaultFailureHandler string = "finish"
-
-	// DefaultRollbackHandler is the prefix of the default rollback handler
-	DefaultRollbackHandler string = "finish"
-
 	// DefaultLoopHandler is the prefix of the default loop handler
 	DefaultLoopHandler string = "loop"
 
@@ -61,18 +55,6 @@ func (s *ExperimentSpec) GetStartHandler() *string {
 // GetFinishHandler returns the handler that should be called when an experiment ha completed.
 func (s *ExperimentSpec) GetFinishHandler() *string {
 	handler := DefaultFinishHandler
-	return &handler
-}
-
-// GetRollbackHandler returns the handler to be called if a candidate fails its objective(s)
-func (s *ExperimentSpec) GetRollbackHandler() *string {
-	handler := DefaultRollbackHandler
-	return &handler
-}
-
-// GetFailureHandler returns the handler to be called if there is a failure during experiment execution
-func (s *ExperimentSpec) GetFailureHandler() *string {
-	handler := DefaultFailureHandler
 	return &handler
 }
 
@@ -135,48 +117,7 @@ func (s *ExperimentSpec) InitializeDuration() {
 	s.InitializeMaxLoops()
 }
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-// criteria
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-// GetRequestCount returns the requst count metric
-// If there are no criteria specified or no request count specified, this is nil
-func (s *ExperimentSpec) GetRequestCount() *string {
-	if s.Criteria == nil {
-		return nil
-	}
-	// if s.Criteria.RequestCount == nil {
-	// 	rc := cfg.RequestCount
-	// 	return &rc
-	// }
-	return s.Criteria.RequestCount
-}
-
-// InitializeRequestCount sets the request count metric to the default value if not already set
-func (s *ExperimentSpec) InitializeRequestCount() {
-	if s.Criteria == nil {
-		return
-	}
-	if s.Criteria.RequestCount == nil {
-		s.Criteria.RequestCount = s.GetRequestCount()
-	}
-}
-
-//////////////////////////////////////////////////////////////////////
-// objective
-//////////////////////////////////////////////////////////////////////
-
-// InitializeCriteria initializes any criteria details not already set
-func (s *ExperimentSpec) InitializeCriteria() {
-	if s.Criteria != nil {
-		s.InitializeRequestCount()
-	}
-}
-
 // InitializeSpec initializes values in Spec to default values if not already set
 func (s *ExperimentSpec) InitializeSpec() {
 	s.InitializeDuration()
-	s.InitializeCriteria()
 }
