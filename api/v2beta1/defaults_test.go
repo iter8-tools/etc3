@@ -179,7 +179,7 @@ var _ = Describe("Generated Code", func() {
 			metric := Metric{
 				Name:        "metric name",
 				Description: &metricDesription,
-				Params:      []NamedValue{},
+				Params:      map[string]string{},
 				Units:       &metricUnits,
 				Type:        &metricType,
 				Body:        &metricBody,

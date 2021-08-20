@@ -21,23 +21,36 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Experiment", func() {
 	ctx := context.Background()
+	testNamespace := "default"
+
+	// Failure of a test case may leave experiments in test space that will cause problems
+	// Be extra paranoid
+	BeforeEach(func() {
+		k8sClient.DeleteAllOf(ctx, &Experiment{}, client.InNamespace(testNamespace))
+	})
+	AfterEach(func() {
+		k8sClient.DeleteAllOf(ctx, &Experiment{}, client.InNamespace(testNamespace))
+	})
 
 	Context("When experiment has backend and metrics", func() {
 		It("should create the experiment", func() {
 			By("reading experiment " + "withbackend.yaml")
 			s := Experiment{}
 			Expect(readExperimentFromFile(path.Join("..", "..", "test", "data", "withbackend.yaml"), &s)).To(Succeed())
+			lg.Info("When experiment has backend and metrics", "s: ", s)
 
 			By("creating the experiment")
 			Expect(k8sClient.Create(ctx, &s)).Should(Succeed())
 
 			By("reading the experiment")
 			exp := Experiment{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: "experiment", Namespace: "default"}, &exp)).Should(Succeed())
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: "experiment", Namespace: testNamespace}, &exp)).Should(Succeed())
+			lg.Info("When experiment has backend and metrics", "exp: ", exp)
 
 			By("verifying the experiment")
 			Expect(len(exp.Spec.Backends) > 0).To(BeTrue())
@@ -47,8 +60,7 @@ var _ = Describe("Experiment", func() {
 			Expect(*exp.Spec.Backends[0].Provider).To(Equal("provider"))
 			Expect(*exp.Spec.Backends[0].JQExpression).To(Equal("jq"))
 			Expect(*exp.Spec.Backends[0].Secret).To(Equal("default/my-secret"))
-			Expect(exp.Spec.Backends[0].Headers[0].Name).To(Equal("header"))
-			Expect(exp.Spec.Backends[0].Headers[0].Value).To(Equal("{{.variable-1}}::{{.variable-2}}"))
+			Expect(exp.Spec.Backends[0].Headers["header"]).To(Equal("{{.variable-1}}::{{.variable-2}}"))
 			Expect(*exp.Spec.Backends[0].URL).To(Equal("https://provider.url"))
 			Expect(len(exp.Spec.Backends[0].VersionInfo)).To(Equal(2))
 
@@ -83,7 +95,7 @@ var _ = Describe("Experiment", func() {
 
 			By("reading the experiment")
 			exp := Experiment{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: "experiment", Namespace: "default"}, &exp)).Should(Succeed())
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: "experiment", Namespace: testNamespace}, &exp)).Should(Succeed())
 
 			By("verifying the experiment")
 			Expect(len(exp.Spec.Backends)).Should(Equal(0))

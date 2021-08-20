@@ -4,17 +4,20 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var lg logr.Logger = zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)).WithName("etc3").WithName("api/v2beta1")
 
 func TestAPI(t *testing.T) {
 	RegisterFailHandler(Fail)

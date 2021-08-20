@@ -288,7 +288,7 @@ type Metric struct {
 	// Params are key/value pairs corresponding to HTTP request parameters
 	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using version information.
 	// +optional
-	Params []NamedValue `json:"params,omitempty" yaml:"params,omitempty"`
+	Params map[string]string `json:"params,omitempty" yaml:"params,omitempty"`
 
 	// Units of the metric. Used for informational purposes.
 	// +optional
@@ -332,7 +332,7 @@ type BackendDetail struct {
 	// Value may be templated, in which Iter8 will attempt to substitute placeholders in the template at query time using Secret.
 	// Placeholder substitution will be attempted only when Secret != nil.
 	// +optional
-	Headers []NamedValue `json:"headers,omitempty" yaml:"headers,omitempty"`
+	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 
 	// URL is a template for the URL queried during the HTTP request.
 	// Typically, URL is expected to be the actual URL without any placeholders.

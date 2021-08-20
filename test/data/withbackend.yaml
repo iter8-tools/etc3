@@ -19,23 +19,20 @@ spec:
     jqExpression: jq
     secret: default/my-secret
     headers:
-    - name: header
-      value: "{{.variable-1}}::{{.variable-2}}"
+      header: "{{.variable-1}}::{{.variable-2}}"
     url: https://provider.url
     metrics:
     - name: "backend-1/reward-metric"
       description: "reward-metric description"
       params:
-      - name: params
-        value: query with $variable-1 and $variable-2
+        params: query with $variable-1 and $variable-2
       units: "ms"
       type: Gauge
       body: maybe empty
     - name: "backend-1/objective-metric"
       description: "objective-metric description"
       params:
-      - name: params
-        value: query with $variable-1 and $variable-2
+        params: query with $variable-1 and $variable-2
       units: "ms"
       type: Gauge
       body: maybe empty
