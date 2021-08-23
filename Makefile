@@ -1,6 +1,8 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+CONTROLLER_IMG ?= controller:latest
+TASKRUNNER_IMG ?= taskrunner:latest
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion) uncomment this:
 # CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 CRD_OPTIONS ?= "crd:crdVersions=v1"
@@ -11,6 +13,8 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
+
+START_TIMEOUT ?= 50s
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
@@ -57,7 +61,7 @@ ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: manifests generate fmt vet staticcheck ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=$(START_TIMEOUT) go test ./... -coverprofile cover.out
 
 ##@ Build
 
@@ -67,11 +71,21 @@ build: generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+docker-build-taskrunner: ## Build docker image with the taskrunner
+	docker build -f Dockerfile.taskrunner -t ${TASKRUNNER_IMG} .
 
-docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+docker-build-controller: ## Build docker image with task runner
+	docker build -f Dockerfile.controller -t ${CONTROLLER_IMG} .
+
+docker-build: docker-build-controller docker-build-taskrunner ## Build docker images
+
+docker-push-controller: ## Push docker image with controller
+	docker push ${CONTROLLER_IMG}
+
+docker-push-taskrunner: ## Push docker image with task runner
+	docker push ${TASKRUNNER_IMG}
+
+docker-push: docker-push-controller docker-push-taskrunner ## Push docker images
 
 ##@ Deployment
 
