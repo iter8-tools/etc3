@@ -8,6 +8,7 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.15.0
 	github.com/sirupsen/logrus v1.8.1
@@ -15,6 +16,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
+	gopkg.in/inf.v0 v0.9.1
 	k8s.io/api v0.22.0
 	k8s.io/apiextensions-apiserver v0.22.0
 	k8s.io/apimachinery v0.22.0
