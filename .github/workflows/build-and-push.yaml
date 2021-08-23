@@ -74,7 +74,7 @@ jobs:
         kustomize: 3.5.5
         helm: 2.16.7
         helmv3: 3.2.1
-    - name: Set up Kubebuilder 2.3.1
+    - name: Set up Kubebuilder 3.1.0
       run: |
         os=$(go env GOOS)
         arch=$(go env GOARCH)
@@ -118,8 +118,17 @@ jobs:
         fi
         echo "OWNER=$owner" >> $GITHUB_ENV
         echo "REPO=$(echo $ownerrepo | cut -f2 -d/)" >> $GITHUB_ENV
-    - uses: docker/build-push-action@v2
+    - name: Build and push controller
+      uses: docker/build-push-action@v2
       with:
         context: .
         tags: ${{ env.OWNER }}/${{ env.REPO }}:${{ env.VERSION }}
+        file: Dockerfile.controller
+        push: true
+    - name: Build and push taskrunner
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        tags: ${{ env.OWNER }}/${{ env.REPO }}:${{ env.VERSION }}
+        file: Dockerfile.taskrunner
         push: true
