@@ -24,14 +24,9 @@ import (
 
 // Iter8Config describes structure of configuration file
 type Iter8Config struct {
-	Analytics   `json:"analytics" yaml:"analytics"`
-	Namespace   string `envconfig:"ITER8_NAMESPACE"`
-	HandlersDir string `envconfig:"HANDLERS_DIR"`
-}
-
-// Analytics captures details of analytics endpoint(s)
-type Analytics struct {
-	Endpoint string `yaml:"endpoint" envconfig:"ITER8_ANALYTICS_ENDPOINT"`
+	AnalyticsEndpoint string `json:"analyticsEndpoint" yaml:"analyticsEndpoint" envconfig:"ITER8_ANALYTICS_ENDPOINT"`
+	Namespace         string `json:"namespace" yaml:"namespace" envconfig:"ITER8_NAMESPACE"`
+	TaskRunner        string `json:"taskRunner" yaml:"taskRunner" envconfig:"ITER8_TASKRUNNER"`
 }
 
 // ReadConfig reads the configuration from a combination of files and the environment
@@ -40,7 +35,7 @@ func ReadConfig(cfg *Iter8Config) error {
 		return err
 	}
 
-	cfg.Analytics.Endpoint = strings.Replace(cfg.Analytics.Endpoint, "ITER8_NAMESPACE", cfg.Namespace, 1)
+	cfg.AnalyticsEndpoint = strings.Replace(cfg.AnalyticsEndpoint, "ITER8_NAMESPACE", cfg.Namespace, 1)
 
 	return nil
 }
@@ -56,7 +51,7 @@ func NewIter8Config() Iter8ConfigBuilder {
 
 // WithEndpoint ..
 func (b Iter8ConfigBuilder) WithEndpoint(endpoint string) Iter8ConfigBuilder {
-	b.Analytics.Endpoint = endpoint
+	b.AnalyticsEndpoint = endpoint
 	return b
 }
 
@@ -66,9 +61,9 @@ func (b Iter8ConfigBuilder) WithNamespace(namespace string) Iter8ConfigBuilder {
 	return b
 }
 
-// WithHandlersDir ..
-func (b Iter8ConfigBuilder) WithHandlersDir(handlersDir string) Iter8ConfigBuilder {
-	b.HandlersDir = handlersDir
+// WithTasRunner ..
+func (b Iter8ConfigBuilder) WithTaskRunner(taskRunner string) Iter8ConfigBuilder {
+	b.TaskRunner = taskRunner
 	return b
 }
 
