@@ -68,17 +68,17 @@ func versionsUnique(s v2beta1.ExperimentSpec) bool {
 // AreTasksValid ensures that each task either has a valid task string or a valid run string but not both
 func (r *ExperimentReconciler) AreTasksValid(ctx context.Context, instance *v2beta1.Experiment) bool {
 	for _, a := range instance.Spec.Actions {
+		num := 0
 		for _, t := range a {
-			num := 0
 			if t.Task != nil && len(*t.Task) > 0 {
 				num++
 			}
 			if t.Run != nil && len(*t.Run) > 0 {
 				num++
 			}
-			if num != 1 {
-				return false
-			}
+		}
+		if num != 1 {
+			return false
 		}
 	}
 	return true

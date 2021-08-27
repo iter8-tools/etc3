@@ -24,6 +24,48 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var _ = Describe("Validation of Actions", func() {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, LoggerKey, ctrl.Log)
+	testNamespace := "default"
+
+	Context("Actions have either a run or a task", func() {
+		var bldr *v2beta1.ExperimentBuilder
+		BeforeEach(func() {
+			bldr = v2beta1.NewExperiment("action-test", testNamespace)
+		})
+		task := "task"
+		run := "command"
+		It("should be valid if an action has a task, but no run", func() {
+			experiment := bldr.
+				WithAction("start", []v2beta1.TaskSpec{{Task: &task}}).
+				Build()
+			Expect(reconciler.IsExperimentValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be valid if an action has no task, but does have a run", func() {
+			experiment := bldr.
+				WithAction("start", []v2beta1.TaskSpec{{Run: &run}}).
+				Build()
+			Expect(reconciler.IsExperimentValid(ctx, experiment)).Should(BeTrue())
+		})
+
+		It("should be invalid if an action has no task and no run", func() {
+			experiment := bldr.
+				WithAction("start", []v2beta1.TaskSpec{}).
+				Build()
+			Expect(reconciler.IsExperimentValid(ctx, experiment)).Should(BeFalse())
+		})
+
+		It("should be invalid if an action has both a task and a run", func() {
+			experiment := bldr.
+				WithAction("start", []v2beta1.TaskSpec{{Task: &task, Run: &run}}).
+				Build()
+			Expect(reconciler.IsExperimentValid(ctx, experiment)).Should(BeFalse())
+		})
+	})
+})
+
 var _ = Describe("Validation of VersionInfo", func() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, LoggerKey, ctrl.Log)

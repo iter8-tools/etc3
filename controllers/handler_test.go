@@ -44,9 +44,10 @@ var _ = Describe("Handlers Run", func() {
 			name := "has-start-handler"
 			handler := "start"
 			loops := int32(1)
+			task := "task"
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithVersion("baseline").
-				WithAction("start", []v2beta1.TaskSpec{}).
+				WithAction("start", []v2beta1.TaskSpec{{Task: &task}}).
 				WithDuration(1, loops).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -77,9 +78,10 @@ var _ = Describe("Handlers Run", func() {
 			name := "has-finish-handler"
 			handler := "finish"
 			loops := int32(1)
+			task := "task"
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithVersion("baseline").
-				WithAction("finish", []v2beta1.TaskSpec{}).
+				WithAction("finish", []v2beta1.TaskSpec{{Task: &task}}).
 				WithDuration(1, loops).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
@@ -115,9 +117,10 @@ var _ = Describe("Handlers Run", func() {
 			handler := "loop"
 			loops := int32(2)
 			testLoop := 1
+			task := "task"
 			experiment := v2beta1.NewExperiment(name, namespace).
 				WithVersion("baseline").
-				WithAction("loop", []v2beta1.TaskSpec{}).
+				WithAction("loop", []v2beta1.TaskSpec{{Task: &task}}).
 				WithDuration(1, loops).
 				Build()
 			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())

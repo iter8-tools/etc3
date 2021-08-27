@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -23,7 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -76,7 +77,7 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	err := r.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		// if object not found, it has been deleted
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			log.Info("Experiment not found")
 			// we make sure to have deleted all jobs
 			r.cleanupDeletedExperiments(ctx, instance)
@@ -126,7 +127,8 @@ func (r *ExperimentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// See IsExperimentValid() for list of validations done
 	// TODO move to validating web hook
 	if !r.IsExperimentValid(ctx, instance) || !r.IsVersionInfoValid(ctx, instance) {
-		return r.failExperiment(ctx, instance, nil)
+		return r.failExperiment(ctx, instance, errors.New("actions must have either a run or a task"))
+
 	}
 
 	// RUN START HANDLER if necessary
@@ -299,11 +301,13 @@ func (r *ExperimentReconciler) failExperiment(ctx context.Context, instance *v2b
 	log.Info("failExperiment called")
 	defer log.Info("failExperiment completed")
 
+	msg := "Experiment failed"
 	if err != nil {
-		log.Error(err, err.Error())
+		msg = msg + ": " + err.Error()
+		log.Info(msg)
 	}
 
-	return r.endExperiment(ctx, instance, "Experiment failed")
+	return r.endExperiment(ctx, instance, msg)
 }
 
 func validUpdateErr(err error) bool {
@@ -548,7 +552,7 @@ func (r *ExperimentReconciler) identifyDeletedExperiments(ctx context.Context, e
 			// we found the experiment, it is not deleted
 			continue
 		}
-		if !errors.IsNotFound(err) {
+		if !k8serrors.IsNotFound(err) {
 			// some other error; ignore
 			continue
 		}
