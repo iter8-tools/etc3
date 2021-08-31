@@ -71,8 +71,16 @@ test-iter8ctl:
 
 ##@ Build
 
-build: generate fmt vet ## Build manager binary.
+build: build-controller build-taskrunner build-iter8ctl
+
+build-controller: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
+
+build-taskrunner: generate fmt vet ## Build taskrunner binary.
+	go build -o bin/taskrunner taskrunner/main.go
+
+build-iter8ctl: generate fmt vet ## Build iter8ctl binary.
+	go build -o bin/iter8ctl iter8ctl/main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go

@@ -118,14 +118,14 @@ jobs:
         fi
         echo "OWNER=$owner" >> $GITHUB_ENV
         echo "REPO=$(echo $ownerrepo | cut -f2 -d/)" >> $GITHUB_ENV
-    - name: Build and push controller
+    - name: Build and push controller image
       uses: docker/build-push-action@v2
       with:
         context: .
         tags: ${{ env.OWNER }}/${{ env.REPO }}:${{ env.VERSION }}
         file: Dockerfile.controller
         push: true
-    - name: Build and push taskrunner
+    - name: Build and push taskrunner image
       uses: docker/build-push-action@v2
       with:
         context: .
