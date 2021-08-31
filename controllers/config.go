@@ -26,21 +26,23 @@ import (
 type Iter8Config struct {
 	AnalyticsEndpoint string `json:"analyticsEndpoint" yaml:"analyticsEndpoint" envconfig:"ITER8_ANALYTICS_ENDPOINT"`
 	Namespace         string `json:"namespace" yaml:"namespace" envconfig:"ITER8_NAMESPACE"`
-	TaskRunner        string `json:"taskRunner" yaml:"taskRunner" envconfig:"ITER8_TASKRUNNER"`
+	TaskRunnerImage   string `json:"taskRunnerImage" yaml:"taskRunnerImage" envconfig:"ITER8_TASKRUNNER_IMAGE"`
 }
 
 // ReadConfig reads the configuration from a combination of files and the environment
+// In our case, no config file is provided; so read from environment.
 func ReadConfig(cfg *Iter8Config) error {
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
 	}
 
+	// overwrite AnalyticsEndpoint if it has the string "ITER8_NAMESPACE" in the value
 	cfg.AnalyticsEndpoint = strings.Replace(cfg.AnalyticsEndpoint, "ITER8_NAMESPACE", cfg.Namespace, 1)
 
 	return nil
 }
 
-// Iter8ConfigBuilder type for building new config by hand
+// Iter8ConfigBuilder type for building new Iter8Config by hand. Used for testing.
 type Iter8ConfigBuilder Iter8Config
 
 // NewIter8Config returns a new config builder
@@ -49,25 +51,25 @@ func NewIter8Config() Iter8ConfigBuilder {
 	return (Iter8ConfigBuilder)(cfg)
 }
 
-// WithEndpoint ..
+// WithEndpoint adds an endpoint to an Iter8Config. Used for testing.
 func (b Iter8ConfigBuilder) WithEndpoint(endpoint string) Iter8ConfigBuilder {
 	b.AnalyticsEndpoint = endpoint
 	return b
 }
 
-// WithNamespace ..
+// WithNamespace adds a namespace to an Iter8Config. Used for testing.
 func (b Iter8ConfigBuilder) WithNamespace(namespace string) Iter8ConfigBuilder {
 	b.Namespace = namespace
 	return b
 }
 
-// WithTasRunner ..
-func (b Iter8ConfigBuilder) WithTaskRunner(taskRunner string) Iter8ConfigBuilder {
-	b.TaskRunner = taskRunner
+// WithTaskRunnerImage adds a task runner image to an Iter8Config. Used for testing.
+func (b Iter8ConfigBuilder) WithTaskRunnerImage(taskRunnerImage string) Iter8ConfigBuilder {
+	b.TaskRunnerImage = taskRunnerImage
 	return b
 }
 
-// Build ..
+// Build creates an Iter8Config from using builder pattern. Used for testing.
 func (b Iter8ConfigBuilder) Build() Iter8Config {
 	return (Iter8Config)(b)
 }

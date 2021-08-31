@@ -129,7 +129,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	iter8config := NewIter8Config().
 		WithEndpoint("http://iter8-analytics:8080").
-		WithTaskRunner("iter8/iter8-taskrunner:default").
+		WithTaskRunnerImage("iter8/iter8-taskrunner:default").
 		WithNamespace("iter8").
 		Build()
 

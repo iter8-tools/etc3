@@ -111,7 +111,7 @@ func (r *ExperimentReconciler) LaunchHandler(ctx context.Context, instance *v2be
 	job := defineJob(jobHandlerConfig{
 		JobName:             jobName(instance, handler, handlerInstance),
 		JobNamespace:        r.Iter8Config.Namespace,
-		Image:               r.Iter8Config.TaskRunner,
+		Image:               r.Iter8Config.TaskRunnerImage,
 		Action:              handler,
 		ExperimentName:      instance.Name,
 		ExperimentNamespace: instance.Namespace,
