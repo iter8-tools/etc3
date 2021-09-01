@@ -68,8 +68,7 @@ func (r *ExperimentReconciler) doLoop(ctx context.Context, instance *v2beta1.Exp
 
 	// TODO  GET CURRENT WEIGHTS (from cluster)
 
-	analyticsEndpoint := r.Iter8Config.Endpoint //r.GetAnalyticsService()
-	analysis, err := Invoke(log, analyticsEndpoint, *instance, r.HTTP)
+	analysis, err := Invoke(log, r.Iter8Config.AnalyticsEndpoint, *instance, r.HTTP)
 	log.Info("Invoke returned", "analysis", analysis)
 	if err != nil {
 		r.recordExperimentFailed(ctx, instance, v2beta1.ReasonAnalyticsServiceError, "Call to analytics engine failed")

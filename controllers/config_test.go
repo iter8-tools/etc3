@@ -21,10 +21,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNoInterpolation(t *testing.T) {
+func TestNoNamespaceInterpolation(t *testing.T) {
 	os.Setenv("ITER8_NAMESPACE", "namespace")
 	os.Setenv("ITER8_ANALYTICS_ENDPOINT", "endpoint")
-	os.Setenv("HANDLERS_DIR", "dir")
+	os.Setenv("ITER8_TASKRUNNER_IMAGE", "taskrunner")
 
 	cfg := Iter8Config{}
 	err := ReadConfig(&cfg)
@@ -36,18 +36,18 @@ func TestNoInterpolation(t *testing.T) {
 	if cfg.Namespace != "namespace" {
 		t.Errorf("cfg.Namespace incorrect. Expected: %s, got: %s", "namespace", cfg.Namespace)
 	}
-	if cfg.HandlersDir != "dir" {
-		t.Errorf("cfg.HandlersDir incorrect. Expected: %s, got: %s", "dir", cfg.HandlersDir)
+	if cfg.TaskRunnerImage != "taskrunner" {
+		t.Errorf("cfg.TaskRunner incorrect. Expected: %s, got: %s", "taskrunner", cfg.TaskRunnerImage)
 	}
-	if cfg.Analytics.Endpoint != "endpoint" {
-		t.Errorf("cfg.Analytics.Endpoint incorrect. Expected: %s, got: %s", "endpoint", cfg.Analytics.Endpoint)
+	if cfg.AnalyticsEndpoint != "endpoint" {
+		t.Errorf("cfg.Endpoint incorrect. Expected: %s, got: %s", "endpoint", cfg.AnalyticsEndpoint)
 	}
 }
 
-func TestInterpolation(t *testing.T) {
+func TestNamespaceInterpolation(t *testing.T) {
 	os.Setenv("ITER8_NAMESPACE", "namespace")
 	os.Setenv("ITER8_ANALYTICS_ENDPOINT", "ITER8_NAMESPACE/endpoint")
-	os.Setenv("HANDLERS_DIR", "dir")
+	os.Setenv("ITER8_TASKRUNNER_IMAGE", "taskrunner")
 
 	cfg := Iter8Config{}
 	err := ReadConfig(&cfg)
@@ -59,11 +59,11 @@ func TestInterpolation(t *testing.T) {
 	if cfg.Namespace != "namespace" {
 		t.Errorf("cfg.Namespace incorrect. Expected: %s, got: %s", "namespace", cfg.Namespace)
 	}
-	if cfg.HandlersDir != "dir" {
-		t.Errorf("cfg.HandlersDir incorrect. Expected: %s, got: %s", "dir", cfg.HandlersDir)
+	if cfg.TaskRunnerImage != "taskrunner" {
+		t.Errorf("cfg.TaskRunner incorrect. Expected: %s, got: %s", "taskrunner", cfg.TaskRunnerImage)
 	}
-	if cfg.Analytics.Endpoint != "namespace/endpoint" {
-		t.Errorf("cfg.Analytics.Endpoint incorrect. Expected: %s, got: %s", "namespace/endpoint", cfg.Analytics.Endpoint)
+	if cfg.AnalyticsEndpoint != "namespace/endpoint" {
+		t.Errorf("cfg.Analytics.Endpoint incorrect. Expected: %s, got: %s", "namespace/endpoint", cfg.AnalyticsEndpoint)
 	}
 }
 
@@ -71,9 +71,9 @@ func TestIter8Config(t *testing.T) {
 	config := NewIter8Config().
 		WithEndpoint("endpoint").
 		WithNamespace("namespace").
-		WithHandlersDir("hDir").
+		WithTaskRunnerImage("tRunner").
 		Build()
-	assert.Equal(t, "endpoint", config.Analytics.Endpoint)
+	assert.Equal(t, "endpoint", config.AnalyticsEndpoint)
 	assert.Equal(t, "namespace", config.Namespace)
-	assert.Equal(t, "hDir", config.HandlersDir)
+	assert.Equal(t, "tRunner", config.TaskRunnerImage)
 }
