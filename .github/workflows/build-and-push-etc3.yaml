@@ -1,11 +1,11 @@
-name: Build, test and push etc3 controller
+name: 'Build, test and push etc3: Iter8 controller, task runner and iter8ctl'
+# No effort to be efficient or minimal based on the change is made
 
 on:
   release:
     types: [published]
   push:
-    branches:
-      - main # Publish `main` as Docker `latest` image.
+    # run test and push on all branches
     tags:
       - v* # Publish `v1.2.3` tags as releases.
   pull_request: # Run tests for any PRs.
@@ -27,10 +27,6 @@ jobs:
         helmv3: 3.2.1
     - name: Set up Kubebuilder 3.1.0
       run: |
-        os=$(go env GOOS)
-        arch=$(go env GOARCH)
-
-        # download kubebuilder and extract it to tmp
         curl -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/v3.1.0/kubebuilder_$(go env GOOS)_$(go env GOARCH)
         chmod +x kubebuilder && mv kubebuilder /usr/local/bin/
         export PATH=$PATH:/usr/local/kubebuilder/bin
@@ -41,7 +37,7 @@ jobs:
     - name: Get Fortio
       run: go get fortio.org/fortio@v1.17.0
     - name: Test
-      run: make test # includes vet and lint
+      run: make test # includes vet and lint (staticcheck)
     - name: Enforce coverage
       run: |
         export COVERAGE=$(go tool cover -func cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
@@ -53,7 +49,30 @@ jobs:
           exit 1
         fi
 
+  test-iter8ctl:
+    strategy:
+      matrix:
+        go-version: [1.16.x,1.17.x]
+        os: [macos-latest] ## did ubuntu-latest in build-and-test job 
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}        
+    - name: Set up Kubebuilder 3.1.0
+      run: |
+        curl -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/v3.1.0/kubebuilder_$(go env GOOS)_$(go env GOARCH)
+        chmod +x kubebuilder && mv kubebuilder /usr/local/bin/
+        export PATH=$PATH:/usr/local/kubebuilder/bin
+    - name: Checkout code
+      uses: actions/checkout@v2
+    ## Ran staticcheck, vet, lint in build-and-test job
+    - name: Test
+      run: make test-iter8ctl
+
   # Compute and upload code coverage
+  # run only on push events (not pull requests or releases)
   code-coverage:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -76,9 +95,6 @@ jobs:
         helmv3: 3.2.1
     - name: Set up Kubebuilder 3.1.0
       run: |
-        os=$(go env GOOS)
-        arch=$(go env GOARCH)
-        # download kubebuilder and extract it to tmp
         curl -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/v3.1.0/kubebuilder_$(go env GOOS)_$(go env GOARCH)
         chmod +x kubebuilder && mv kubebuilder /usr/local/bin/
         export PATH=$PATH:/usr/local/kubebuilder/bin
@@ -87,10 +103,11 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
-  # Push etc3 image to dockerhub
+  # Push etc3 images (controller and taskrunner) to dockerhub
+  # run only on push and release events; not pull-requests
   build-and-push:
     # Ensure test job passes before pushing image.		
-    needs: build-and-test
+    needs: [build-and-test, test-iter8ctl]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'release'
     steps:
@@ -122,13 +139,13 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        tags: ${{ env.OWNER }}/${{ env.REPO }}:${{ env.VERSION }}
+        tags: ${{ env.OWNER }}/iter8-controller:${{ env.VERSION }}
         file: Dockerfile.controller
         push: true
     - name: Build and push taskrunner image
       uses: docker/build-push-action@v2
       with:
         context: .
-        tags: ${{ env.OWNER }}/${{ env.REPO }}:${{ env.VERSION }}
+        tags: ${{ env.OWNER }}/iter8-taskrunner:${{ env.VERSION }}
         file: Dockerfile.taskrunner
         push: true
