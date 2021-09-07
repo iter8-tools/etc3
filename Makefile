@@ -61,7 +61,7 @@ ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: manifests generate fmt vet staticcheck ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=$(START_TIMEOUT) go test ./... -coverprofile cover.out
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=$(START_TIMEOUT) go test  ./... -coverprofile=coverage.out -covermode=atomic 
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test-iter8ctl:
@@ -140,4 +140,4 @@ rm -rf $$TMP_DIR ;\
 endef
 
 coverage:
-	@echo "test coverage: $(shell go tool cover -func cover.out | grep total | awk '{print substr($$3, 1, length($$3)-1)}')"
+	@echo "test coverage: $(shell go tool cover -func coverage.out | grep total | awk '{print substr($$3, 1, length($$3)-1)}')"
