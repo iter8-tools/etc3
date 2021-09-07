@@ -101,7 +101,7 @@ jobs:
         chmod +x kubebuilder && mv kubebuilder /usr/local/bin/
         export PATH=$PATH:/usr/local/kubebuilder/bin
     - name: Test With Coverage
-      run: go test -gcflags=-l -v  -coverprofile=coverage.txt -covermode=atomic ./...
+      run: make test # make target already does coverage
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
@@ -127,6 +127,8 @@ jobs:
           echo "VERSION=$(echo $tarref | sed -e 's/^v//')" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" == *"main" ]]; then
           echo "VERSION=latest" >> $GITHUB_ENV
+        else
+          echo "VERSION=$tarref" >> $GITHUB_ENV
         fi
     - name: Get owner and repo
       run: |
