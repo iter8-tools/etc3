@@ -41,7 +41,7 @@ jobs:
       run: make test # includes vet and lint (staticcheck)
     - name: Enforce coverage
       run: |
-        export COVERAGE=$(go tool cover -func cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+        export COVERAGE=$(go tool cover -func coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
         echo "code coverage is at ${COVERAGE}"
         if [ 1 -eq "$(echo "${COVERAGE} > 79.0" | bc)" ]; then \
           echo "all good... coverage is at or above 79.0%"; 
@@ -103,7 +103,9 @@ jobs:
     - name: Test With Coverage
       run: make test # make target already does coverage
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
+      with:
+        files: ./coverage.out
 
   # Push etc3 images (controller and taskrunner) to dockerhub
   # run only on push and release events; not pull-requests
