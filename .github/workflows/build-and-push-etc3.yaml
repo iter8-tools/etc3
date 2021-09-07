@@ -5,9 +5,10 @@ on:
   release:
     types: [published]
   push:
-    # run test and push on all branches
+    branches:
+    - '**' # run test and push on all branches
     tags:
-      - v* # Publish `v1.2.3` tags as releases.
+    - v* # Publish `v1.2.3` tags as releases.
   pull_request: # Run tests for any PRs.
 
 jobs:
