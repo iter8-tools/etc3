@@ -49,6 +49,11 @@ jobs:
           echo "not good... coverage is not at 79.0% or above";
           exit 1
         fi
+    - name: Upload coverage to Codecov
+      if: github.event_name == 'push'
+      uses: codecov/codecov-action@v2
+      with:
+        files: ./coverage.out
 
   test-iter8ctl:
     needs: build-and-test
@@ -72,40 +77,6 @@ jobs:
     ## Ran staticcheck, vet, lint in build-and-test job
     - name: Test
       run: make test-iter8ctl
-
-  # Compute and upload code coverage
-  # run only on push events (not pull requests or releases)
-  code-coverage:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-    - name: Install Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.16
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Build
-      run: go build .
-    - name: Run Kubernetes tools
-      uses: stefanprodan/kube-tools@v1
-      with:
-        kubectl: 1.18.2
-        kustomize: 3.5.5
-        helm: 2.16.7
-        helmv3: 3.2.1
-    - name: Set up Kubebuilder 3.1.0
-      run: |
-        curl -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/v3.1.0/kubebuilder_$(go env GOOS)_$(go env GOARCH)
-        chmod +x kubebuilder && mv kubebuilder /usr/local/bin/
-        export PATH=$PATH:/usr/local/kubebuilder/bin
-    - name: Test With Coverage
-      run: make test # make target already does coverage
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
-      with:
-        files: ./coverage.out
 
   # Push etc3 images (controller and taskrunner) to dockerhub
   # run only on push and release events; not pull-requests
