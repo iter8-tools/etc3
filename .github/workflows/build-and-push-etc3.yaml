@@ -55,6 +55,15 @@ jobs:
       with:
         files: ./coverage.out
 
+    - if: github.event_name == 'pull_request'
+      uses: docker/setup-buildx-action@v1
+    - name: Test docker build of controller
+      if: github.event_name == 'pull_request'
+      run: make docker-build-controller
+    - name: Test docker build of taskrunner
+      if: github.event_name == 'pull_request'
+      run: make docker-build-taskrunner
+
   test-iter8ctl:
     needs: build-and-test
     strategy:
