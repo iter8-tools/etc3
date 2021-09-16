@@ -21,14 +21,21 @@ var debugCmd = &cobra.Command{
 		if len(args) > 1 {
 			return errors.New("more than one positional argument supplied")
 		}
+
+		// check priority if supplied incorrectly
+		if priority > 10 || priority < 1 {
+			return errors.New("priority must be an integer between 1 and 10")
+		}
+
+		// at this stage, either latest must be true or expName must be non-empty
 		latest = (len(args) == 0)
 		if !latest {
 			expName = args[0]
 		}
-		// at this stage, either latest must be true or expName must be non-empty
 		if !latest && expName == "" {
 			panic("either latest must be true or expName must be non-empty")
 		}
+
 		// get experiment from cluster
 		var err error
 		if exp, err = expr.GetExperiment(latest, expName, expNamespace); err != nil {
