@@ -51,7 +51,7 @@ func (a byPrecedence) Less(i, j int) bool {
 		}
 		return false
 	} else {
-		panic("only task runner is currently supported as a source for Iter8Logs")
+		panic(fmt.Sprintf("only supported source at the moment is %s", taskRunnerSource))
 	}
 }
 
