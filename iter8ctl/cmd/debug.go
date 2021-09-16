@@ -10,21 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var priority uint8
-
 // debugCmd represents the debug command
 var debugCmd = &cobra.Command{
 	Use:   "debug [experiment-name]",
 	Short: "Debug an Iter8 experiment",
-	Long:  `Print logs for an Iter8 experiment sorted in chronological order and filtered by priority level.`,
+	Long:  `Print logs for an Iter8 experiment sorted in chronological order`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 1 {
 			return errors.New("more than one positional argument supplied")
-		}
-
-		// check priority if supplied incorrectly
-		if priority > 10 || priority < 1 {
-			return errors.New("priority must be an integer between 1 and 10")
 		}
 
 		// at this stage, either latest must be true or expName must be non-empty
@@ -44,7 +37,7 @@ var debugCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		deb, err := debug.Debug(exp, priority)
+		deb, err := debug.Debug(exp)
 		if err == nil {
 			fmt.Print(deb)
 		} else {
@@ -56,5 +49,4 @@ var debugCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(debugCmd)
-	debugCmd.Flags().Uint8VarP(&priority, "priority", "p", 1, "priority level (1 to 10)")
 }
