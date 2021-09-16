@@ -1,5 +1,5 @@
 name: 'Build, test and push etc3: Iter8 controller, task runner and iter8ctl'
-# No effort to be efficient or minimal based on the change is made
+# Parallelizing the tests to some degree
 
 on:
   release:
@@ -55,6 +55,12 @@ jobs:
       with:
         files: ./coverage.out
 
+  # Ensure Docker builds work.
+  test-docker-builds:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
     - if: github.event_name == 'pull_request'
       uses: docker/setup-buildx-action@v1
     - name: Test docker build of controller
@@ -90,7 +96,7 @@ jobs:
   # run only on push and release events; not pull-requests
   build-and-push:
     # Ensure test job passes before pushing image.		
-    needs: [build-and-test, test-iter8ctl]
+    needs: [build-and-test, test-docker-builds, test-iter8ctl]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'release'
     steps:
