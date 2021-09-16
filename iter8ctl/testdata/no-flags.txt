@@ -6,6 +6,7 @@ Usage:
 Available Commands:
   assert      Assert conditions for an Iter8 experiment
   completion  generate the autocompletion script for the specified shell
+  debug       Debug an Iter8 experiment
   describe    Describe an Iter8 experiment
   help        Help about any command
 
