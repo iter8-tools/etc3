@@ -2,6 +2,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"runtime"
 )
@@ -11,4 +12,10 @@ import (
 func CompletePath(prefix string, suffix string) string {
 	_, testFilename, _, _ := runtime.Caller(1) // one step up the call stack
 	return filepath.Join(filepath.Dir(testFilename), prefix, suffix)
+}
+
+// IsJSON checks if the given string is a valid JSON object (schemaless check)
+func IsJSONObject(str string) bool {
+	var js json.RawMessage
+	return json.Unmarshal([]byte(str), &js) == nil
 }

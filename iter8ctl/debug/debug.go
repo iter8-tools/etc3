@@ -2,11 +2,15 @@
 package debug
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"os/exec"
+	"sort"
+	"strings"
 
 	expr "github.com/iter8-tools/etc3/iter8ctl/experiment"
-	"github.com/iter8-tools/etc3/taskrunner/core"
+	"github.com/iter8-tools/etc3/iter8ctl/utils"
 )
 
 const (
@@ -15,8 +19,29 @@ const (
 	iter8ExpNamespaceKey string = "iter8/experimentNamespace"
 )
 
+type Iter8Log struct {
+	Iter8Log bool   `json:"iter8Log" yaml:"iter8Log"`
+	Source   string `json:"source" yaml:"source"`
+	Message  string `json:"message" yaml:"message"`
+	Priority uint8  `json:"priority" yaml:"priority"`
+}
+
+// byPrecedence implements sort.Interface based on the precedence of Iter8Log
+type byPrecedence []Iter8Log
+
+// Len returns length of the log slice
+func (a byPrecedence) Len() int { return len(a) }
+
+// Less is true if i^th log should precede the j^th log and false otherwise
+func (a byPrecedence) Less(i, j int) bool {
+	return true // no real sorting at the moment
+}
+
+// Swap two entries in the log slice
+func (a byPrecedence) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
 // getTaskRunnerLogs gets the logs for the task runner jobs for the given experiment
-func getTaskRunnerLogs(exp *expr.Experiment) (*string, error) {
+func getTaskRunnerLogs(exp *expr.Experiment) ([]byte, error) {
 	selector := fmt.Sprintf("%s=%s,%s=%s", iter8ExpNameKey, exp.Name, iter8ExpNamespaceKey, exp.Namespace)
 
 	cmd := exec.Command("kubectl", "logs", "-l", selector, "-n", iter8NameSpace, "--tail=-1")
@@ -26,25 +51,40 @@ func getTaskRunnerLogs(exp *expr.Experiment) (*string, error) {
 		return nil, err
 	}
 
-	return core.StringPointer(string(stdout)), nil
+	return stdout, nil
 }
 
 // Debug prints iter8-logs for the given experiment
-func Debug(exp *expr.Experiment) (*string, error) {
+func Debug(exp *expr.Experiment) ([]Iter8Log, error) {
 	// fetch task runner job logs
 
 	tr, err := getTaskRunnerLogs(exp)
 	if err != nil {
 		return nil, err
 	}
-	return tr, nil // this needs to be fixed to return properly formatted iter8-logs
 
 	// fetch controller logs
 	// fetch analytics logs
 
-	// select log lines that are JSON
-	// filter log lines that are valid iter8-log jsons.
-	// compute & add precedence value to iter8-logs
+	// initialize Iter8logs
+	ils := []Iter8Log{}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(tr)))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if utils.IsJSONObject(line) {
+			il := Iter8Log{}
+			if json.Unmarshal([]byte(line), &il) == nil {
+				if il.Iter8Log {
+					ils = append(ils, il)
+				}
+			}
+		}
+		// sort logs by precedence
+		sort.Sort(byPrecedence(ils))
+	}
+
 	// return iter8-logs sorted by precedence
+	return ils, nil
 
 }
