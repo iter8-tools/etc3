@@ -27,3 +27,6 @@ bin
 
 # Mac file information
 **/.DS_Store
+
+# iter8ctl binary
+iter8ctl/iter8ctl

@@ -39,7 +39,7 @@ var debugCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		deb, err := debug.Debug(exp)
 		if err == nil {
-			fmt.Print(deb)
+			fmt.Print(*deb)
 		} else {
 			fmt.Println(err)
 			os.Exit(1)
