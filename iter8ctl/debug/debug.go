@@ -17,6 +17,7 @@ const (
 	iter8NameSpace       string = "iter8-system"
 	iter8ExpNameKey      string = "iter8/experimentName"
 	iter8ExpNamespaceKey string = "iter8/experimentNamespace"
+	taskRunnerSource     string = "task-runner"
 )
 
 type Iter8Log struct {
@@ -24,6 +25,9 @@ type Iter8Log struct {
 	ExperimentName      string `json:"experimentName" yaml:"experimentName"`
 	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
 	Source              string `json:"source" yaml:"source"`
+	ActionIndex         int    `json:"actionIndex" yaml:"actionIndex"`
+	Loop                int    `json:"loop" yaml:"loop"`
+	Iteration           int    `json:"iteration" yaml:"iteration"`
 	Message             string `json:"message" yaml:"message"`
 	Priority            uint8  `json:"priority" yaml:"priority"`
 }
@@ -38,7 +42,17 @@ func (a byPrecedence) Len() int {
 
 // Less is true if i^th log should precede the j^th log and false otherwise
 func (a byPrecedence) Less(i, j int) bool {
-	return i < j // no real sorting at the moment
+	if a[i].Source == a[j].Source && a[i].Source == taskRunnerSource {
+		if a[i].ActionIndex < a[j].ActionIndex {
+			return true
+		}
+		if a[i].ActionIndex == a[j].ActionIndex {
+			return i < j
+		}
+		return false
+	} else {
+		panic("only task runner is currently supported as a source for Iter8Logs")
+	}
 }
 
 // Swap two entries in the log slice
