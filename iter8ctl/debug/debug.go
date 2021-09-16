@@ -20,25 +20,31 @@ const (
 )
 
 type Iter8Log struct {
-	Iter8Log bool   `json:"iter8Log" yaml:"iter8Log"`
-	Source   string `json:"source" yaml:"source"`
-	Message  string `json:"message" yaml:"message"`
-	Priority uint8  `json:"priority" yaml:"priority"`
+	Iter8Log            bool   `json:"iter8Log" yaml:"iter8Log"`
+	ExperimentName      string `json:"experimentName" yaml:"experimentName"`
+	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
+	Source              string `json:"source" yaml:"source"`
+	Message             string `json:"message" yaml:"message"`
+	Priority            uint8  `json:"priority" yaml:"priority"`
 }
 
 // byPrecedence implements sort.Interface based on the precedence of Iter8Log
 type byPrecedence []Iter8Log
 
 // Len returns length of the log slice
-func (a byPrecedence) Len() int { return len(a) }
+func (a byPrecedence) Len() int {
+	return len(a)
+}
 
 // Less is true if i^th log should precede the j^th log and false otherwise
 func (a byPrecedence) Less(i, j int) bool {
-	return true // no real sorting at the moment
+	return i < j // no real sorting at the moment
 }
 
 // Swap two entries in the log slice
-func (a byPrecedence) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byPrecedence) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
 
 // getTaskRunnerLogs gets the logs for the task runner jobs for the given experiment
 func getTaskRunnerLogs(exp *expr.Experiment) ([]byte, error) {
@@ -75,11 +81,15 @@ func Debug(exp *expr.Experiment) ([]Iter8Log, error) {
 		if utils.IsJSONObject(line) {
 			il := Iter8Log{}
 			if json.Unmarshal([]byte(line), &il) == nil {
-				if il.Iter8Log {
+				// filter Iter8logs for this experiment
+				if il.Iter8Log &&
+					il.ExperimentName == exp.Name &&
+					il.ExperimentNamespace == exp.Namespace {
 					ils = append(ils, il)
 				}
 			}
 		}
+
 		// sort logs by precedence
 		sort.Sort(byPrecedence(ils))
 	}
