@@ -40,7 +40,7 @@ var debugCmd = &cobra.Command{
 		ils, err := debug.Debug(exp)
 		if err == nil {
 			for _, l := range ils {
-				fmt.Println(l)
+				fmt.Println(l.Message)
 			}
 		} else {
 			fmt.Println(err)

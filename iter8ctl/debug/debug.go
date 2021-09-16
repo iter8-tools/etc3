@@ -26,8 +26,6 @@ type Iter8Log struct {
 	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
 	Source              string `json:"source" yaml:"source"`
 	ActionIndex         int    `json:"actionIndex" yaml:"actionIndex"`
-	Loop                int    `json:"loop" yaml:"loop"`
-	Iteration           int    `json:"iteration" yaml:"iteration"`
 	Message             string `json:"message" yaml:"message"`
 	Priority            uint8  `json:"priority" yaml:"priority"`
 }
