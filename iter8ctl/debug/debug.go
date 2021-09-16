@@ -25,9 +25,10 @@ type Iter8Log struct {
 	ExperimentName      string `json:"experimentName" yaml:"experimentName"`
 	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
 	Source              string `json:"source" yaml:"source"`
-	ActionIndex         int    `json:"actionIndex" yaml:"actionIndex"`
-	Message             string `json:"message" yaml:"message"`
-	Priority            uint8  `json:"priority" yaml:"priority"`
+	// ActionIndex = 0 for start action...
+	// ActionIndex = number of completed loops + 1, for loop action, finish action, controller & analytcs
+	ActionIndex int    `json:"actionIndex" yaml:"actionIndex"`
+	Message     string `json:"message" yaml:"message"`
 }
 
 // byPrecedence implements sort.Interface based on the precedence of Iter8Log

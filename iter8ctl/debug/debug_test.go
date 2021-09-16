@@ -16,7 +16,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         3,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -25,7 +24,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         0,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -34,7 +32,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         2,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -43,7 +40,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         1,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -52,7 +48,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         1,
 			Message:             "hello world again",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -61,7 +56,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         1,
 			Message:             "hello world again and again",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -70,7 +64,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         4,
 			Message:             "hello world",
-			Priority:            1,
 		},
 	}
 
@@ -82,7 +75,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         0,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -91,7 +83,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         1,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -100,7 +91,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         1,
 			Message:             "hello world again",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -109,7 +99,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         1,
 			Message:             "hello world again and again",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -118,7 +107,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         2,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -127,7 +115,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         3,
 			Message:             "hello world",
-			Priority:            1,
 		},
 		{
 			Iter8Log:            true,
@@ -136,7 +123,6 @@ func TestSortIter8Logs(t *testing.T) {
 			Source:              "task-runner",
 			ActionIndex:         4,
 			Message:             "hello world",
-			Priority:            1,
 		},
 	}
 
