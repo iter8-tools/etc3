@@ -26,11 +26,13 @@ type Iter8Log struct {
 	ExperimentName      string `json:"experimentName" yaml:"experimentName"`
 	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
 	Source              string `json:"source" yaml:"source"`
-	// ActionIndex = 0 for start action...
-	// ActionIndex = number of completed loops + 1, for loop action, finish action, controller & analytcs
-	ActionIndex int    `json:"actionIndex" yaml:"actionIndex"`
-	Message     string `json:"message" yaml:"message"`
-	Priority    uint8  `json:"priority" yaml:"priority"`
+	Priority            uint8  `json:"priority" yaml:"priority"`
+	Message             string `json:"message" yaml:"message"`
+	// Precedence = 0 ... for start action.
+	// Precedence = number of completed loops + 1 ... for loop action, and finish action.
+	// Above definition of precedence will evolve as controller and analytics Iter8logs are implemented.
+	// Precedence is not intended to be seen/used by the end-user. It is one a field used for ensuring Iter8logs are output in the chronological order.
+	Precedence int `json:"precedence" yaml:"precedence"`
 }
 
 // byPrecedence implements sort.Interface based on the precedence of Iter8Log
@@ -44,13 +46,13 @@ func (a byPrecedence) Len() int {
 // Less is true if i^th log should precede the j^th log and false otherwise
 func (a byPrecedence) Less(i, j int) bool {
 	if a[i].Source == a[j].Source && a[i].Source == taskRunnerSource {
-		if a[i].ActionIndex < a[j].ActionIndex {
+		if a[i].Precedence < a[j].Precedence {
 			return true
-		}
-		if a[i].ActionIndex == a[j].ActionIndex {
+		} else if a[i].Precedence == a[j].Precedence {
 			return i < j
+		} else {
+			return false
 		}
-		return false
 	} else {
 		panic(fmt.Sprintf("only supported source at the moment is %s", taskRunnerSource))
 	}
