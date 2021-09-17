@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/iter8-tools/etc3/controllers"
 	expr "github.com/iter8-tools/etc3/iter8ctl/experiment"
 	"github.com/iter8-tools/etc3/iter8ctl/utils"
 )
@@ -18,25 +19,10 @@ const (
 	iter8NameSpace       string = "iter8-system"
 	iter8ExpNameKey      string = "iter8/experimentName"
 	iter8ExpNamespaceKey string = "iter8/experimentNamespace"
-	taskRunnerSource     string = "task-runner"
 )
 
-type Iter8Log struct {
-	IsIter8Log          bool   `json:"isIter8Log" yaml:"isIter8Log"`
-	ExperimentName      string `json:"experimentName" yaml:"experimentName"`
-	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
-	Source              string `json:"source" yaml:"source"`
-	Priority            uint8  `json:"priority" yaml:"priority"`
-	Message             string `json:"message" yaml:"message"`
-	// Precedence = 0 ... for start action.
-	// Precedence = number of completed loops + 1 ... for loop action, and finish action.
-	// Above definition of precedence will evolve as controller and analytics Iter8logs are implemented.
-	// Precedence is not intended to be seen/used by the end-user. It is one a field used for ensuring Iter8logs are output in the chronological order.
-	Precedence int `json:"precedence" yaml:"precedence"`
-}
-
 // byPrecedence implements sort.Interface based on the precedence of Iter8Log
-type byPrecedence []Iter8Log
+type byPrecedence []controllers.Iter8Log
 
 // Len returns length of the log slice
 func (a byPrecedence) Len() int {
@@ -45,7 +31,7 @@ func (a byPrecedence) Len() int {
 
 // Less is true if i^th log should precede the j^th log and false otherwise
 func (a byPrecedence) Less(i, j int) bool {
-	if a[i].Source == a[j].Source && a[i].Source == taskRunnerSource {
+	if a[i].Source == a[j].Source && a[i].Source == controllers.Iter8LogSourceTR {
 		if a[i].Precedence < a[j].Precedence {
 			return true
 		} else if a[i].Precedence == a[j].Precedence {
@@ -54,7 +40,7 @@ func (a byPrecedence) Less(i, j int) bool {
 			return false
 		}
 	} else {
-		panic(fmt.Sprintf("only supported source at the moment is %s", taskRunnerSource))
+		panic(fmt.Sprintf("only supported source at the moment is %s", controllers.Iter8LogSourceTR))
 	}
 }
 
@@ -78,7 +64,7 @@ func getTaskRunnerLogs(exp *expr.Experiment) ([]byte, error) {
 }
 
 // Debug prints iter8-logs for the given experiment
-func Debug(exp *expr.Experiment, priority uint8) ([]Iter8Log, error) {
+func Debug(exp *expr.Experiment, priority controllers.Iter8LogPriority) ([]controllers.Iter8Log, error) {
 	// check priority
 	if priority < 1 || priority > 3 {
 		return nil, errors.New("priority can only be set to 1, 2, or 3")
@@ -94,13 +80,13 @@ func Debug(exp *expr.Experiment, priority uint8) ([]Iter8Log, error) {
 	// fetch analytics logs
 
 	// initialize Iter8logs
-	ils := []Iter8Log{}
+	ils := []controllers.Iter8Log{}
 
 	scanner := bufio.NewScanner(strings.NewReader(string(tr)))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if utils.IsJSONObject(line) {
-			il := Iter8Log{}
+			il := controllers.Iter8Log{}
 			if json.Unmarshal([]byte(line), &il) == nil {
 				// filter Iter8logs for this experiment
 				if il.IsIter8Log &&

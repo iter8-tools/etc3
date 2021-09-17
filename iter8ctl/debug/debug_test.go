@@ -4,11 +4,12 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/iter8-tools/etc3/controllers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSortIter8Logs(t *testing.T) {
-	il := []Iter8Log{
+	il := []controllers.Iter8Log{
 		{
 			IsIter8Log:          true,
 			ExperimentName:      "hello",
@@ -67,7 +68,7 @@ func TestSortIter8Logs(t *testing.T) {
 		},
 	}
 
-	sortedIl := []Iter8Log{il[1], il[3], il[4], il[5], il[2], il[0], il[6]}
+	sortedIl := []controllers.Iter8Log{il[1], il[3], il[4], il[5], il[2], il[0], il[6]}
 
 	// sort logs by precedence
 	sort.Sort(byPrecedence(il))

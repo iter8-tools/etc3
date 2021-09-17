@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/iter8-tools/etc3/controllers"
 	"github.com/iter8-tools/etc3/iter8ctl/debug"
 	expr "github.com/iter8-tools/etc3/iter8ctl/experiment"
 	"github.com/spf13/cobra"
@@ -37,10 +38,11 @@ var debugCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		ils, err := debug.Debug(exp, priority)
+		ils, err := debug.Debug(exp, controllers.Iter8LogPriority(priority))
 		if err == nil {
-			for _, l := range ils {
-				fmt.Println(l.Message)
+			fmt.Printf("Debugging experiment %s in namespace %s\n", exp.Name, exp.Namespace)
+			for _, il := range ils {
+				fmt.Printf("source: %v priority: %v message: %s\n", il.Source, il.Priority, il.Message)
 			}
 		} else {
 			fmt.Println(err)

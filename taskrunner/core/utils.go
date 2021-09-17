@@ -2,11 +2,13 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/iter8-tools/etc3/api/v2alpha2"
 	controllers "github.com/iter8-tools/etc3/controllers"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -34,6 +36,47 @@ func GetLogger() *logrus.Logger {
 		})
 	}
 	return log
+}
+
+// Iter8Logger type objects are functions that can be used to print Iter8Logs within tasks
+type Iter8Logger func(expName string, expNamespace string, priority controllers.Iter8LogPriority, taskName string, msg string, prec int) string
+
+// GetIter8Logger returns a logger that prints Iter8logs
+func GetIter8Logger() Iter8Logger {
+	return func(expName string, expNamespace string, priority controllers.Iter8LogPriority, taskName string, msg string, prec int) string {
+		// create Iter8log struct
+		il := controllers.Iter8Log{
+			IsIter8Log:          true,
+			ExperimentName:      expName,
+			ExperimentNamespace: expNamespace,
+			Source:              "taskrunner",
+			Priority:            priority,
+			Message:             fmt.Sprintf("from task %v; %v", taskName, msg),
+			Precedence:          prec,
+		}
+
+		return il.JSON()
+	}
+}
+
+// GetIter8LogPrecedence returns the precedence value to be used in an Ite8log
+func GetIter8LogPrecedence(exp *Experiment, action string) int {
+	loopCount := int32(0)
+	ipl := v2alpha2.DefaultIterationsPerLoop
+	if exp.Spec.Duration != nil &&
+		exp.Spec.Duration.IterationsPerLoop != nil {
+		ipl = *exp.Spec.Duration.IterationsPerLoop
+	}
+	if exp.Status.CompletedIterations != nil {
+		loopCount = (*exp.Status.CompletedIterations) / ipl
+	}
+	if action == "start" {
+		return 0
+	} else if action == "loop" {
+		return int(loopCount + 1)
+	} else { // this better be the finish action
+		return int(loopCount + 1)
+	}
 }
 
 // ContextKey is the type of key that will be used to index into context.
