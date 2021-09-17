@@ -14,6 +14,7 @@ var expName string
 var expNamespace string
 var latest bool
 var exp *expr.Experiment
+var priority uint8
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{

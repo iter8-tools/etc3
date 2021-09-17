@@ -10,7 +10,7 @@ import (
 func TestSortIter8Logs(t *testing.T) {
 	il := []Iter8Log{
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -18,7 +18,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -26,7 +26,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -34,7 +34,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -42,7 +42,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -50,7 +50,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world again",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -58,7 +58,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world again and again",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -69,7 +69,7 @@ func TestSortIter8Logs(t *testing.T) {
 
 	sortedIl := []Iter8Log{
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -77,7 +77,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -85,7 +85,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -93,7 +93,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world again",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -101,7 +101,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world again and again",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -109,7 +109,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",
@@ -117,7 +117,7 @@ func TestSortIter8Logs(t *testing.T) {
 			Message:             "hello world",
 		},
 		{
-			Iter8Log:            true,
+			IsIter8Log:          true,
 			ExperimentName:      "hello",
 			ExperimentNamespace: "default",
 			Source:              "task-runner",

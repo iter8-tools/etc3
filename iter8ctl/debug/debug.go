@@ -4,6 +4,7 @@ package debug
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"sort"
@@ -21,7 +22,7 @@ const (
 )
 
 type Iter8Log struct {
-	Iter8Log            bool   `json:"iter8Log" yaml:"iter8Log"`
+	IsIter8Log          bool   `json:"isIter8Log" yaml:"isIter8Log"`
 	ExperimentName      string `json:"experimentName" yaml:"experimentName"`
 	ExperimentNamespace string `json:"experimentNamespace" yaml:"experimentNamespace"`
 	Source              string `json:"source" yaml:"source"`
@@ -75,9 +76,13 @@ func getTaskRunnerLogs(exp *expr.Experiment) ([]byte, error) {
 }
 
 // Debug prints iter8-logs for the given experiment
-func Debug(exp *expr.Experiment) ([]Iter8Log, error) {
-	// fetch task runner job logs
+func Debug(exp *expr.Experiment, priority uint8) ([]Iter8Log, error) {
+	// check priority
+	if priority < 1 || priority > 3 {
+		return nil, errors.New("priority can only be set to 1, 2, or 3")
+	}
 
+	// fetch task runner job logs
 	tr, err := getTaskRunnerLogs(exp)
 	if err != nil {
 		return nil, err
@@ -96,9 +101,10 @@ func Debug(exp *expr.Experiment) ([]Iter8Log, error) {
 			il := Iter8Log{}
 			if json.Unmarshal([]byte(line), &il) == nil {
 				// filter Iter8logs for this experiment
-				if il.Iter8Log &&
+				if il.IsIter8Log &&
 					il.ExperimentName == exp.Name &&
-					il.ExperimentNamespace == exp.Namespace {
+					il.ExperimentNamespace == exp.Namespace &&
+					il.Priority <= priority {
 					ils = append(ils, il)
 				}
 			}
