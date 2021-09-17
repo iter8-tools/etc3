@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -41,23 +40,23 @@ func GetLogger() *logrus.Logger {
 // Iter8Logger type objects are functions that can be used to print Iter8Logs within tasks
 type Iter8Logger func(expName string, expNamespace string, priority controllers.Iter8LogPriority, taskName string, msg string, prec int) string
 
-// GetIter8Logger returns a logger that prints Iter8logs
-func GetIter8Logger() Iter8Logger {
-	return func(expName string, expNamespace string, priority controllers.Iter8LogPriority, taskName string, msg string, prec int) string {
-		// create Iter8log struct
-		il := controllers.Iter8Log{
-			IsIter8Log:          true,
-			ExperimentName:      expName,
-			ExperimentNamespace: expNamespace,
-			Source:              "taskrunner",
-			Priority:            priority,
-			Message:             fmt.Sprintf("from task %v; %v", taskName, msg),
-			Precedence:          prec,
-		}
+// // GetIter8Logger returns a logger that prints Iter8logs
+// func GetIter8Logger() Iter8Logger {
+// 	return func(expName string, expNamespace string, priority controllers.Iter8LogPriority, taskName string, msg string, prec int) string {
+// 		// create Iter8log struct
+// 		il := controllers.Iter8Log{
+// 			IsIter8Log:          true,
+// 			ExperimentName:      expName,
+// 			ExperimentNamespace: expNamespace,
+// 			Source:              "taskrunner",
+// 			Priority:            priority,
+// 			Message:             fmt.Sprintf("from task %v; %v", taskName, msg),
+// 			Precedence:          prec,
+// 		}
 
-		return il.JSON()
-	}
-}
+// 		return il.JSON()
+// 	}
+// }
 
 // GetIter8LogPrecedence returns the precedence value to be used in an Ite8log
 func GetIter8LogPrecedence(exp *Experiment, action string) int {

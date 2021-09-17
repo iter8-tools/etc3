@@ -50,7 +50,8 @@ func (a byPrecedence) Swap(i, j int) {
 }
 
 // getTaskRunnerLogs gets the logs for the task runner jobs for the given experiment
-func getTaskRunnerLogs(exp *expr.Experiment) ([]byte, error) {
+// var useful for mocking in tests
+var getTaskRunnerLogs = func(exp *expr.Experiment) ([]byte, error) {
 	selector := fmt.Sprintf("%s=%s,%s=%s", iter8ExpNameKey, exp.Name, iter8ExpNamespaceKey, exp.Namespace)
 
 	cmd := exec.Command("kubectl", "logs", "-l", selector, "-n", iter8NameSpace, "--tail=-1")
