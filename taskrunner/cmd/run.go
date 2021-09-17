@@ -22,12 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var iter8Log core.Iter8Logger
-
-func init() {
-	iter8Log = core.GetIter8Logger()
-}
-
 // getExperimentNN gets the name and namespace of the experiment from environment variables.
 // Returns error if unsuccessful.
 func getExperimentNN() (*types.NamespacedName, error) {
