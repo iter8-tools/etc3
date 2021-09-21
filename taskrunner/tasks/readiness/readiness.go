@@ -145,32 +145,6 @@ func (t *ReadinessTask) Run(ctx context.Context) error {
 	}
 	log.Info("experiment", exp)
 
-	// MK
-	// // add versioninfo objects to task
-	// // for baseline
-	// if exp.Spec.VersionInfo != nil {
-	// 	if exp.Spec.VersionInfo.Baseline.WeightObjRef != nil {
-	// 		objRef := ObjRef{
-	// 			Kind:      exp.Spec.VersionInfo.Baseline.WeightObjRef.Kind,
-	// 			Namespace: &exp.Spec.VersionInfo.Baseline.WeightObjRef.Namespace,
-	// 			Name:      exp.Spec.VersionInfo.Baseline.WeightObjRef.Name,
-	// 		}
-	// 		t.With.ObjRefs = append(t.With.ObjRefs, objRef)
-	// 	}
-
-	// 	// for each candidate
-	// 	for _, c := range exp.Spec.VersionInfo.Candidates {
-	// 		if c.WeightObjRef != nil {
-	// 			objRef := ObjRef{
-	// 				Kind:      c.WeightObjRef.Kind,
-	// 				Namespace: &c.WeightObjRef.Namespace,
-	// 				Name:      c.WeightObjRef.Name,
-	// 			}
-	// 			t.With.ObjRefs = append(t.With.ObjRefs, objRef)
-	// 		}
-	// 	}
-	// }
-
 	log.Info("The task...")
 	log.Info(t)
 	time.Sleep(time.Duration(*t.With.InitialDelaySeconds) * time.Second)

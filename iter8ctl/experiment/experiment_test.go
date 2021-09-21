@@ -81,11 +81,7 @@ func TestExperiment(t *testing.T) {
 			// test Started()
 			assert.Equal(t, tc.started, tc.exp.Started())
 			// test GetVersions()
-			// MK if tc.exp.Started() {
 			assert.Equal(t, []string{"default", "canary"}, tc.exp.GetVersions())
-			// MK } else {
-			// MK 	assert.Equal(t, []string([]string(nil)), tc.exp.GetVersions())
-			// MK }
 			// test GetMetricStrs(...)
 			assert.Equal(t, tc.errorRates, tc.exp.GetMetricStrs("error-rate"))
 			assert.Equal(t, tc.fakeMetric, tc.exp.GetMetricStrs("fake-metric"))
