@@ -42,7 +42,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.iter8ctl.yaml)")
 
-	rootCmd.PersistentFlags().StringVarP(&expNamespace, "namespace", "n", "default", "namespace of the experiment; ignored when experiment name is not specified explicitly")
+	rootCmd.PersistentFlags().StringVarP(&expNamespace, "namespace", "n", "default", "namespace of the experiment; never ignored -- default value used if not specified")
 }
 
 // initConfig reads in config file and ENV variables if set.

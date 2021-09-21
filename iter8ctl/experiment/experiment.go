@@ -98,7 +98,7 @@ func GetExperiment(latest bool, name string, namespace string) (*Experiment, err
 	// get all experiments
 	var rc client.Client
 	if rc, err = GetClient(); err == nil {
-		err = rc.List(context.Background(), &results, &client.ListOptions{})
+		err = rc.List(context.Background(), &results, &client.ListOptions{Namespace: namespace})
 	}
 
 	// get latest experiment
