@@ -13,6 +13,6 @@ Available Commands:
 Flags:
       --config string      config file (default is $HOME/.iter8ctl.yaml)
   -h, --help               help for iter8ctl
-  -n, --namespace string   namespace of the experiment; ignored when experiment name is not specified explicitly (default "default")
+  -n, --namespace string   namespace of the experiment; never ignored -- default value used if not specified (default "default")
 
 Use "iter8ctl [command] --help" for more information about a command.
