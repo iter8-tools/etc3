@@ -13,10 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 const (
@@ -69,7 +68,7 @@ type CollectTask struct {
 }
 
 // Make constructs a CollectTask out of a collect task spec
-func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
+func Make(t *iter8.TaskSpec) (core.Task, error) {
 	if *t.Task != TaskName {
 		return nil, errors.New("task need to be " + TaskName)
 	}
@@ -290,24 +289,26 @@ func (t *CollectTask) Run(ctx context.Context) error {
 	// if experiment already has fortio data, initialize them
 	// this is possible if this task is run in loop actions repeatedly
 	fortioData := make(map[string]*Result)
-	exp, err := core.GetExperimentFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	// if this task is **not** loadOnly
-	if t.With.LoadOnly == nil || !*t.With.LoadOnly {
-		// bootstrap AggregatedBuiltinHists with data already present in experiment status
-		if exp.Status.Analysis != nil && exp.Status.Analysis.AggregatedBuiltinHists != nil {
-			jsonBytes, err := json.Marshal(exp.Status.Analysis.AggregatedBuiltinHists.Data)
-			// convert jsonBytes to fortioData
-			if err == nil {
-				err = json.Unmarshal(jsonBytes, &fortioData)
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
+	// MK start
+	// exp, err := core.GetExperimentFromContext(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+	// // if this task is **not** loadOnly
+	// if t.With.LoadOnly == nil || !*t.With.LoadOnly {
+	// 	// bootstrap AggregatedBuiltinHists with data already present in experiment status
+	// 	if exp.Status.Analysis != nil && exp.Status.Analysis.AggregatedBuiltinHists != nil {
+	// 		jsonBytes, err := json.Marshal(exp.Status.Analysis.AggregatedBuiltinHists.Data)
+	// 		// convert jsonBytes to fortioData
+	// 		if err == nil {
+	// 			err = json.Unmarshal(jsonBytes, &fortioData)
+	// 		}
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
+	// MK end
 
 	// lock ensures thread safety while updating fortioData from go routines
 	var lock sync.Mutex
@@ -375,26 +376,28 @@ func (t *CollectTask) Run(ctx context.Context) error {
 	log.Trace("Wait group finished normally")
 
 	// if this task is **not** loadOnly
-	if t.With.LoadOnly == nil || !*t.With.LoadOnly {
-		// Update experiment status with results
-		// update to experiment status will result in reconcile request to etc3
-		// unless the task runner job executing this action is completed, this request will not have have an immediate effect in the experiment reconcilation process
+	// MK start
+	// if t.With.LoadOnly == nil || !*t.With.LoadOnly {
+	// 	// Update experiment status with results
+	// 	// update to experiment status will result in reconcile request to etc3
+	// 	// unless the task runner job executing this action is completed, this request will not have have an immediate effect in the experiment reconcilation process
 
-		bytes1, err := json.Marshal(fortioData)
-		if err != nil {
-			return err
-		}
+	// 	bytes1, err := json.Marshal(fortioData)
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		exp.SetAggregatedBuiltinHists(v1.JSON{Raw: bytes1})
+	// 	exp.SetAggregatedBuiltinHists(v1.JSON{Raw: bytes1})
 
-		core.UpdateInClusterExperimentStatus(exp)
+	// 	core.UpdateInClusterExperimentStatus(exp)
 
-		var prettyBody bytes.Buffer
-		bytes2, _ := json.Marshal(exp)
+	// 	var prettyBody bytes.Buffer
+	// 	bytes2, _ := json.Marshal(exp)
 
-		json.Indent(&prettyBody, bytes2, "", "  ")
-		log.Trace(prettyBody.String())
-	}
+	// 	json.Indent(&prettyBody, bytes2, "", "  ")
+	// 	log.Trace(prettyBody.String())
+	// }
+	// MK end
 
 	return err
 }

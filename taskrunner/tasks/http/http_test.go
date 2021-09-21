@@ -6,21 +6,21 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/stretchr/testify/assert"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 func TestMakeFakeNotificationTask(t *testing.T) {
-	_, err := Make(&v2alpha2.TaskSpec{
+	_, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer("fake/fake"),
 	})
 	assert.Error(t, err)
 }
 
 func TestMakeFakeHTTPTask(t *testing.T) {
-	_, err := Make(&v2alpha2.TaskSpec{
+	_, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer("fake/fake"),
 	})
 	assert.Error(t, err)
@@ -29,14 +29,14 @@ func TestMakeFakeHTTPTask(t *testing.T) {
 func TestMakeHttpTask(t *testing.T) {
 	url, _ := json.Marshal("http://postman-echo.com/post")
 	body, _ := json.Marshal("{\"hello\":\"world\"}")
-	headers, _ := json.Marshal([]v2alpha2.NamedValue{{
+	headers, _ := json.Marshal([]core.NamedValue{{
 		Name:  "x-foo",
 		Value: "bar",
 	}, {
 		Name:  "Authentication",
 		Value: "Basic: dXNlcm5hbWU6cGFzc3dvcmQK",
 	}})
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer(TaskName),
 		With: map[string]apiextensionsv1.JSON{
 			"URL":     {Raw: url},
@@ -63,7 +63,7 @@ func TestMakeHttpTask(t *testing.T) {
 
 func TestMakeHttpTaskDefaults(t *testing.T) {
 	url, _ := json.Marshal("http://target")
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer(TaskName),
 		With: map[string]apiextensionsv1.JSON{
 			"URL": {Raw: url},
@@ -87,6 +87,6 @@ func TestMakeHttpTaskDefaults(t *testing.T) {
 	data, err := ioutil.ReadAll(req.Body)
 	assert.NoError(t, err)
 
-	expectedBody := `{"summary":{"winnerFound":false,"versionRecommendedForPromotion":"default"},"experiment":{"kind":"Experiment","apiVersion":"iter8.tools/v2alpha2","metadata":{"name":"sklearn-iris-experiment-1","namespace":"default","selfLink":"/apis/iter8.tools/v2alpha2/namespaces/default/experiments/sklearn-iris-experiment-1","uid":"b99489b6-a1b4-420f-9615-165d6ff88293","generation":2,"creationTimestamp":"2020-12-27T21:55:48Z","annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"iter8.tools/v2alpha2\",\"kind\":\"Experiment\",\"metadata\":{\"annotations\":{},\"name\":\"sklearn-iris-experiment-1\",\"namespace\":\"default\"},\"spec\":{\"criteria\":{\"indicators\":[\"95th-percentile-tail-latency\"],\"objectives\":[{\"metric\":\"mean-latency\",\"upperLimit\":1000},{\"metric\":\"error-rate\",\"upperLimit\":\"0.01\"}]},\"duration\":{\"intervalSeconds\":15,\"iterationsPerLoop\":10},\"strategy\":{\"type\":\"Canary\"},\"target\":\"default/sklearn-iris\"}}\n"}},"spec":{"target":"default/sklearn-iris","versionInfo":{"baseline":{"name":"default","variables":[{"name":"revision","value":"revision1"}]},"candidates":[{"name":"canary","variables":[{"name":"revision","value":"revision2"}],"weightObjRef":{"kind":"InferenceService","namespace":"default","name":"sklearn-iris","apiVersion":"serving.kubeflow.org/v1alpha2","fieldPath":".spec.canaryTrafficPercent"}}]},"strategy":{"testingPattern":"Canary","deploymentPattern":"Progressive","actions":{"finish":[{"task":"common/exec","with":{"args":["build","."],"cmd":"kustomize"}}],"start":[{"task":"common/exec","with":{"args":["hello-world","hello {{ revision }} world","hello {{ omg }} world"],"cmd":"echo"}},{"task":"common/exec","with":{"args":["v1","v2",20,40.5],"cmd":"helm"}}]},"weights":{"maxCandidateWeight":100,"maxCandidateWeightIncrement":10}},"criteria":{"requestCount":"request-count","indicators":["95th-percentile-tail-latency"],"objectives":[{"metric":"mean-latency","upperLimit":"1k"},{"metric":"error-rate","upperLimit":"10m"}],"strength":null},"duration":{"intervalSeconds":15,"iterationsPerLoop":10}},"status":{"conditions":[{"type":"Completed","status":"False","lastTransitionTime":"2020-12-27T21:55:49Z","reason":"StartHandlerLaunched","message":"Start handler 'start' launched"},{"type":"Failed","status":"False","lastTransitionTime":"2020-12-27T21:55:48Z"}],"initTime":"2020-12-27T21:55:48Z","lastUpdateTime":"2020-12-27T21:55:48Z","completedIterations":0,"versionRecommendedForPromotion":"default","message":"StartHandlerLaunched: Start handler 'start' launched"}}}`
+	expectedBody := `{"summary":{"winnerFound":false},"experiment":{"kind":"Experiment","apiVersion":"iter8.tools/v2beta1","metadata":{"name":"test-experiment-1","namespace":"default","creationTimestamp":null},"spec":{"versionInfo":["default","canary"],"criteria":{"objectives":[{"metric":"mean-latency","upperLimit":"1k"},{"metric":"error-rate","upperLimit":"10m"}]},"duration":{"minIntervalBetweenLoops":15,"maxLoops":10},"backends":[{"name":"backend","description":"backend description","method":"POST","provider":"provider","jqExpression":"jqExpression","headers":{"header":"{{.variable-1}}::{{.variable-2}}"},"url":"https://provider.url","versionInfo":[{"interval":"interval-v1","name":"name-v1"},{"interval":"interval-v2","name":"name-v2"}],"metrics":[{"name":"mean-latency","description":"Mean latency","params":{"query":"(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"},"units":"milliseconds","type":"Gauge"},{"name":"error-rate","description":"Fraction of requests with error responses","params":{"query":"(sum(increase(revision_app_request_latencies_count{response_code_class!='2xx',service_name=~'.*$name'}[$interval])) or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"},"type":"Gauge"},{"name":"request-count","description":"Number of requests","params":{"query":"sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"},"type":"Counter"},{"name":"95th-percentile-tail-latency","description":"95th percentile tail latency","params":{"query":"histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval])) by (le))"},"units":"milliseconds","type":"Gauge"}]}]},"status":{"conditions":[{"type":"Completed","status":"False","lastTransitionTime":"2020-12-27T21:55:49Z","reason":"StartHandlerLaunched","message":"Start handler 'start' launched"},{"type":"Failed","status":"False","lastTransitionTime":"2020-12-27T21:55:48Z"}],"startTime":"2020-12-27T21:55:48Z","lastUpdateTime":"2020-12-27T21:55:48Z","stage":"Initializing","testingPattern":"SLOValidation","completedLoops":0,"message":"StartHandlerLaunched: Start handler 'start' launched"}}}`
 	assert.Equal(t, expectedBody, string(data))
 }

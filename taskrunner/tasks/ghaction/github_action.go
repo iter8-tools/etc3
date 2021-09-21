@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/http"
 	"github.com/sirupsen/logrus"
@@ -26,13 +26,13 @@ const (
 
 // Inputs contain the name and arguments of the task.
 type Inputs struct {
-	Repository    string                `json:"repository" yaml:"repository"`
-	Workflow      string                `json:"workflow" yaml:"workflow"`
-	Secret        string                `json:"secret" yaml:"secret"`
-	Ref           *string               `json:"ref,omitempty" yaml:"ref,omitempty"`
-	WFInputs      []v2alpha2.NamedValue `json:"inputs,omitempty" yaml:"inputs,omitempty"`
-	VersionInfo   []core.VersionInfo    `json:"versionInfo,omitempty" yaml:"versionInfo,omitempty"`
-	IgnoreFailure *bool                 `json:"ignoreFailure,omitempty" yaml:"ignoreFailure,omitempty"`
+	Repository    string             `json:"repository" yaml:"repository"`
+	Workflow      string             `json:"workflow" yaml:"workflow"`
+	Secret        string             `json:"secret" yaml:"secret"`
+	Ref           *string            `json:"ref,omitempty" yaml:"ref,omitempty"`
+	WFInputs      []core.NamedValue  `json:"inputs,omitempty" yaml:"inputs,omitempty"`
+	VersionInfo   []core.VersionInfo `json:"versionInfo,omitempty" yaml:"versionInfo,omitempty"`
+	IgnoreFailure *bool              `json:"ignoreFailure,omitempty" yaml:"ignoreFailure,omitempty"`
 }
 
 // Task encapsulates the task.
@@ -42,7 +42,7 @@ type Task struct {
 }
 
 // Make converts an spec to a task.
-func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
+func Make(t *iter8.TaskSpec) (core.Task, error) {
 	if *t.Task != TaskName {
 		return nil, fmt.Errorf("library and task need to be '%s'", TaskName)
 	}
@@ -61,7 +61,7 @@ func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
 
 // ToHTTPTask converts a Task to an http Task
 func (t *Task) ToHTTPTask() *http.Task {
-	authType := v2alpha2.BearerAuthType
+	authType := iter8.BearerAuthType
 	authtype := &authType
 	secret := &t.With.Secret
 
@@ -93,7 +93,7 @@ func (t *Task) ToHTTPTask() *http.Task {
 			URL:      "https://api.github.com/repos/" + t.With.Repository + "/actions/workflows/" + t.With.Workflow + "/dispatches",
 			AuthType: authtype,
 			Secret:   secret,
-			Headers: []v2alpha2.NamedValue{{
+			Headers: []core.NamedValue{{
 				Name:  "Accept",
 				Value: "application/vnd.github.v3+json",
 			}},

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"os"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
-	"github.com/iter8-tools/etc3/taskrunner/tasks/bash"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/collect"
-	"github.com/iter8-tools/etc3/taskrunner/tasks/exec"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/ghaction"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/http"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/readiness"
@@ -35,7 +33,7 @@ func getExperimentNN() (*types.NamespacedName, error) {
 }
 
 // GetAction converts an action spec into an action.
-func GetAction(exp *core.Experiment, actionSpec v2alpha2.Action) (core.Action, error) {
+func GetAction(exp *core.Experiment, actionSpec iter8.Action) (core.Action, error) {
 	action := make(core.Action, len(actionSpec))
 	var err error
 	for i := 0; i < len(actionSpec); i++ {
@@ -61,7 +59,7 @@ func run(cmd *cobra.Command, args []string) error {
 	if err == nil {
 		var exp *core.Experiment
 		if exp, err = (&core.Builder{}).FromCluster(nn).Build(); err == nil {
-			var actionSpec v2alpha2.Action
+			var actionSpec iter8.Action
 			if actionSpec, err = exp.GetActionSpec(action); err == nil {
 				var action core.Action
 				if action, err = GetAction(exp, actionSpec); err == nil {
@@ -101,17 +99,13 @@ func init() {
 }
 
 // MakeTask constructs a Task from a TaskSpec or returns an error if any.
-func MakeTask(t *v2alpha2.TaskSpec) (core.Task, error) {
+func MakeTask(t *iter8.TaskSpec) (core.Task, error) {
 	if t == nil || t.Task == nil || len(*t.Task) == 0 {
 		return nil, errors.New("nil or empty task found")
 	}
 	switch *t.Task {
-	case bash.TaskName:
-		return bash.Make(t)
 	case collect.TaskName:
 		return collect.Make(t)
-	case exec.TaskName:
-		return exec.Make(t)
 	case ghaction.TaskName:
 		return ghaction.Make(t)
 	case http.TaskName:

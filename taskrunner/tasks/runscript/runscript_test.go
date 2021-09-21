@@ -4,20 +4,20 @@ import (
 	"context"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeFakeRun(t *testing.T) {
-	_, err := Make(&v2alpha2.TaskSpec{
+	_, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer("fake/fake"),
 	})
 	assert.Error(t, err)
 }
 
 func TestMakeRun(t *testing.T) {
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Run: core.StringPointer("echo hello"),
 	})
 	assert.NotEmpty(t, task)
@@ -102,7 +102,7 @@ func TestRunEnv(t *testing.T) {
 	exp, err := (&core.Builder{}).FromFile(core.CompletePath("../../testdata/common", "runexperiment.yaml")).Build()
 	assert.NoError(t, err)
 
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Run: core.StringPointer("echo $SCRATCH_DIR"),
 	})
 	assert.NoError(t, err)

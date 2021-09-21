@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -35,7 +35,7 @@ var _ = Describe("Readiness task", func() {
 		var err error
 
 		u := &unstructured.Unstructured{}
-		u.SetGroupVersionKind(v2alpha2.GroupVersion.WithKind("experiment"))
+		u.SetGroupVersionKind(iter8.GroupVersion.WithKind("experiment"))
 		BeforeEach(func() {
 			k8sClient.DeleteAllOf(context.Background(), u, client.InNamespace("default"))
 		})
@@ -59,7 +59,7 @@ var _ = Describe("Readiness task", func() {
 			ctx := context.WithValue(context.Background(), core.ContextKey("experiment"), exp2)
 
 			By("creating a readiness task")
-			taskSpec := exp2.Spec.Strategy.Actions["start"][0]
+			taskSpec := exp2.Spec.Actions["start"][0]
 			readiness, err := Make(&taskSpec)
 			Expect(err).ToNot(HaveOccurred())
 

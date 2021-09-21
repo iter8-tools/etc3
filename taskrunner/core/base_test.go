@@ -26,16 +26,16 @@ func TestWithExperiment(t *testing.T) {
 	testStr := []string{
 		"{{.this.apiVersion}}",
 		"{{.this.metadata.name}}",
-		"{{.this.spec.duration.intervalSeconds}}",
-		"{{(index .this.spec.versionInfo.baseline.variables 0).value}}",
-		"{{.this.status.versionRecommendedForPromotion}}",
+		"{{.this.spec.duration.minIntervalBetweenLoops}}",
+		"{{(index (index .this.spec.backends 0).versionInfo 0).name}}",
+		"{{.this.status.stage}}",
 	}
 	expectedOut := []string{
-		"iter8.tools/v2alpha2",
-		"sklearn-iris-experiment-1",
+		"iter8.tools/v2beta1",
+		"test-experiment-1",
 		"15",
-		"revision1",
-		"default",
+		"name-v1",
+		"Initializing",
 	}
 
 	for i, in := range testStr {

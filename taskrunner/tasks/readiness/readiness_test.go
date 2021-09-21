@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/stretchr/testify/assert"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -22,7 +22,7 @@ func TestInvalidObjName(t *testing.T) {
 			WaitFor:   core.StringPointer("condition=available"),
 		},
 	})
-	_, err := Make(&v2alpha2.TaskSpec{
+	_, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer(TaskName),
 		With: map[string]apiextensionsv1.JSON{
 			"initialDelaySeconds": {Raw: initDelay},
@@ -52,7 +52,7 @@ func TestMakeReadinessTask(t *testing.T) {
 			WaitFor:   core.StringPointer("condition=available"),
 		},
 	})
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer(TaskName),
 		With: map[string]apiextensionsv1.JSON{
 			"initialDelaySeconds": {Raw: initDelay},

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 func TestMakeFakeMetricsTask(t *testing.T) {
-	_, err := Make(&v2alpha2.TaskSpec{
+	_, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer("fake/fake"),
 	})
 	assert.Error(t, err)
@@ -24,7 +24,7 @@ func TestMakeMetricsTask(t *testing.T) {
 			URL:  "https://iter8.tools",
 		},
 	})
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer("metrics/collect"),
 		With: map[string]v1.JSON{
 			"versions": {Raw: vers},
@@ -33,7 +33,7 @@ func TestMakeMetricsTask(t *testing.T) {
 	assert.NotEmpty(t, task)
 	assert.NoError(t, err)
 
-	task, err = Make(&v2alpha2.TaskSpec{
+	task, err = Make(&iter8.TaskSpec{
 		Task: core.StringPointer("metrics/collect"),
 		With: map[string]v1.JSON{
 			"versionables": {Raw: vers},
@@ -42,7 +42,7 @@ func TestMakeMetricsTask(t *testing.T) {
 	assert.Empty(t, task)
 	assert.Error(t, err)
 
-	task, err = Make(&v2alpha2.TaskSpec{
+	task, err = Make(&iter8.TaskSpec{
 		Task: core.StringPointer("metrics/collect-it"),
 	})
 	assert.Nil(t, task)

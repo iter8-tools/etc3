@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -40,7 +40,7 @@ var _ = Describe("run task", func() {
 
 			By("creating a run with secret")
 			secret, _ := json.Marshal("default/top-secret")
-			task, err := Make(&v2alpha2.TaskSpec{
+			task, err := Make(&iter8.TaskSpec{
 				Run: core.StringPointer(`echo {{ .Secret "token" }}`),
 				With: map[string]apiextensionsv1.JSON{
 					"secret": {Raw: secret},

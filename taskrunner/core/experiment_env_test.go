@@ -25,7 +25,7 @@ var _ = Describe("Experiment's handler field", func() {
 			By("fetching experiment from cluster")
 			b := &Builder{}
 			exp2, err := b.FromCluster(&types.NamespacedName{
-				Name:      "sklearn-iris-experiment-1",
+				Name:      "test-experiment-1",
 				Namespace: "default",
 			}).Build()
 			Expect(err).ToNot(HaveOccurred())

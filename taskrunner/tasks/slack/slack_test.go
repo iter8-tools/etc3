@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/stretchr/testify/assert"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -13,7 +13,7 @@ import (
 func TestMakeTask(t *testing.T) {
 	channel, _ := json.Marshal("channel")
 	secret, _ := json.Marshal("default/slack-secret")
-	task, err := Make(&v2alpha2.TaskSpec{
+	task, err := Make(&iter8.TaskSpec{
 		Task: core.StringPointer(TaskName),
 		With: map[string]apiextensionsv1.JSON{
 			"channel": {Raw: channel},
@@ -46,7 +46,7 @@ var tests = []test{
 	// A/B test  (2 versions), failed
 	{fileName: "slack2.yaml", expectedName: "default/quickstart-exp", expectedVersions: "productpage-v1, productpage-v2", expectedStage: "Completed", expectedWinner: winnerNotFound, expectedFailure: false},
 	// A/B/n Test (3 versions), --> no analysis (winner); no failure, no stage
-	{fileName: "slack3.yaml", expectedName: "default/abn-exp", expectedVersions: "productpage-v1, productpage-v2, productpage-v3", expectedStage: "Waiting", expectedWinner: winnerNotFound, expectedFailure: false},
+	{fileName: "slack3.yaml", expectedName: "default/abn-exp", expectedVersions: "productpage-v1, productpage-v2, productpage-v3", expectedStage: "Initializing", expectedWinner: winnerNotFound, expectedFailure: false},
 }
 
 func TestExperiment(t *testing.T) {

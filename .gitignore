@@ -27,3 +27,7 @@ bin
 
 # Mac file information
 **/.DS_Store
+
+# Avoid saving keys
+*.crt
+*.key

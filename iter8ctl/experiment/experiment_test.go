@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/iter8ctl/utils"
 	tasks "github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/stretchr/testify/assert"
@@ -48,15 +48,15 @@ var errorRateStrs = []string{"0.000", "0.000"}
 
 // table driven tests
 var tests = []test{
-	{name: "experiment1", started: false, errorRates: []string{}, fakeMetric: []string{}, satisfyStrs: []string{}, fakeObj: []string{}},
-	{name: "experiment2", started: false, errorRates: []string{}, fakeMetric: []string{}, satisfyStrs: []string{}, fakeObj: []string{}},
+	{name: "experiment1", started: false, errorRates: []string{"unavailable", "unavailable"}, fakeMetric: []string{"unavailable", "unavailable"}, satisfyStrs: []string{"unavailable", "unavailable"}, fakeObj: []string{"unavailable", "unavailable"}},
+	{name: "experiment2", started: false, errorRates: []string{"unavailable", "unavailable"}, fakeMetric: []string{"unavailable", "unavailable"}, satisfyStrs: []string{"unavailable", "unavailable"}, fakeObj: []string{"unavailable", "unavailable"}},
 	{name: "experiment3", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
 	{name: "experiment4", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
 	{name: "experiment5", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
 	{name: "experiment6", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
 	{name: "experiment7", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
-	{name: "experiment8", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
-	{name: "experiment9", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
+	// {name: "experiment8", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
+	// {name: "experiment9", started: true, errorRates: errorRateStrs, fakeMetric: fakeValStrs, satisfyStrs: satisfyStrs, fakeObj: fakeValStrs},
 }
 
 func init() {
@@ -65,7 +65,7 @@ func init() {
 		if err == nil {
 			tests[i].exp = e
 		} else {
-			fmt.Println("Unable to extract experiment objects from files")
+			fmt.Printf("Unable to extract experiment objects from files: %s\n", err.Error())
 			os.Exit(1)
 		}
 	}
@@ -81,11 +81,11 @@ func TestExperiment(t *testing.T) {
 			// test Started()
 			assert.Equal(t, tc.started, tc.exp.Started())
 			// test GetVersions()
-			if tc.exp.Started() {
-				assert.Equal(t, []string{"default", "canary"}, tc.exp.GetVersions())
-			} else {
-				assert.Equal(t, []string([]string(nil)), tc.exp.GetVersions())
-			}
+			// MK if tc.exp.Started() {
+			assert.Equal(t, []string{"default", "canary"}, tc.exp.GetVersions())
+			// MK } else {
+			// MK 	assert.Equal(t, []string([]string(nil)), tc.exp.GetVersions())
+			// MK }
 			// test GetMetricStrs(...)
 			assert.Equal(t, tc.errorRates, tc.exp.GetMetricStrs("error-rate"))
 			assert.Equal(t, tc.fakeMetric, tc.exp.GetMetricStrs("fake-metric"))
@@ -97,15 +97,19 @@ func TestExperiment(t *testing.T) {
 }
 
 func TestGetMetricNameAndUnits(t *testing.T) {
-	metricNameAndUnits := [4]string{"95th-percentile-tail-latency (milliseconds)", "mean-latency (milliseconds)", "error-rate", "request-count"}
+	// look at third test case (tests[2] -- experiment3.yaml)
+	// 4 metrics are defined in the backend; order is important
+	metricNameAndUnits := [4]string{"mean-latency (milliseconds)", "error-rate", "request-count", "95th-percentile-tail-latency (milliseconds)"}
 	mnu := [4]string{}
 	for i := 0; i < 4; i++ {
-		mnu[i] = GetMetricNameAndUnits(tests[2].exp.Status.Metrics[i])
+		mnu[i] = GetMetricNameAndUnits(tests[2].exp.Spec.Backends[0].Metrics[i])
 	}
 	assert.Equal(t, metricNameAndUnits, mnu)
 }
 
 func TestStringifyObjective(t *testing.T) {
+	// look at third test case (tests[2] -- experiment3.yaml)
+	// 2 obejctives are defined in the backend; order is important
 	objectives := [2]string{"mean-latency <= 1000.000", "error-rate <= 0.010"}
 	objs := [2]string{}
 	for i := 0; i < 2; i++ {
@@ -115,8 +119,8 @@ func TestStringifyObjective(t *testing.T) {
 }
 
 func TestAssertComplete(t *testing.T) {
-	exp := v2alpha2.NewExperiment("test", "test").WithCondition(
-		v2alpha2.ExperimentConditionExperimentCompleted,
+	exp := iter8.NewExperiment("test", "test").WithCondition(
+		iter8.ExperimentConditionExperimentCompleted,
 		corev1.ConditionTrue,
 		"experiment is over",
 		"",
@@ -130,8 +134,8 @@ func TestAssertComplete(t *testing.T) {
 }
 
 func TestAssertInComplete(t *testing.T) {
-	exp := v2alpha2.NewExperiment("test", "test").WithCondition(
-		v2alpha2.ExperimentConditionExperimentCompleted,
+	exp := iter8.NewExperiment("test", "test").WithCondition(
+		iter8.ExperimentConditionExperimentCompleted,
 		corev1.ConditionFalse,
 		"experiment is not over",
 		"",
@@ -145,13 +149,11 @@ func TestAssertInComplete(t *testing.T) {
 }
 
 func TestAssertWinnerFound(t *testing.T) {
-	exp := v2alpha2.NewExperiment("test", "test").Build()
-	exp.Status.Analysis = &v2alpha2.Analysis{}
-	exp.Status.Analysis.WinnerAssessment = &v2alpha2.WinnerAssessmentAnalysis{
-		Data: v2alpha2.WinnerAssessmentData{
-			WinnerFound: true,
-			Winner:      tasks.StringPointer("the best"),
-		},
+	exp := iter8.NewExperiment("test", "test").Build()
+	exp.Status.Analysis = &iter8.Analysis{}
+	exp.Status.Analysis.Winner = &iter8.Winner{
+		WinnerFound: true,
+		Winner:      tasks.StringPointer("the best"),
 	}
 
 	err := (&Experiment{
@@ -162,13 +164,10 @@ func TestAssertWinnerFound(t *testing.T) {
 }
 
 func TestAssertNoWinnerFound(t *testing.T) {
-	exp := v2alpha2.NewExperiment("test", "test").Build()
-	exp.Status.Analysis = &v2alpha2.Analysis{}
-	exp.Status.Analysis.WinnerAssessment = &v2alpha2.WinnerAssessmentAnalysis{
-		AnalysisMetaData: v2alpha2.AnalysisMetaData{},
-		Data: v2alpha2.WinnerAssessmentData{
-			WinnerFound: false,
-		},
+	exp := iter8.NewExperiment("test", "test").Build()
+	exp.Status.Analysis = &iter8.Analysis{}
+	exp.Status.Analysis.Winner = &iter8.Winner{
+		WinnerFound: false,
 	}
 
 	err := (&Experiment{
@@ -179,9 +178,9 @@ func TestAssertNoWinnerFound(t *testing.T) {
 }
 
 func TestAssertNoWinnerFound2(t *testing.T) {
-	exp := v2alpha2.NewExperiment("test", "test").Build()
-	exp.Status.Analysis = &v2alpha2.Analysis{}
-	exp.Status.Analysis.WinnerAssessment = nil
+	exp := iter8.NewExperiment("test", "test").Build()
+	exp.Status.Analysis = &iter8.Analysis{}
+	exp.Status.Analysis.Winner = nil
 
 	err := (&Experiment{
 		*exp,
@@ -191,7 +190,7 @@ func TestAssertNoWinnerFound2(t *testing.T) {
 }
 
 func TestAssertNoWinnerFound3(t *testing.T) {
-	exp := v2alpha2.NewExperiment("test", "test").Build()
+	exp := iter8.NewExperiment("test", "test").Build()
 	exp.Status.Analysis = nil
 
 	err := (&Experiment{
@@ -205,13 +204,9 @@ func TestAssertNoWinnerFound3(t *testing.T) {
 
 func ExampleGetMetricNameAndUnits() {
 	u := "inches"
-	mi := v2alpha2.MetricInfo{
-		Name: "height",
-		MetricObj: v2alpha2.Metric{
-			Spec: v2alpha2.MetricSpec{
-				Units: &u,
-			},
-		},
+	mi := iter8.Metric{
+		Name:  "height",
+		Units: &u,
 	}
 	met := GetMetricNameAndUnits(mi)
 	fmt.Println(met)
@@ -219,9 +214,8 @@ func ExampleGetMetricNameAndUnits() {
 }
 
 func ExampleGetMetricNameAndUnits_unitless() {
-	mi := v2alpha2.MetricInfo{
-		Name:      "weight",
-		MetricObj: v2alpha2.Metric{},
+	mi := iter8.Metric{
+		Name: "weight",
 	}
 	met := GetMetricNameAndUnits(mi)
 	fmt.Println(met)
@@ -230,7 +224,7 @@ func ExampleGetMetricNameAndUnits_unitless() {
 
 func ExampleStringifyObjective_upperlimit() {
 	q := resource.MustParse("0.01")
-	obj := v2alpha2.Objective{
+	obj := iter8.Objective{
 		Metric:     "error-rate",
 		UpperLimit: &q,
 		LowerLimit: nil,
@@ -242,7 +236,7 @@ func ExampleStringifyObjective_upperlimit() {
 
 func ExampleStringifyObjective_lowerlimit() {
 	q := resource.MustParse("0.998")
-	obj := v2alpha2.Objective{
+	obj := iter8.Objective{
 		Metric:     "accuracy",
 		UpperLimit: nil,
 		LowerLimit: &q,
@@ -255,7 +249,7 @@ func ExampleStringifyObjective_lowerlimit() {
 func ExampleStringifyObjective_upperandlower() {
 	q1 := resource.MustParse("6.998")
 	q2 := resource.MustParse("7.012")
-	obj := v2alpha2.Objective{
+	obj := iter8.Objective{
 		Metric:     "pH level",
 		UpperLimit: &q2,
 		LowerLimit: &q1,
@@ -272,7 +266,7 @@ func ExampleExperiment_GetMetricStr() {
 	exp := &Experiment{}
 	yaml.Unmarshal(buf, exp)
 	// Get value of the 'mean-latency' metric for 'canary' version
-	met := exp.GetMetricStr("mean-latency", "canary")
+	met := exp.GetMetricStr("mean-latency", 1)
 	fmt.Println(met)
 	// output: 197.500
 }
@@ -284,7 +278,7 @@ func ExampleExperiment_GetMetricStr_unavailable1() {
 	exp := &Experiment{}
 	yaml.Unmarshal(buf, exp)
 	// Get value of the 'fake' metric for 'default' version
-	met := exp.GetMetricStr("fake", "default")
+	met := exp.GetMetricStr("fake", 0)
 	fmt.Println(met)
 	// output: unavailable
 }
@@ -296,7 +290,7 @@ func ExampleExperiment_GetMetricStr_unavailable2() {
 	exp := &Experiment{}
 	yaml.Unmarshal(buf, exp)
 	// Get value of the 'mean-latency' metric for 'perfect' version
-	met := exp.GetMetricStr("mean-latency", "perfect")
+	met := exp.GetMetricStr("mean-latency", 100)
 	fmt.Println(met)
 	// output: unavailable
 }
@@ -332,7 +326,7 @@ func ExampleExperiment_GetSatisfyStr() {
 	exp := &Experiment{}
 	yaml.Unmarshal(buf, exp)
 	// Get value of the 2nd objective for 'canary' version
-	obj := exp.GetSatisfyStr(1, "canary")
+	obj := exp.GetSatisfyStr(1, 1)
 	fmt.Println(obj)
 	// output: true
 }
@@ -345,7 +339,7 @@ func ExampleExperiment_GetSatisfyStr_unavailable1() {
 	yaml.Unmarshal(buf, exp)
 	// Get value of the 3rd objective for 'default' version
 	// This experiment has only two objectives, so this value is unavailable
-	obj := exp.GetSatisfyStr(2, "default")
+	obj := exp.GetSatisfyStr(2, 0)
 	fmt.Println(obj)
 	// output: unavailable
 }
@@ -357,7 +351,7 @@ func ExampleExperiment_GetSatisfyStr_unavailable2() {
 	exp := &Experiment{}
 	yaml.Unmarshal(buf, exp)
 	// Get value of the 2nd objective for 'perfect' version
-	obj := exp.GetSatisfyStr(1, "perfect")
+	obj := exp.GetSatisfyStr(1, 1)
 	fmt.Println(obj)
 	// output: unavailable
 }
@@ -384,7 +378,7 @@ func ExampleExperiment_GetSatisfyStrs_unavailable1() {
 	// This experiment does not have versionInfo as part of its spec section, so there are no versions
 	objs := exp.GetSatisfyStrs(1)
 	fmt.Println(objs)
-	// output: []
+	// output: [unavailable unavailable]
 }
 
 func ExampleExperiment_GetSatisfyStrs_unavailable2() {
@@ -410,19 +404,6 @@ func ExampleExperiment_GetVersions() {
 	versions := exp.GetVersions()
 	fmt.Println(versions)
 	// output: [default canary]
-}
-
-func ExampleExperiment_GetVersions_empty() {
-	// Read in an experiment object from the testdata folder
-	filePath := utils.CompletePath("../testdata", "experiment2.yaml")
-	buf, _ := ioutil.ReadFile(filePath)
-	exp := &Experiment{}
-	yaml.Unmarshal(buf, exp)
-	// Get value of objective indicators for the 2nd objective for all versions ('default' and 'canary')
-	// This experiment does not have versionInfo as part of its spec section, so there are no versions
-	versions := exp.GetVersions()
-	fmt.Println(versions)
-	// output: []
 }
 
 func ExampleExperiment_Started_true() {

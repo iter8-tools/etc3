@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
@@ -41,7 +41,7 @@ type Task struct {
 }
 
 // Make converts an sampletask spec into an base.Task.
-func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
+func Make(t *iter8.TaskSpec) (core.Task, error) {
 	if *t.Task != TaskName {
 		return nil, fmt.Errorf("task need to be '%s'", TaskName)
 	}
@@ -94,7 +94,7 @@ func (t *Task) postNotification(e *core.Experiment) error {
 		slack.MsgOptionBlocks(slack.NewSectionBlock(&slack.TextBlockObject{
 			Type: slack.MarkdownType,
 			// Text: Bold(Name(e)),
-			Text: Bold(string(e.Spec.Strategy.TestingPattern) + " experiment on " + e.Spec.Target),
+			Text: Bold(string(*e.Status.TestingPattern) + " experiment"),
 		}, nil, nil)),
 		slack.MsgOptionAttachments(slack.Attachment{
 			Blocks: slack.Blocks{
@@ -143,19 +143,12 @@ func Name(e *core.Experiment) string {
 
 // Versions returns a comma separated list of version names
 func Versions(e *core.Experiment) string {
-	versions := make([]string, 0)
-	if e.Spec.VersionInfo != nil {
-		versions = append(versions, e.Spec.VersionInfo.Baseline.Name)
-		for _, c := range e.Spec.VersionInfo.Candidates {
-			versions = append(versions, c.Name)
-		}
-	}
-	return strings.Join(versions, ", ")
+	return strings.Join(e.Spec.VersionInfo, ", ")
 }
 
 // Stage returns the stage (status.stage) of an experiment
 func Stage(e *core.Experiment) string {
-	stage := v2alpha2.ExperimentStageWaiting
+	stage := iter8.ExperimentStageInitializing
 	if e.Status.Stage != nil {
 		stage = *e.Status.Stage
 	}
@@ -166,9 +159,9 @@ func Stage(e *core.Experiment) string {
 func Winner(e *core.Experiment) string {
 	winner := "not found"
 	if e.Status.Analysis != nil &&
-		e.Status.Analysis.WinnerAssessment != nil {
-		if e.Status.Analysis.WinnerAssessment.Data.WinnerFound {
-			winner = *e.Status.Analysis.WinnerAssessment.Data.Winner
+		e.Status.Analysis.Winner != nil {
+		if e.Status.Analysis.Winner.WinnerFound {
+			winner = *e.Status.Analysis.Winner.Winner
 		}
 	}
 	return winner
@@ -177,7 +170,7 @@ func Winner(e *core.Experiment) string {
 // Failed returns true if the experiment has failed; false otherwise
 func Failed(e *core.Experiment) bool {
 	// use !.. IsFalse() to allow undefined value => true
-	return !e.Status.GetCondition(v2alpha2.ExperimentConditionExperimentFailed).IsFalse()
+	return !e.Status.GetCondition(iter8.ExperimentConditionExperimentFailed).IsFalse()
 }
 
 // Bold formats a string as bold in markdown

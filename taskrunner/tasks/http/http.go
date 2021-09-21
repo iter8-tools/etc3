@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
 )
@@ -29,14 +29,13 @@ func init() {
 
 // Inputs contain the name and arguments of the task.
 type Inputs struct {
-	URL           string                `json:"URL" yaml:"URL"`
-	Method        *v2alpha2.MethodType  `json:"method,omitempty" yaml:"method,omitempty"`
-	AuthType      *v2alpha2.AuthType    `json:"authType,omitempty" yaml:"authType,omitempty"`
-	Secret        *string               `json:"secret,omitempty" yaml:"secret,omitempty"`
-	Headers       []v2alpha2.NamedValue `json:"headers,omitempty" yaml:"headers,omitempty"`
-	Body          *string               `json:"body,omitempty" yaml:"body,omitempty"`
-	VersionInfo   []core.VersionInfo    `json:"versionInfo,omitempty" yaml:"versionInfo,omitempty"`
-	IgnoreFailure *bool                 `json:"ignoreFailure,omitempty" yaml:"ignoreFailure,omitempty"`
+	URL           string            `json:"URL" yaml:"URL"`
+	Method        *iter8.MethodType `json:"method,omitempty" yaml:"method,omitempty"`
+	AuthType      *iter8.AuthType   `json:"authType,omitempty" yaml:"authType,omitempty"`
+	Secret        *string           `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Headers       []core.NamedValue `json:"headers,omitempty" yaml:"headers,omitempty"`
+	Body          *string           `json:"body,omitempty" yaml:"body,omitempty"`
+	IgnoreFailure *bool             `json:"ignoreFailure,omitempty" yaml:"ignoreFailure,omitempty"`
 }
 
 // Task encapsulates the task.
@@ -46,7 +45,7 @@ type Task struct {
 }
 
 // Make converts an spec to a task.
-func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
+func Make(t *iter8.TaskSpec) (core.Task, error) {
 	if *t.Task != TaskName {
 		return nil, fmt.Errorf("task need to be '%s'", TaskName)
 	}
@@ -82,8 +81,7 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 	// Note that if versionRecommendedForPromotion is not set or there is no version corresponding to it,
 	// then some placeholders may not be replaced
 	tags = tags.
-		With("this", obj).
-		WithRecommendedVersionForPromotion(&exp.Experiment, t.With.VersionInfo)
+		With("this", obj)
 
 	// log tags now before secret is added; we don't log the secret
 	log.Trace("tags without secrets: ", tags)
@@ -97,7 +95,7 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 	}
 	log.Trace("tags with secrets: ", tags)
 
-	defaultMethod := v2alpha2.POSTMethodType
+	defaultMethod := iter8.POSTMethodType
 	method := t.With.Method
 	if method == nil {
 		method = &defaultMethod
@@ -119,7 +117,7 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 	}
 	log.Trace("body:", *body)
 
-	defaultAuthType := v2alpha2.AuthType("None")
+	defaultAuthType := iter8.AuthType("None")
 	authType := t.With.AuthType
 	if authType == nil {
 		authType = &defaultAuthType
@@ -141,13 +139,13 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 		}
 	}
 
-	if *authType == v2alpha2.BasicAuthType {
+	if *authType == iter8.BasicAuthType {
 		usernameTemplate := "{{ .secret.username }}"
 		passwordTemplate := "{{ .secret.password }}"
 		username, _ := tags.Interpolate(&usernameTemplate)
 		password, _ := tags.Interpolate(&passwordTemplate)
 		req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(username+":"+password)))
-	} else if *authType == v2alpha2.BearerAuthType {
+	} else if *authType == iter8.BearerAuthType {
 		tokenTemplate := "{{ .secret.token }}"
 		token, _ := tags.Interpolate(&tokenTemplate)
 		req.Header.Set("Authorization", "Bearer "+token)
@@ -158,18 +156,17 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 
 // helper types for creating a default body
 type defaultbody struct {
-	Summary    experimentsummary   `json:"summary" yaml:"summary"`
-	Experiment v2alpha2.Experiment `json:"experiment" yaml:"experiment"`
+	Summary    experimentsummary `json:"summary" yaml:"summary"`
+	Experiment iter8.Experiment  `json:"experiment" yaml:"experiment"`
 }
 
 type experimentsummary struct {
-	WinnerFound                    bool                  `json:"winnerFound" yaml:"winnerFound"`
-	Winner                         *string               `json:"winner,omitempty" yaml:"winner,omitempty"`
-	VersionRecommendedForPromotion *string               `json:"versionRecommendedForPromotion,omitempty" yaml:"versionRecommendedForPromotion,omitempty"`
-	LastRecommendedWeights         []v2alpha2.WeightData `json:"lastRecommendedWeights,omitempty" yaml:"lastRecommendedWeights,omitempty"`
+	WinnerFound            bool    `json:"winnerFound" yaml:"winnerFound"`
+	Winner                 *string `json:"winner,omitempty" yaml:"winner,omitempty"`
+	LastRecommendedWeights []int32 `json:"lastRecommendedWeights,omitempty" yaml:"lastRecommendedWeights,omitempty"`
 }
 
-func defaultBody(experiment v2alpha2.Experiment) (string, error) {
+func defaultBody(experiment iter8.Experiment) (string, error) {
 	defaultBody := defaultbody{
 		Summary: experimentsummary{
 			WinnerFound: false,
@@ -179,23 +176,18 @@ func defaultBody(experiment v2alpha2.Experiment) (string, error) {
 
 	// WinnerFound, Winner
 	if experiment.Status.Analysis != nil &&
-		experiment.Status.Analysis.WinnerAssessment != nil {
-		defaultBody.Summary.WinnerFound = experiment.Status.Analysis.WinnerAssessment.Data.WinnerFound
-		if experiment.Status.Analysis.WinnerAssessment.Data.Winner != nil {
-			defaultBody.Summary.Winner = experiment.Status.Analysis.WinnerAssessment.Data.Winner
+		experiment.Status.Analysis.Winner != nil {
+		defaultBody.Summary.WinnerFound = experiment.Status.Analysis.Winner.WinnerFound
+		if experiment.Status.Analysis.Winner.Winner != nil {
+			defaultBody.Summary.Winner = experiment.Status.Analysis.Winner.Winner
 		}
-	}
-
-	// VersionRecommendedForPromotion
-	if experiment.Status.VersionRecommendedForPromotion != nil {
-		defaultBody.Summary.VersionRecommendedForPromotion = experiment.Status.VersionRecommendedForPromotion
 	}
 
 	// LastRecommendedWeights
 	if experiment.Status.Analysis != nil && experiment.Status.Analysis.Weights != nil {
-		defaultBody.Summary.LastRecommendedWeights = make([]v2alpha2.WeightData, len(experiment.Status.Analysis.Weights.Data))
-		for i, w := range experiment.Status.Analysis.Weights.Data {
-			defaultBody.Summary.LastRecommendedWeights[i] = v2alpha2.WeightData{Name: w.Name, Value: w.Value}
+		defaultBody.Summary.LastRecommendedWeights = make([]int32, len(experiment.Status.Analysis.Weights))
+		for i, w := range experiment.Status.Analysis.Weights {
+			defaultBody.Summary.LastRecommendedWeights[i] = w
 		}
 	}
 

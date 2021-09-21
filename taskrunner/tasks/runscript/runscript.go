@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"text/template"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -39,7 +39,7 @@ type Task struct {
 }
 
 // Make converts an run spec into a run.
-func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
+func Make(t *iter8.TaskSpec) (core.Task, error) {
 	if !core.IsARun(t) {
 		return nil, fmt.Errorf("invalid run spec")
 	}

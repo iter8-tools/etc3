@@ -10,7 +10,7 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	tasks "github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/inf.v0"
@@ -27,9 +27,9 @@ func init() {
 	log = tasks.GetLogger()
 }
 
-// Experiment is an enhancement of v2alpha2.Experiment struct, and supports various methods used in describing an experiment.
+// Experiment is an enhancement of iter8.Experiment struct, and supports various methods used in describing an experiment.
 type Experiment struct {
-	v2alpha2.Experiment
+	iter8.Experiment
 }
 
 // ConditionType is a type for conditions that can be asserted
@@ -68,9 +68,9 @@ var GetClient = func() (rc client.Client, err error) {
 
 	var addKnownTypes = func(scheme *runtime.Scheme) error {
 		// register iter8.GroupVersion and type
-		metav1.AddToGroupVersion(scheme, v2alpha2.GroupVersion)
-		scheme.AddKnownTypes(v2alpha2.GroupVersion, &v2alpha2.Experiment{})
-		scheme.AddKnownTypes(v2alpha2.GroupVersion, &v2alpha2.ExperimentList{})
+		metav1.AddToGroupVersion(scheme, iter8.GroupVersion)
+		scheme.AddKnownTypes(iter8.GroupVersion, &iter8.Experiment{})
+		scheme.AddKnownTypes(iter8.GroupVersion, &iter8.ExperimentList{})
 		return nil
 	}
 
@@ -91,8 +91,8 @@ var GetClient = func() (rc client.Client, err error) {
 
 // GetExperiment gets the experiment from cluster
 func GetExperiment(latest bool, name string, namespace string) (*Experiment, error) {
-	results := v2alpha2.ExperimentList{}
-	var exp *v2alpha2.Experiment
+	results := iter8.ExperimentList{}
+	var exp *iter8.Experiment
 	var err error
 
 	// get all experiments
@@ -139,7 +139,7 @@ func (e *Experiment) Started() bool {
 	if e == nil {
 		return false
 	}
-	c := e.Status.CompletedIterations
+	c := e.Status.CompletedLoops
 	return c != nil && *c > 0
 }
 
@@ -148,7 +148,7 @@ func (e *Experiment) Completed() bool {
 	if e == nil {
 		return false
 	}
-	c := e.Status.GetCondition(v2alpha2.ExperimentConditionExperimentCompleted)
+	c := e.Status.GetCondition(iter8.ExperimentConditionExperimentCompleted)
 	return c != nil && c.IsTrue()
 }
 
@@ -158,8 +158,8 @@ func (e *Experiment) WinnerFound() bool {
 		return false
 	}
 	if a := e.Status.Analysis; a != nil {
-		if w := a.WinnerAssessment; w != nil {
-			return w.Data.WinnerFound
+		if w := a.Winner; w != nil {
+			return w.WinnerFound
 		}
 	}
 	return false
@@ -167,54 +167,39 @@ func (e *Experiment) WinnerFound() bool {
 
 // GetVersions returns the slice of version name strings. If the VersionInfo section is not present in the experiment's spec, then this slice is empty.
 func (e *Experiment) GetVersions() []string {
-	if e.Spec.VersionInfo == nil {
-		return nil
-	}
-	versions := []string{e.Spec.VersionInfo.Baseline.Name}
-	for _, c := range e.Spec.VersionInfo.Candidates {
-		versions = append(versions, c.Name)
-	}
-	return versions
+	return e.Spec.VersionInfo
 }
 
 // GetMetricStr returns the metric value as a string for a given metric and a given version.
-func (e *Experiment) GetMetricStr(metric string, version string) string {
-	am := e.Status.Analysis.AggregatedMetrics
-	if am == nil {
+func (e *Experiment) GetMetricStr(metric string, versionIdx int) string {
+	v := e.GetMetricDec(metric, versionIdx)
+	if v == nil {
 		return "unavailable"
 	}
-	if vals, ok := am.Data[metric]; ok {
-		if val, ok := vals.Data[version]; ok {
-			if val.Value != nil {
-				z := new(inf.Dec).Round(val.Value.AsDec(), 3, inf.RoundCeil)
-				return z.String()
-			}
-		}
-	}
-	return "unavailable"
+	return v.String()
 }
 
 // GetMetricStrs returns the given metric's value as a slice of strings, whose elements correspond to versions.
 func (e *Experiment) GetMetricStrs(metric string) []string {
 	versions := e.GetVersions()
 	reqs := make([]string, len(versions))
-	for i, v := range versions {
-		reqs[i] = e.GetMetricStr(metric, v)
+	for i := range versions {
+		reqs[i] = e.GetMetricStr(metric, i)
 	}
 	return reqs
 }
 
 // GetMetricNameAndUnits extracts the name, and if specified, units for the given metricInfo object and combines them into a string.
-func GetMetricNameAndUnits(metricInfo v2alpha2.MetricInfo) string {
+func GetMetricNameAndUnits(metricInfo iter8.Metric) string {
 	r := metricInfo.Name
-	if metricInfo.MetricObj.Spec.Units != nil {
-		r += fmt.Sprintf(" (" + *metricInfo.MetricObj.Spec.Units + ")")
+	if metricInfo.Units != nil {
+		r += fmt.Sprintf(" (" + *metricInfo.Units + ")")
 	}
 	return r
 }
 
 // StringifyObjective returns a string representation of the given objective.
-func StringifyObjective(objective v2alpha2.Objective) string {
+func StringifyObjective(objective iter8.Objective) string {
 	r := ""
 	if objective.LowerLimit != nil {
 		z := new(inf.Dec).Round(objective.LowerLimit.AsDec(), 3, inf.RoundCeil)
@@ -229,20 +214,21 @@ func StringifyObjective(objective v2alpha2.Objective) string {
 }
 
 // GetSatisfyStr returns a true/false/unavailable valued string denotating if a version satisfies the objective.
-func (e *Experiment) GetSatisfyStr(objectiveIndex int, version string) string {
+func (e *Experiment) GetSatisfyStr(objectiveIndex int, versionIndex int) string {
 	ana := e.Status.Analysis
 	if ana == nil {
 		return "unavailable"
 	}
-	va := ana.VersionAssessments
-	if va == nil {
+	objectivesByVersion := ana.Objectives
+	if versionIndex > len(objectivesByVersion) {
 		return "unavailable"
 	}
-	if vals, ok := va.Data[version]; ok {
-		if len(vals) > objectiveIndex {
-			return fmt.Sprintf("%v", vals[objectiveIndex])
-		}
+
+	assessmentsForVersion := objectivesByVersion[versionIndex]
+	if len(assessmentsForVersion) > objectiveIndex {
+		return fmt.Sprintf("%v", assessmentsForVersion[objectiveIndex])
 	}
+
 	return "unavailable"
 }
 
@@ -250,17 +236,17 @@ func (e *Experiment) GetSatisfyStr(objectiveIndex int, version string) string {
 func (e *Experiment) GetSatisfyStrs(objectiveIndex int) []string {
 	versions := e.GetVersions()
 	sat := make([]string, len(versions))
-	for i, v := range versions {
-		sat[i] = e.GetSatisfyStr(objectiveIndex, v)
+	for versionIndex := range versions {
+		sat[versionIndex] = e.GetSatisfyStr(objectiveIndex, versionIndex)
 	}
 	return sat
 }
 
 // StringifyReward returns a string representation of the given reward.
-func StringifyReward(reward v2alpha2.Reward) string {
+func StringifyReward(reward iter8.Reward) string {
 	r := ""
 	r += reward.Metric
-	if reward.PreferredDirection == v2alpha2.PreferredDirectionHigher {
+	if reward.PreferredDirection == iter8.PreferredDirectionHigher {
 		r += " (higher better)"
 	} else {
 		r += " (lower better)"
@@ -269,56 +255,53 @@ func StringifyReward(reward v2alpha2.Reward) string {
 }
 
 // GetMetricDec returns the metric value as a string for a given metric and a given version.
-func (e *Experiment) GetMetricDec(metric string, version string) *inf.Dec {
-	am := e.Status.Analysis.AggregatedMetrics
-	if am == nil {
+func (e *Experiment) GetMetricDec(metric string, versionIndex int) *inf.Dec {
+	if e.Status.Analysis == nil || versionIndex > len(e.Status.Analysis.Metrics) {
 		return nil
 	}
-	if vals, ok := am.Data[metric]; ok {
-		if val, ok := vals.Data[version]; ok {
-			if val.Value != nil {
-				z := new(inf.Dec).Round(val.Value.AsDec(), 3, inf.RoundCeil)
-				return z
-			}
-		}
+	if values, ok := e.Status.Analysis.Metrics[versionIndex][metric]; ok {
+		val := values[len(values)-1]
+		z := new(inf.Dec).Round(val.AsDec(), 3, inf.RoundCeil)
+		return z
 	}
+
 	return nil
 }
 
 // GetAnnotatedMetricStrs returns a slice of values for a reward
-func (e *Experiment) GetAnnotatedMetricStrs(reward v2alpha2.Reward) []string {
+func (e *Experiment) GetAnnotatedMetricStrs(reward iter8.Reward) []string {
 	versions := e.GetVersions()
 	row := make([]string, len(versions))
 	var currentBestIndex *int
 	var currentBestValue *inf.Dec
-	for i, v := range versions {
-		val := e.GetMetricDec(reward.Metric, v)
+	for versionIndex := range versions {
+		val := e.GetMetricDec(reward.Metric, versionIndex)
 
 		if val == nil {
-			row[i] = "unavailable"
+			row[versionIndex] = "unavailable"
 			continue
 		}
 
-		row[i] = val.String()
+		row[versionIndex] = val.String()
 
 		// set currentBest if not already set
 		if currentBestIndex == nil {
-			currentBestIndex, currentBestValue = &i, val
+			currentBestIndex, currentBestValue = &versionIndex, val
 			continue
 		}
 
 		// update currentBest
 
-		if reward.PreferredDirection == v2alpha2.PreferredDirectionHigher {
+		if reward.PreferredDirection == iter8.PreferredDirectionHigher {
 			if -1 == currentBestValue.Cmp(val) {
-				currentBestIndex, currentBestValue = &i, val
+				currentBestIndex, currentBestValue = &versionIndex, val
 			}
 			continue
 		}
 
-		// reward.PreferredDirection == v2alpha2.PreferredDirectionLower
+		// reward.PreferredDirection == iter8.PreferredDirectionLower
 		if currentBestValue.Cmp(val) == 1 {
-			currentBestIndex, currentBestValue = &i, val
+			currentBestIndex, currentBestValue = &versionIndex, val
 		}
 	}
 

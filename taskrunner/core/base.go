@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/antonmedv/expr"
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 )
 
 func init() {
@@ -18,12 +18,12 @@ type Task interface {
 }
 
 // IsARun determines if the given task spec is in fact a run spec.
-func IsARun(t *v2alpha2.TaskSpec) bool {
+func IsARun(t *iter8.TaskSpec) bool {
 	return t.Run != nil && len(*t.Run) > 0
 }
 
 // IsARun determines if the given task spec is in fact a task spec.
-func IsATask(t *v2alpha2.TaskSpec) bool {
+func IsATask(t *iter8.TaskSpec) bool {
 	return t.Task != nil && len(*t.Task) > 0
 }
 
@@ -42,9 +42,16 @@ func (tm TaskMeta) GetIf() *string {
 	return tm.If
 }
 
-// VersionInfo contains name value pairs for each version.
+// NamedValue name/value to be used in constructing a REST query to backend metrics server
+type NamedValue struct {
+	// Name of parameter
+	Name string `json:"name" yaml:"name"`
+
+	// Value of parameter
+	Value string `json:"value" yaml:"value"`
+}
 type VersionInfo struct {
-	Variables []v2alpha2.NamedValue `json:"variables,omitempty" yaml:"variables,omitempty"`
+	Variables []NamedValue
 }
 
 // Run the given action.
@@ -89,8 +96,7 @@ func GetDefaultTags(ctx context.Context) *Tags {
 		obj, err := exp.ToMap()
 		if err == nil {
 			tags = tags.
-				With("this", obj).
-				WithRecommendedVersionForPromotionDeprecated(&exp.Experiment)
+				With("this", obj)
 		}
 	} else {
 		log.Warn("No experiment found in context")

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -14,7 +14,7 @@ import (
 
 // Experiment is an enhancement of v2alpha2.Experiment struct with useful methods.
 type Experiment struct {
-	v2alpha2.Experiment
+	iter8.Experiment
 }
 
 // Builder helps in construction of an experiment.
@@ -45,34 +45,6 @@ func GetExperimentFromContext(ctx context.Context) (*Experiment, error) {
 	return nil, errors.New("context has no experiment key")
 }
 
-// Interpolate interpolates input arguments based on tags of the version recommended for promotion in the experiment.
-// DEPRECATED. Use tags.Interpolate in base package instead
-func (exp *Experiment) Interpolate(inputArgs []string) ([]string, error) {
-	var recommendedBaseline string
-	var args []string
-	var err error
-	if recommendedBaseline, err = exp.GetVersionRecommendedForPromotion(); err == nil {
-		var versionDetail *v2alpha2.VersionDetail
-		if versionDetail, err = exp.GetVersionDetail(recommendedBaseline); err == nil {
-			// get the tags
-			tags := Tags{M: make(map[string]interface{})}
-			tags.M["name"] = versionDetail.Name
-			for i := 0; i < len(versionDetail.Variables); i++ {
-				tags.M[versionDetail.Variables[i].Name] = versionDetail.Variables[i].Value
-			}
-			log.Trace(tags)
-			args = make([]string, len(inputArgs))
-			for i := 0; i < len(args); i++ {
-				if args[i], err = tags.Interpolate(&inputArgs[i]); err != nil {
-					break
-				}
-				log.Trace("input arg: ", inputArgs[i], " interpolated arg: ", args[i])
-			}
-		}
-	}
-	return args, err
-}
-
 // ToMap converts exp.Experiment to  a map[string]interface{}
 func (exp *Experiment) ToMap() (map[string]interface{}, error) {
 	// convert unstructured object to JSON object
@@ -96,8 +68,8 @@ func (exp *Experiment) ToMap() (map[string]interface{}, error) {
 func (exp *Experiment) WinnerFound() bool {
 	if exp != nil {
 		if exp.Status.Analysis != nil {
-			if exp.Status.Analysis.WinnerAssessment != nil {
-				return exp.Status.Analysis.WinnerAssessment.Data.WinnerFound
+			if exp.Status.Analysis.Winner != nil {
+				return exp.Status.Analysis.Winner.WinnerFound
 			}
 		}
 	}
@@ -107,8 +79,8 @@ func (exp *Experiment) WinnerFound() bool {
 // CandidateWon returns true if candidate won in the experiment
 func (exp *Experiment) CandidateWon() bool {
 	if exp.WinnerFound() {
-		if len(exp.Spec.VersionInfo.Candidates) == 1 {
-			return exp.Spec.VersionInfo.Candidates[0].Name == *exp.Status.Analysis.WinnerAssessment.Data.Winner
+		if len(exp.Spec.VersionInfo) == 2 {
+			return exp.Spec.VersionInfo[1] == *exp.Status.Analysis.Winner.Winner
 		}
 	}
 	return false

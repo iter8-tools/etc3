@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	expr "github.com/iter8-tools/etc3/iter8ctl/experiment"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/olekukonko/tablewriter"
@@ -66,23 +66,17 @@ func (d *Result) printProgress() *Result {
 	d.description.WriteString("\n****** Overview ******\n")
 	d.description.WriteString("Experiment name: " + d.experiment.Name + "\n")
 	d.description.WriteString("Experiment namespace: " + d.experiment.Namespace + "\n")
-	d.description.WriteString("Target: " + d.experiment.Spec.Target + "\n")
-	d.description.WriteString(fmt.Sprintf("Testing pattern: %v\n", d.experiment.Spec.Strategy.TestingPattern))
-	deploymentPattern := v2alpha2.DeploymentPatternProgressive
-	if d.experiment.Spec.Strategy.DeploymentPattern != nil {
-		deploymentPattern = *d.experiment.Spec.Strategy.DeploymentPattern
-	}
-	d.description.WriteString(fmt.Sprintf("Deployment pattern: %v\n", deploymentPattern))
+	d.description.WriteString(fmt.Sprintf("Testing pattern: %v\n", d.experiment.Status.TestingPattern))
 
 	d.description.WriteString("\n****** Progress Summary ******\n")
 	sta := d.experiment.Status
 	if sta.Stage != nil {
 		d.description.WriteString(fmt.Sprintf("Experiment stage: %s\n", *sta.Stage))
 	}
-	if sta.CompletedIterations == nil || *sta.CompletedIterations == 0 {
-		d.description.WriteString("Number of completed iterations: 0\n")
+	if sta.CompletedLoops == nil || *sta.CompletedLoops == 0 {
+		d.description.WriteString("Number of completed loops: 0\n")
 	} else {
-		d.description.WriteString(fmt.Sprintf("Number of completed iterations: %v\n", *sta.CompletedIterations))
+		d.description.WriteString(fmt.Sprintf("Number of completed loops: %v\n", *sta.CompletedLoops))
 	}
 	return d
 }
@@ -94,34 +88,31 @@ func (d *Result) printWinnerAssessment() *Result {
 		return d
 	}
 	if a := d.experiment.Status.Analysis; a != nil {
-		if w := a.WinnerAssessment; w != nil {
+		if w := a.Winner; w != nil {
 			d.description.WriteString("\n****** Winner Assessment ******\n")
 			var explanation string = ""
-			switch d.experiment.Spec.Strategy.TestingPattern {
-			case v2alpha2.TestingPatternCanary:
-				explanation = "> If the candidate version satisfies the experiment objectives, then it is the winner.\n> Otherwise, if the baseline version satisfies the experiment objectives, it is the winner.\n> Otherwise, there is no winner.\n"
-			case v2alpha2.TestingPatternConformance:
-				explanation = "> If the version being validated; i.e., the baseline version, satisfies the experiment objectives, it is the winner.\n> Otherwise, there is no winner.\n"
-			default:
-				explanation = ""
+			if d.experiment.Status.TestingPattern != nil {
+				switch *d.experiment.Status.TestingPattern {
+				case iter8.TestingPatternSLOValidation:
+					explanation = "> If just one version satisfies the obectives, it is the winner. If both versions satisify the objectives, the candidate is the winner. Otherwise, there is no winner."
+				case iter8.TestingPatternAB:
+				case iter8.TestingPatternABN:
+					explanation = "> The version that yields the greatest reward is the winner.\n"
+				case iter8.TestingPatternHybridAB:
+				case iter8.TestingPatternHybridABN:
+					explanation = "> The version that yields the greatest reward and satisfies the experiment objectives is the winner. If no version satisfies the objectives, there is no winner.\n"
+				default:
+					explanation = ""
+				}
 			}
 			d.description.WriteString(explanation)
-			if d.experiment.Spec.Strategy.TestingPattern != v2alpha2.TestingPatternConformance && d.experiment.Spec.VersionInfo != nil {
-				versions := []string{d.experiment.Spec.VersionInfo.Baseline.Name}
-				for i := 0; i < len(d.experiment.Spec.VersionInfo.Candidates); i++ {
-					versions = append(versions, d.experiment.Spec.VersionInfo.Candidates[i].Name)
-				}
-				d.description.WriteString(fmt.Sprintf("App versions in this experiment: %s\n", versions))
+			if len(d.experiment.Spec.VersionInfo) != 0 {
+				d.description.WriteString(fmt.Sprintf("App versions in this experiment: %s\n", d.experiment.Spec.VersionInfo))
 			}
-			if w.Data.WinnerFound {
-				d.description.WriteString(fmt.Sprintf("Winning version: %s\n", *w.Data.Winner))
+			if w.WinnerFound {
+				d.description.WriteString(fmt.Sprintf("Winning version: %s\n", *w.Winner))
 			} else {
 				d.description.WriteString("Winning version: not found\n")
-			}
-
-			if d.experiment.Spec.Strategy.TestingPattern != v2alpha2.TestingPatternConformance &&
-				d.experiment.Status.VersionRecommendedForPromotion != nil {
-				d.description.WriteString(fmt.Sprintf("Version recommended for promotion: %s\n", *d.experiment.Status.VersionRecommendedForPromotion))
 			}
 		}
 	}
@@ -134,7 +125,7 @@ func (d *Result) printWinnerAssessment() *Result {
 func (d *Result) printRewardAssessment() *Result {
 	if d.err != nil ||
 		d.experiment.Status.Analysis == nil ||
-		d.experiment.Status.Analysis.VersionAssessments == nil ||
+		d.experiment.Status.Analysis.Objectives == nil ||
 		d.experiment.Spec.Criteria == nil ||
 		len(d.experiment.Spec.Criteria.Rewards) == 0 {
 		return d
@@ -164,7 +155,7 @@ func (d *Result) printObjectiveAssessment() *Result {
 		return d
 	}
 	if a := d.experiment.Status.Analysis; a != nil {
-		if v := a.VersionAssessments; v != nil {
+		if v := a.Objectives; v != nil {
 			d.description.WriteString("\n****** Objective Assessment ******\n")
 			d.description.WriteString("> Identifies whether or not the experiment objectives are satisfied by the most recently observed metrics values for each version.\n")
 			table := tablewriter.NewWriter(&d.description)
@@ -201,16 +192,18 @@ func (d *Result) printMetrics() *Result {
 		return d
 	}
 	if a := d.experiment.Status.Analysis; a != nil {
-		if v := a.AggregatedMetrics; v != nil {
+		if v := a.Metrics; v != nil {
 			d.description.WriteString("\n****** Metrics Assessment ******\n")
 			d.description.WriteString("> Most recently read values of experiment metrics for each version.\n")
 			table := tablewriter.NewWriter(&d.description)
 			table.SetRowLine(true)
 			versions := d.experiment.GetVersions()
 			table.SetHeader(append([]string{"Metric"}, versions...))
-			for _, metricInfo := range d.experiment.Status.Metrics {
-				row := []string{expr.GetMetricNameAndUnits(metricInfo)}
-				table.Append(append(row, d.experiment.GetMetricStrs(metricInfo.Name)...))
+			for _, backend := range d.experiment.Spec.Backends {
+				for _, metricInfo := range backend.Metrics {
+					row := []string{expr.GetMetricNameAndUnits(metricInfo)}
+					table.Append(append(row, d.experiment.GetMetricStrs(metricInfo.Name)...))
+				}
 			}
 			table.Render()
 		}

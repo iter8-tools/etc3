@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/iter8-tools/etc3/taskrunner/core"
@@ -16,6 +17,7 @@ var _ = Describe("Experiment's handler field", func() {
 		By("reading the experiment from file")
 		exp, err = (&core.Builder{}).FromFile(core.CompletePath("../", "testdata/experiment6.yaml")).Build()
 		Expect(err).ToNot(HaveOccurred())
+		fmt.Printf("%v\n", exp)
 	}
 	var create = func() {
 		By("creating experiment in cluster")
@@ -24,11 +26,11 @@ var _ = Describe("Experiment's handler field", func() {
 	}
 	var runhandler = func(by string) {
 		By(by)
-		os.Setenv("EXPERIMENT_NAME", "sklearn-iris-experiment-6")
+		os.Setenv("EXPERIMENT_NAME", "test-experiment-6")
 		os.Setenv("EXPERIMENT_NAMESPACE", "default")
 		nn, err := getExperimentNN()
 		Expect(err).ToNot(HaveOccurred())
-		Expect("sklearn-iris-experiment-6").To(Equal(nn.Name))
+		Expect("test-experiment-6").To(Equal(nn.Name))
 		Expect("default").To(Equal(nn.Namespace))
 
 		action = "start"
@@ -49,12 +51,12 @@ var _ = Describe("Experiment's handler field", func() {
 	Context("when not containing the specified action", func() {
 		It("should exit gracefully", func() {
 			head()
-			delete(exp.Spec.Strategy.Actions, "start")
+			delete(exp.Spec.Actions, "start")
 			tail("with an error log")
 		})
 		It("should exit gracefully when ActionMap is nil", func() {
 			head()
-			exp.Spec.Strategy.Actions = nil
+			exp.Spec.Actions = nil
 			tail("with an error log")
 		})
 	})

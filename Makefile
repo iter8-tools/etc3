@@ -58,10 +58,20 @@ staticcheck: sc
 	$(STATICCHECK) ./...
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+test-cmd: 
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=$(START_TIMEOUT) go test  -v ./taskrunner/cmd/... -coverprofile=coverage.out -covermode=atomic 
+
 test: manifests generate fmt vet staticcheck ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=$(START_TIMEOUT) go test  ./... -coverprofile=coverage.out -covermode=atomic 
+
+test-controller: manifests generate  ## Run tests.
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=$(START_TIMEOUT) go test  ./api/v2beta1/... ./controller  -coverprofile=coverage.out -covermode=atomic 
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test-iter8ctl:

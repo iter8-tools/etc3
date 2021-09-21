@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -44,7 +44,7 @@ var _ = Describe("notification/http task", func() {
 			url, _ := json.Marshal("http://test")
 			authType, _ := json.Marshal("Basic")
 			secret, _ := json.Marshal("default/basic-secret")
-			task, err := Make(&v2alpha2.TaskSpec{
+			task, err := Make(&iter8.TaskSpec{
 				Task: core.StringPointer(TaskName),
 				With: map[string]apiextensionsv1.JSON{
 					"URL":      {Raw: url},
@@ -87,7 +87,7 @@ var _ = Describe("notification/http task", func() {
 			url, _ := json.Marshal("http://test")
 			authType, _ := json.Marshal("Bearer")
 			secret, _ := json.Marshal("default/bearer-secret")
-			task, err := Make(&v2alpha2.TaskSpec{
+			task, err := Make(&iter8.TaskSpec{
 				Task: core.StringPointer(TaskName),
 				With: map[string]apiextensionsv1.JSON{
 					"URL":      {Raw: url},

@@ -3,7 +3,7 @@ package experiment
 import (
 	"context"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	tasks "github.com/iter8-tools/etc3/taskrunner/core"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +14,7 @@ import (
 var _ = Describe("iter8ctl", func() {
 	// cleanup cluster
 	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(v2alpha2.GroupVersion.WithKind("experiment"))
+	u.SetGroupVersionKind(iter8.GroupVersion.WithKind("experiment"))
 	BeforeEach(func() {
 		k8sClient.DeleteAllOf(context.Background(), u, client.InNamespace("default"))
 	})
@@ -36,7 +36,7 @@ var _ = Describe("iter8ctl", func() {
 			Expect(exp2.Spec).To(Equal(exp.Spec))
 
 			By("fetching experiment from cluster using name and namespace")
-			exp2, err = GetExperiment(false, "sklearn-iris-experiment-1", "default")
+			exp2, err = GetExperiment(false, "test-experiment-1", "default")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(exp2.Spec).To(Equal(exp.Spec))
 

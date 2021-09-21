@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/iter8-tools/etc3/api/v2alpha2"
+	iter8 "github.com/iter8-tools/etc3/api/v2beta1"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
 )
@@ -87,7 +87,7 @@ type ReadinessTask struct {
 }
 
 // Make creates a readiness task with correct defaults.
-func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
+func Make(t *iter8.TaskSpec) (core.Task, error) {
 	if *t.Task != TaskName {
 		return nil, fmt.Errorf("library and task need to be '%s'", TaskName)
 	}
@@ -145,30 +145,31 @@ func (t *ReadinessTask) Run(ctx context.Context) error {
 	}
 	log.Info("experiment", exp)
 
-	// add versioninfo objects to task
-	// for baseline
-	if exp.Spec.VersionInfo != nil {
-		if exp.Spec.VersionInfo.Baseline.WeightObjRef != nil {
-			objRef := ObjRef{
-				Kind:      exp.Spec.VersionInfo.Baseline.WeightObjRef.Kind,
-				Namespace: &exp.Spec.VersionInfo.Baseline.WeightObjRef.Namespace,
-				Name:      exp.Spec.VersionInfo.Baseline.WeightObjRef.Name,
-			}
-			t.With.ObjRefs = append(t.With.ObjRefs, objRef)
-		}
+	// MK
+	// // add versioninfo objects to task
+	// // for baseline
+	// if exp.Spec.VersionInfo != nil {
+	// 	if exp.Spec.VersionInfo.Baseline.WeightObjRef != nil {
+	// 		objRef := ObjRef{
+	// 			Kind:      exp.Spec.VersionInfo.Baseline.WeightObjRef.Kind,
+	// 			Namespace: &exp.Spec.VersionInfo.Baseline.WeightObjRef.Namespace,
+	// 			Name:      exp.Spec.VersionInfo.Baseline.WeightObjRef.Name,
+	// 		}
+	// 		t.With.ObjRefs = append(t.With.ObjRefs, objRef)
+	// 	}
 
-		// for each candidate
-		for _, c := range exp.Spec.VersionInfo.Candidates {
-			if c.WeightObjRef != nil {
-				objRef := ObjRef{
-					Kind:      c.WeightObjRef.Kind,
-					Namespace: &c.WeightObjRef.Namespace,
-					Name:      c.WeightObjRef.Name,
-				}
-				t.With.ObjRefs = append(t.With.ObjRefs, objRef)
-			}
-		}
-	}
+	// 	// for each candidate
+	// 	for _, c := range exp.Spec.VersionInfo.Candidates {
+	// 		if c.WeightObjRef != nil {
+	// 			objRef := ObjRef{
+	// 				Kind:      c.WeightObjRef.Kind,
+	// 				Namespace: &c.WeightObjRef.Namespace,
+	// 				Name:      c.WeightObjRef.Name,
+	// 			}
+	// 			t.With.ObjRefs = append(t.With.ObjRefs, objRef)
+	// 		}
+	// 	}
+	// }
 
 	log.Info("The task...")
 	log.Info(t)
