@@ -31,7 +31,7 @@ var _ = Describe("iter8ctl", func() {
 			Expect(k8sClient.Create(context.Background(), &exp.Experiment)).To(Succeed())
 
 			By("fetching experiment from cluster using latest flag")
-			exp2, err := GetExperiment(true, "dummy", "dummy")
+			exp2, err := GetExperiment(true, "dummy", "default")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(exp2.Spec).To(Equal(exp.Spec))
 
