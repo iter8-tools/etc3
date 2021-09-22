@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/iter8-tools/etc3/api/v2alpha2"
@@ -127,27 +126,6 @@ const (
 // HTTPMethodPointer takes an HTTPMethod as input, creates a new variable with the input value, and returns a pointer to the variable
 func HTTPMethodPointer(h HTTPMethod) *HTTPMethod {
 	return &h
-}
-
-// WaitTimeoutOrError waits for one of the following three events
-// 1) all goroutines in the waitgroup to finish normally -- no error is returned
-// 2) a timeout occurred before all go routines could finish normally -- an error is returned
-// 3) an error in the errCh channel sent by one of the goroutines -- an error is returned
-// See https://stackoverflow.com/questions/32840687/timeout-for-waitgroup-wait
-func WaitTimeoutOrError(wg *sync.WaitGroup, timeout time.Duration, errCh chan error) error {
-	c := make(chan struct{})
-	go func() {
-		defer close(c)
-		wg.Wait()
-	}()
-	select {
-	case <-c: // completed normally
-		return nil
-	case <-time.After(timeout): // timeout
-		return errors.New("timed out waiting for go routines to complete") // timed out
-	case err := <-errCh: // error in channel
-		return err
-	}
 }
 
 // GetPayloadBytes downloads payload from URL and returns a byte slice
