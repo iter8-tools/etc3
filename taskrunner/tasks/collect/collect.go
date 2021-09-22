@@ -402,7 +402,7 @@ func (t *CollectTask) Run(ctx context.Context) error {
 			ExperimentName:      exp.Name,
 			ExperimentNamespace: exp.Namespace,
 			Source:              controllers.Iter8LogSourceTR,
-			Priority:            3,
+			Priority:            controllers.Iter8LogPriorityLow,
 			Message:             "metrics collection completed for all versions",
 			Precedence:          core.GetIter8LogPrecedence(exp, a),
 		}

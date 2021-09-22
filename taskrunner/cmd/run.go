@@ -89,7 +89,7 @@ func run(cmd *cobra.Command, args []string) error {
 			ExperimentName:      exp.Name,
 			ExperimentNamespace: exp.Namespace,
 			Source:              controllers.Iter8LogSourceTR,
-			Priority:            0,
+			Priority:            controllers.Iter8LogPriorityHigh,
 			Message:             err.Error(),
 			Precedence:          core.GetIter8LogPrecedence(exp, action),
 		}
