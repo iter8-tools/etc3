@@ -20,7 +20,7 @@ func TestInitializeCollectDefaults(t *testing.T) {
 		},
 	}
 	ct.InitializeDefaults()
-	assert.Equal(t, "5s", *ct.With.Time)
+	assert.Equal(t, uint32(100), *ct.With.NumQueries)
 	assert.Equal(t, core.Float32Pointer(8.0), ct.With.QPS)
 }
 
