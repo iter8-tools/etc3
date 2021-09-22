@@ -21,7 +21,7 @@ func TestInitializeCollectDefaults(t *testing.T) {
 	}
 	ct.InitializeDefaults()
 	assert.Equal(t, "5s", *ct.With.Time)
-	assert.Equal(t, core.Float32Pointer(8.0), ct.With.Versions[0].QPS)
+	assert.Equal(t, core.Float32Pointer(8.0), ct.With.QPS)
 }
 
 func TestAggregate(t *testing.T) {
@@ -109,7 +109,6 @@ func TestPayloadFile(t *testing.T) {
 }
 
 func TestResultForVersion(t *testing.T) {
-	log := core.GetLogger()
 	ct := CollectTask{
 		TaskMeta: core.TaskMeta{
 			Task: core.StringPointer(TaskName),
@@ -122,8 +121,7 @@ func TestResultForVersion(t *testing.T) {
 		},
 	}
 	ct.InitializeDefaults()
-	entry := log.WithField("version", "default")
-	res, err := ct.resultForVersion(entry, 0, "")
+	res, err := ct.resultForVersion(0)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 }

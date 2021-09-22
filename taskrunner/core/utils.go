@@ -84,6 +84,11 @@ type ContextKey string
 // CompletePath determines complete path of a file
 var CompletePath func(prefix string, suffix string) string = controllers.CompletePath
 
+// UInt32Pointer takes a uint32 as input, creates a new variable with the input value, and returns a pointer to the variable
+func UInt32Pointer(u uint32) *uint32 {
+	return &u
+}
+
 // Int32Pointer takes an int32 as input, creates a new variable with the input value, and returns a pointer to the variable
 func Int32Pointer(i int32) *int32 {
 	return &i
@@ -145,8 +150,8 @@ func WaitTimeoutOrError(wg *sync.WaitGroup, timeout time.Duration, errCh chan er
 	}
 }
 
-// GetJSONBytes downloads JSON from URL and returns a byte slice
-func GetJSONBytes(url string) ([]byte, error) {
+// GetPayloadBytes downloads payload from URL and returns a byte slice
+func GetPayloadBytes(url string) ([]byte, error) {
 	var myClient = &http.Client{Timeout: 10 * time.Second}
 	r, err := myClient.Get(url)
 	if err != nil || r.StatusCode >= 400 {

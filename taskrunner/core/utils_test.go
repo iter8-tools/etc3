@@ -13,11 +13,11 @@ import (
 
 func TestGetJsonBytes(t *testing.T) {
 	// valid
-	_, err := GetJSONBytes("https://httpbin.org/stream/1")
+	_, err := GetPayloadBytes("https://httpbin.org/stream/1")
 	assert.NoError(t, err)
 
 	// invalid
-	_, err = GetJSONBytes("https://httpbin.org/undef")
+	_, err = GetPayloadBytes("https://httpbin.org/undef")
 	assert.Error(t, err)
 }
 

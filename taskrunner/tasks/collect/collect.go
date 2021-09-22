@@ -10,8 +10,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
-	"sync"
-	"time"
+	"path/filepath"
 
 	"github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/taskrunner/core"
@@ -23,11 +22,23 @@ const (
 	// TaskName is the name of the task this file implements
 	TaskName string = "metrics/collect"
 
-	// DefaultQPS is the default value of QPS (queries per sec) in collect task inputs
+	// DefaultQPS is the default value of QPS (queries per sec) in the collect task
 	DefaultQPS float32 = 8
 
-	// DefaultTime is the default value of time (duration of queries) in collect task inputs
-	DefaultTime string = "5s"
+	// DefaultNumQueries is the default value of the number of queries used by the collect task
+	DefaultNumQueries uint32 = 100
+
+	// DefaultConnections is the default value of the number of connections
+	DefaultConnections uint32 = 4
+
+	// fortioFolder is where fortio data is held
+	fortioFolder string = "/tmp"
+
+	// fortioOutputFile is where fortio data is held within the fortioFolder
+	fortioOutputFile string = "output.json"
+
+	// fortioPayloadFile is where fortio payload data is held within the fortioFolder
+	fortioPayloadFile string = "payload.out"
 )
 
 var log *logrus.Logger
@@ -42,8 +53,6 @@ type Version struct {
 	// version names must be unique and must match one of the version names in the
 	// VersionInfo field of the experiment
 	Name string `json:"name" yaml:"name"`
-	// how many queries per second will be sent to this version; optional; default 8
-	QPS *float32 `json:"qps,omitempty" yaml:"qps,omitempty"`
 	// HTTP headers to use in the query for this version; optional
 	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 	// URL to use for querying this version
@@ -52,14 +61,26 @@ type Version struct {
 
 // CollectInputs contain the inputs to the metrics collection task to be executed.
 type CollectInputs struct {
-	// how long to run the metrics collector; optional; default 5s
+	// how many queries will be sent for each version; optional; default 100
+	NumQueries *uint32 `json:"numQueries,omitempty" yaml:"numQueries,omitempty"`
+	// how long to run the metrics collector; optional;
+	// if both time and numQueries are specified, numQueries takes precedence
 	Time *string `json:"time,omitempty" yaml:"time,omitempty"`
-	// list of versions
-	Versions []Version `json:"versions" yaml:"versions"`
-	// URL of the JSON file to send during the query; optional
+	// how many queries per second will be sent; optional; default 8
+	QPS *float32 `json:"qps,omitempty" yaml:"qps,omitempty"`
+	// how many parallel connections will be used; optional; default 4
+	Connections *uint32 `json:"connections,omitempty" yaml:"connections,omitempty"`
+	// if LoadOnly is true, send requests without collecting metrics; optional; default false
+	LoadOnly *bool `json:"loadOnly,omitempty" yaml:"loadOnly,omitempty"` // list of versions
+	// string to be sent during queries as payload; optional
+	PayloadStr *string `json:"payloadStr,omitempty" yaml:"payloadStr,omitempty"`
+	// URL whose content will be sent as payload during queries; optional
+	// if both payloadURL and payloadStr are specified, the URL takes precedence
 	PayloadURL *string `json:"payloadURL,omitempty" yaml:"payloadURL,omitempty"`
-	// if LoadOnly is set to true, this task will send requests without collecting metrics; optional
-	LoadOnly *bool `json:"loadOnly,omitempty" yaml:"loadOnly,omitempty"`
+	// valid HTTP content type string; specifying this switches the request from GET to POST
+	ContentType *string `json:"contentType,omitempty" yaml:"contentType,omitempty"`
+	// information about versions
+	Versions []Version `json:"versions" yaml:"versions"`
 }
 
 // CollectTask enables collection of Iter8's built-in metrics.
@@ -90,16 +111,19 @@ func Make(t *v2alpha2.TaskSpec) (core.Task, error) {
 	return bt, err
 }
 
-// InitializeDefaults sets default values for time duration and QPS for Fortio run
-// Default values are set only if the field is non-empty
+// InitializeDefaults sets default values for the collect task
 func (t *CollectTask) InitializeDefaults() {
-	if t.With.Time == nil {
-		t.With.Time = core.StringPointer(DefaultTime)
+	if t.With.NumQueries == nil && t.With.Time == nil {
+		t.With.NumQueries = core.UInt32Pointer(DefaultNumQueries)
 	}
-	for i := 0; i < len(t.With.Versions); i++ {
-		if t.With.Versions[i].QPS == nil {
-			t.With.Versions[i].QPS = core.Float32Pointer(DefaultQPS)
-		}
+	if t.With.LoadOnly == nil {
+		t.With.LoadOnly = core.BoolPointer(false)
+	}
+	if t.With.QPS == nil {
+		t.With.QPS = core.Float32Pointer(DefaultQPS)
+	}
+	if t.With.Connections == nil {
+		t.With.Connections = core.UInt32Pointer(DefaultConnections)
 	}
 }
 
@@ -194,15 +218,15 @@ func getResultFromFile(fortioOutputFile string) (*Result, error) {
 	return &res, nil
 }
 
-// payloadFile downloads JSON payload from a URL into a temp file, and returns its name
+// payloadFile downloads payload from a URL into a temp file, and returns its name
 func payloadFile(url string) (string, error) {
-	content, err := core.GetJSONBytes(url)
+	content, err := core.GetPayloadBytes(url)
 	if err != nil {
-		log.Error("Error while getting JSON bytes: ", err)
+		log.Error("Error while getting payload bytes: ", err)
 		return "", err
 	}
 
-	tmpfile, err := ioutil.TempFile("/tmp", "payload.json")
+	tmpfile, err := ioutil.TempFile(fortioFolder, fortioPayloadFile)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -221,32 +245,50 @@ func payloadFile(url string) (string, error) {
 	return tmpfile.Name(), nil
 }
 
-// resultForVersion collects Fortio result for a given version
-func (t *CollectTask) resultForVersion(entry *logrus.Entry, j int, pf string) (*Result, error) {
-	// the main idea is to run Fortio shell command with proper args
-	// collect Fortio output as a file
-	// and extract the result from the file, and return the result
-
-	var execOut bytes.Buffer
-	// appending Fortio load subcommand
+// getFortioArgs constructs args for the Fortio command using the collect task spec for the j^th version
+func (t *CollectTask) getFortioArgs(j int) ([]string, error) {
+	// append Fortio load subcommand
 	args := []string{"load"}
-	// append Fortio time flag
-	args = append(args, "-t", *t.With.Time)
-	// append Fortio qps flag
-	args = append(args, "-qps", fmt.Sprintf("%f", *t.With.Versions[j].QPS))
-	// append Fortio header flags
-	for header, value := range t.With.Versions[j].Headers {
-		args = append(args, "-H", fmt.Sprintf("%v: %v", header, value))
-	}
-	// download JSON payload if specified; and append Fortio ayload-file flag
-	if t.With.PayloadURL != nil {
-		args = append(args, "-payload-file", pf)
+
+	// append numQueries or time
+	if t.With.NumQueries != nil {
+		args = append(args, "-n", fmt.Sprintf("%v", *t.With.NumQueries))
+	} else {
+		args = append(args, "-t", *t.With.Time)
 	}
 
+	// append qps
+	args = append(args, "-qps", fmt.Sprintf("%f", *t.With.QPS))
+
+	// append connections
+	args = append(args, "-c", fmt.Sprintf("%v", *t.With.Connections))
+
+	// append payload file if URL is specified
+	if t.With.PayloadURL != nil {
+		pf, err := payloadFile(*t.With.PayloadURL)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, "-payload-file", pf)
+	} else if t.With.PayloadStr != nil {
+		// append double quoted payload string if specified
+		args = append(args, "-payload", fmt.Sprintf("%q", *t.With.PayloadStr))
+	}
+
+	// append content type
+	if t.With.ContentType != nil {
+		args = append(args, "-content-type", fmt.Sprintf("%q", *t.With.ContentType))
+	}
+
+	// append headers
+	for header, value := range t.With.Versions[j].Headers {
+		args = append(args, "-H", fmt.Sprintf("\"%v: %v\"", header, value))
+	}
+
+	// append output file
 	// create json output file; and Fortio append json flag
-	jsonOutputFile, err := ioutil.TempFile("/tmp", "output.json.")
+	jsonOutputFile, err := ioutil.TempFile(fortioFolder, fortioOutputFile)
 	if err != nil {
-		entry.Fatal(err)
 		return nil, err
 	}
 	args = append(args, "-json", jsonOutputFile.Name())
@@ -255,23 +297,40 @@ func (t *CollectTask) resultForVersion(entry *logrus.Entry, j int, pf string) (*
 	// append URL to be queried by Fortio
 	args = append(args, t.With.Versions[j].URL)
 
+	return args, nil
+}
+
+// resultForVersion collects Fortio result for a given version
+func (t *CollectTask) resultForVersion(j int) (*Result, error) {
+	// the main idea is to run Fortio shell command with proper args
+	// collect Fortio output as a file
+	// and extract the result from the file, and return the result
+
+	var execOut bytes.Buffer
+
+	// get fortio args
+	args, err := t.getFortioArgs(j)
+	if err != nil {
+		return nil, err
+	}
+
 	// setup Fortio command
 	cmd := exec.Command("fortio", args...)
 	cmd.Stdout = &execOut
 	cmd.Stderr = os.Stderr
-	entry.Trace("Invoking: " + cmd.String())
+	log.Trace("Invoking: " + cmd.String())
 
 	// execute Fortio command
 	err = cmd.Run()
 	if err != nil {
-		entry.Fatal(err)
+		log.Error(err)
 		return nil, err
 	}
 
-	// extract result from Fortio json output file
-	ifr, err := getResultFromFile(jsonOutputFile.Name())
+	// extract result from Fortio output file
+	ifr, err := getResultFromFile(filepath.Join(fortioFolder, fortioOutputFile))
 	if err != nil {
-		entry.Fatal(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -279,111 +338,50 @@ func (t *CollectTask) resultForVersion(entry *logrus.Entry, j int, pf string) (*
 }
 
 // Run executes the metrics/collect task
-// Todo: error handling
+// ToDo: error handling
 func (t *CollectTask) Run(ctx context.Context) error {
 	log.Trace("collect task run started...")
 	t.InitializeDefaults()
-	// we would like to query versions in parallel
-	// sync waitgroup is a mechanism that enables this
-	var wg sync.WaitGroup
 
-	// if experiment already has fortio data, initialize them
-	// this is possible if this task is run in loop actions repeatedly
+	// fortioData will be used if this not a loadOnly task
 	fortioData := make(map[string]*Result)
+
+	// get experiment
 	exp, err := core.GetExperimentFromContext(ctx)
 	if err != nil {
 		return err
 	}
+
 	// if this task is **not** loadOnly
-	if t.With.LoadOnly == nil || !*t.With.LoadOnly {
+	if !*t.With.LoadOnly {
 		// bootstrap AggregatedBuiltinHists with data already present in experiment status
 		if exp.Status.Analysis != nil && exp.Status.Analysis.AggregatedBuiltinHists != nil {
-			jsonBytes, err := json.Marshal(exp.Status.Analysis.AggregatedBuiltinHists.Data)
-			// convert jsonBytes to fortioData
-			if err == nil {
-				err = json.Unmarshal(jsonBytes, &fortioData)
-			}
-			if err != nil {
-				return err
-			}
+			jsonBytes, _ := json.Marshal(exp.Status.Analysis.AggregatedBuiltinHists.Data)
+			json.Unmarshal(jsonBytes, &fortioData)
 		}
 	}
 
-	// lock ensures thread safety while updating fortioData from go routines
-	var lock sync.Mutex
-
-	// if errors occur in one of the parallel go routines, errCh is used to communicate them
-	errCh := make(chan error)
-	defer close(errCh)
-
-	// download JSON from URL if specified
-	// this is intended to be used as a JSON payload file by Fortio
-	tmpfileName := ""
-	if t.With.PayloadURL != nil {
-		var err error
-		tmpfileName, err = payloadFile(*t.With.PayloadURL)
-		if err != nil {
+	// run fortio queries for each version sequentially
+	for j := range t.With.Versions {
+		data, err := t.resultForVersion(j)
+		if err == nil {
+			// if this task is **not** loadOnly
+			if !*t.With.LoadOnly {
+				// Update fortioData in a threadsafe manner
+				fortioData = aggregate(fortioData, t.With.Versions[j].Name, data)
+			}
+		} else {
 			return err
 		}
 	}
-	defer os.Remove(tmpfileName) // clean up later
-
-	// execute fortio queries to versions in parallel
-	for j := range t.With.Versions {
-		// Increment the WaitGroup counter.
-		wg.Add(1)
-		// get log entry
-		entry := log.WithField("version", t.With.Versions[j].Name)
-		// Launch a goroutine to fetch the Fortio data for this version.
-		go func(entry *logrus.Entry, k int) {
-			// Decrement the counter when the goroutine completes.
-			defer wg.Done()
-			// Get Fortio data for version
-			data, err := t.resultForVersion(entry, k, tmpfileName)
-			if err == nil {
-				// if this task is **not** loadOnly
-				if t.With.LoadOnly == nil || !*t.With.LoadOnly {
-					// Update fortioData in a threadsafe manner
-					lock.Lock()
-					fortioData = aggregate(fortioData, t.With.Versions[k].Name, data)
-					lock.Unlock()
-				}
-			} else {
-				// if any error occured in this go routine, send it through the error channel
-				// this helps metrics/collect task exit immediately upon error
-				errCh <- err
-			}
-		}(entry, j)
-		// never use loop variable directly within the inner go routine as it will get overwritten in loop iterations
-		// go func is invoked with its arg k set to the value of j
-		// eliminating 'k' and simply plugging 'j' in t.With.Versions[k].Name above will not work, and will result in the ultra helpful linter warning
-	}
-
-	// See https://stackoverflow.com/questions/32840687/timeout-for-waitgroup-wait
-	// Compute timeout as duration of fortio requests + 30s
-	dur, err := time.ParseDuration(*t.With.Time)
-	if err != nil {
-		return err
-	}
-	// wait for WaitGroup to be done... normal execution
-	// timeout ... abnormal execution
-	// error on errCh ... abnormal execution
-	if err = core.WaitTimeoutOrError(&wg, dur+30*time.Second, errCh); err != nil {
-		log.Error("Got error: ", err)
-		return err
-	}
-	log.Trace("Wait group finished normally")
 
 	// if this task is **not** loadOnly
-	if t.With.LoadOnly == nil || !*t.With.LoadOnly {
+	if !*t.With.LoadOnly {
 		// Update experiment status with results
 		// update to experiment status will result in reconcile request to etc3
 		// unless the task runner job executing this action is completed, this request will not have have an immediate effect in the experiment reconcilation process
 
-		bytes1, err := json.Marshal(fortioData)
-		if err != nil {
-			return err
-		}
+		bytes1, _ := json.Marshal(fortioData)
 
 		exp.SetAggregatedBuiltinHists(v1.JSON{Raw: bytes1})
 
