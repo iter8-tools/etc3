@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/user"
+	"path"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -17,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
@@ -95,10 +100,21 @@ func GetExperiment(latest bool, name string, namespace string) (*Experiment, err
 	var exp *v2alpha2.Experiment
 	var err error
 
+	ns := namespace
+	if ns == "" {
+		ns, err = getNamespaceFromCurrentContext()
+		if err != nil {
+			log.Warn("Unable to get namespace from current context: " + err.Error())
+			ns = "default"
+		}
+	}
+	// log.Infof("latest: %t", latest)
+	// log.Infof("using namespace: %s", ns)
+
 	// get all experiments
 	var rc client.Client
 	if rc, err = GetClient(); err == nil {
-		err = rc.List(context.Background(), &results, &client.ListOptions{Namespace: namespace})
+		err = rc.List(context.Background(), &results, &client.ListOptions{Namespace: ns})
 	}
 
 	// get latest experiment
@@ -113,13 +129,13 @@ func GetExperiment(latest bool, name string, namespace string) (*Experiment, err
 	// get named experiment
 	if !latest && err == nil {
 		for i := range results.Items {
-			if results.Items[i].Name == name && results.Items[i].Namespace == namespace {
+			if results.Items[i].Name == name && results.Items[i].Namespace == ns {
 				exp = &results.Items[i]
 				break
 			}
 		}
 		if exp == nil {
-			err = errors.New("Experiment " + name + " not found in namespace " + namespace)
+			err = errors.New("Experiment " + name + " not found in namespace " + ns)
 		}
 	}
 
@@ -346,4 +362,41 @@ func (e *Experiment) Assert(conditions []ConditionType) error {
 		}
 	}
 	return nil
+}
+
+// Methods to get namespace defined in current context
+// These are inspired by the methods to get the config in sigs.k8s.io/controller-runtime/pkg/client/config
+// Namespace does not seem to be otherwise readily available
+
+// getNamespaceFromCurrentContext gets the namespace specified in the current kubernetes context
+func getNamespaceFromCurrentContext() (string, error) {
+	// start -- the following should be included if we support a --kubeconfg flag
+	// // If a flag is specified with the config location, use that
+	// if len(kubeconfig) > 0 {
+	// 	return loadNamespaceWithContext("", &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}, context)
+	// }
+	// end -- support --kubeconfig
+
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	if _, ok := os.LookupEnv("HOME"); !ok {
+		u, err := user.Current()
+		if err != nil {
+			return "default", fmt.Errorf("could not get current user: %v", err)
+		}
+		loadingRules.Precedence = append(loadingRules.Precedence, path.Join(u.HomeDir, clientcmd.RecommendedHomeDir, clientcmd.RecommendedFileName))
+	}
+
+	return getNamespaceWithContext("", loadingRules)
+}
+
+func getNamespaceWithContext(apiServerURL string, loader clientcmd.ClientConfigLoader) (string, error) {
+	ns, _, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		loader,
+		&clientcmd.ConfigOverrides{
+			ClusterInfo: clientcmdapi.Cluster{
+				Server: apiServerURL,
+			},
+			CurrentContext: "",
+		}).Namespace()
+	return ns, err
 }
