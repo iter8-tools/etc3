@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 
 	"github.com/iter8-tools/etc3/api/v2alpha2"
+	"github.com/iter8-tools/etc3/controllers"
 	"github.com/iter8-tools/etc3/taskrunner/core"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -286,13 +287,7 @@ func (t *CollectTask) getFortioArgs(j int) ([]string, error) {
 	}
 
 	// append output file
-	// create json output file; and Fortio append json flag
-	jsonOutputFile, err := ioutil.TempFile(fortioFolder, fortioOutputFile)
-	if err != nil {
-		return nil, err
-	}
-	args = append(args, "-json", jsonOutputFile.Name())
-	jsonOutputFile.Close()
+	args = append(args, "-json", filepath.Join(fortioFolder, fortioOutputFile))
 
 	// append URL to be queried by Fortio
 	args = append(args, t.With.Versions[j].URL)
@@ -392,6 +387,26 @@ func (t *CollectTask) Run(ctx context.Context) error {
 
 		json.Indent(&prettyBody, bytes2, "", "  ")
 		log.Trace(prettyBody.String())
+	}
+
+	// Iter8Log
+	if err == nil {
+		// get action from context
+		a, err := core.GetActionStringFromContext(ctx)
+		if err != nil {
+			return err
+		}
+
+		il := controllers.Iter8Log{
+			IsIter8Log:          true,
+			ExperimentName:      exp.Name,
+			ExperimentNamespace: exp.Namespace,
+			Source:              controllers.Iter8LogSourceTR,
+			Priority:            3,
+			Message:             "metrics collection completed for all versions",
+			Precedence:          core.GetIter8LogPrecedence(exp, a),
+		}
+		fmt.Println(il.JSON())
 	}
 
 	return err

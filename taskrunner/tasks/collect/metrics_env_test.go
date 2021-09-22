@@ -117,6 +117,7 @@ var _ = Describe("metrics library", func() {
 
 			By("populating context with the experiment")
 			ctx := context.WithValue(context.Background(), core.ContextKey("experiment"), exp2)
+			ctx = context.WithValue(ctx, core.ContextKey("action"), "start")
 
 			By("creating a metrics/collect task")
 			ct := CollectTask{

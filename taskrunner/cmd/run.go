@@ -38,23 +38,23 @@ func getExperimentNN() (*types.NamespacedName, error) {
 
 // GetAction converts an action spec into an action.
 func GetAction(exp *core.Experiment, actionSpec v2alpha2.Action) (core.Action, error) {
-	action := make(core.Action, len(actionSpec))
+	actionSlice := make(core.Action, len(actionSpec))
 	var err error
 	for i := 0; i < len(actionSpec); i++ {
 		// if this is a run ... populate runspec
 		if core.IsARun(&actionSpec[i]) {
-			if action[i], err = runscript.Make(&actionSpec[i]); err != nil {
+			if actionSlice[i], err = runscript.Make(&actionSpec[i]); err != nil {
 				break
 			}
 		} else if core.IsATask(&actionSpec[i]) {
-			if action[i], err = MakeTask(&actionSpec[i]); err != nil {
+			if actionSlice[i], err = MakeTask(&actionSpec[i]); err != nil {
 				break
 			}
 		} else {
 			return nil, errors.New("action spec contains item that is neither run spec nor task spec")
 		}
 	}
-	return action, err
+	return actionSlice, err
 }
 
 // run is a helper function used in the definition of runCmd cobra command.
@@ -65,12 +65,13 @@ func run(cmd *cobra.Command, args []string) error {
 		if exp, err = (&core.Builder{}).FromCluster(nn).Build(); err == nil {
 			var actionSpec v2alpha2.Action
 			if actionSpec, err = exp.GetActionSpec(action); err == nil {
-				var action core.Action
-				if action, err = GetAction(exp, actionSpec); err == nil {
+				var actionSlice core.Action
+				if actionSlice, err = GetAction(exp, actionSpec); err == nil {
 					ctx := context.WithValue(context.Background(), core.ContextKey("experiment"), exp)
+					ctx = context.WithValue(ctx, core.ContextKey("action"), action)
 					// pass in the type of action within context ...
 					log.Trace("created context for experiment")
-					err = action.Run(ctx)
+					err = actionSlice.Run(ctx)
 					if err == nil {
 						return nil
 					}

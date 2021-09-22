@@ -45,6 +45,20 @@ func GetExperimentFromContext(ctx context.Context) (*Experiment, error) {
 	return nil, errors.New("context has no experiment key")
 }
 
+// GetActionStringFromContext gets the action string from given context.
+func GetActionStringFromContext(ctx context.Context) (string, error) {
+	if v := ctx.Value(ContextKey("action")); v != nil {
+		log.Debug("found action")
+		var a string
+		var ok bool
+		if a, ok = v.(string); !ok {
+			return "", errors.New("context has action value with wrong type")
+		}
+		return a, nil
+	}
+	return "", errors.New("context has no action key")
+}
+
 // Interpolate interpolates input arguments based on tags of the version recommended for promotion in the experiment.
 // DEPRECATED. Use tags.Interpolate in base package instead
 func (exp *Experiment) Interpolate(inputArgs []string) ([]string, error) {
