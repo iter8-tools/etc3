@@ -98,7 +98,7 @@ var _ = Describe("metrics library", func() {
 			Expect(fortioData).ToNot(BeNil())
 			Expect(fortioData["default"]).ToNot(BeNil())
 			Expect(fortioData["canary"]).ToNot(BeNil())
-			Expect(fortioData["canary"].DurationHistogram.Count).To(Equal(80))
+			Expect(fortioData["canary"].DurationHistogram.Count).To(Equal(int(2 * DefaultNumQueries)))
 		}) // it
 
 		It("should initialize an experiment", func() {
