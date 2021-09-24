@@ -43,3 +43,16 @@ func TestContext(t *testing.T) {
 	assert.Equal(t, lg, Logger(ctx))
 	assert.True(t, reflect.DeepEqual(OriginalStatus(ctx), &status))
 }
+
+func TestIter8LogJSON(t *testing.T) {
+	il := Iter8Log{
+		IsIter8Log:          false,
+		ExperimentName:      "name",
+		ExperimentNamespace: "namespace",
+		Source:              "source",
+		Priority:            1,
+		Message:             "message",
+		Precedence:          0,
+	}
+	assert.Equal(t, "{\"isIter8Log\":false,\"experimentName\":\"name\",\"experimentNamespace\":\"namespace\",\"source\":\"source\",\"priority\":1,\"message\":\"message\",\"precedence\":0}", il.JSON())
+}

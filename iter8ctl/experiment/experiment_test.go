@@ -114,6 +114,23 @@ func TestStringifyObjective(t *testing.T) {
 	assert.Equal(t, objectives, objs)
 }
 
+func TestStringifyReward(t *testing.T) {
+	assert.Equal(t,
+		"reward (lower better)",
+		StringifyReward(v2alpha2.Reward{Metric: "reward", PreferredDirection: "Lower"}))
+	assert.Equal(t,
+		"reward (higher better)",
+		StringifyReward(v2alpha2.Reward{Metric: "reward", PreferredDirection: "High"}))
+}
+
+func TestGetAnnotatedMetricStrs(t *testing.T) {
+	e, err := getExp("experiment12")
+	assert.NoError(t, err)
+	assert.Equal(t,
+		[]string{"5.030", "24.454 *"},
+		e.GetAnnotatedMetricStrs(v2alpha2.Reward{Metric: "books-purchased", PreferredDirection: "High"}))
+}
+
 func TestAssertComplete(t *testing.T) {
 	exp := v2alpha2.NewExperiment("test", "test").WithCondition(
 		v2alpha2.ExperimentConditionExperimentCompleted,

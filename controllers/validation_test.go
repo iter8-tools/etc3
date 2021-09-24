@@ -313,4 +313,38 @@ var _ = Describe("Validation of VersionInfo", func() {
 		})
 	})
 
+	Context("AreTasksValid", func() {
+		bldr := v2alpha2.NewExperiment("task-validity", testNamespace).
+			WithTarget("target").
+			WithTestingPattern(v2alpha2.TestingPatternConformance)
+		task := "task"
+		run := "run"
+		It("Should accept the experiment if has \"task\"", func() {
+			experiment := bldr.WithBaselineVersion("baseline", nil).
+				WithAction("start", []v2alpha2.TaskSpec{{
+					Task: &task,
+				}}).
+				Build()
+			Expect(reconciler.AreTasksValid(ctx, experiment)).Should(BeTrue())
+		})
+		It("Should accept the experiment if has \"run\"", func() {
+			experiment := bldr.WithBaselineVersion("baseline", nil).
+				WithAction("start", []v2alpha2.TaskSpec{{
+					Run: &run,
+				}}).
+				Build()
+			Expect(reconciler.AreTasksValid(ctx, experiment)).Should(BeTrue())
+		})
+		It("Should reject the experiment if has \"task\" and \"run\"", func() {
+			experiment := bldr.WithBaselineVersion("baseline", nil).
+				WithAction("start", []v2alpha2.TaskSpec{{
+					Task: &task,
+					Run:  &run,
+				}}).
+				Build()
+			Expect(reconciler.AreTasksValid(ctx, experiment)).Should(BeFalse())
+		})
+
+	})
+
 })
