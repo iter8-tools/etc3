@@ -166,13 +166,14 @@ func (d *Result) printObjectiveAssessment() *Result {
 	if a := d.experiment.Status.Analysis; a != nil {
 		if v := a.VersionAssessments; v != nil {
 			d.description.WriteString("\n****** Objective Assessment ******\n")
-			d.description.WriteString("> Identifies whether or not the experiment objectives are satisfied by the most recently observed metrics values for each version.\n")
+			d.description.WriteString("> Whether objectives specified in the experiment are satisfied by versions.\n")
+			d.description.WriteString("> This assessment is based on last known metric values for each version.\n")
 			table := tablewriter.NewWriter(&d.description)
 			table.SetRowLine(true)
 			versions := d.experiment.GetVersions()
-			table.SetHeader(append([]string{"Objective"}, versions...))
+			table.SetHeader(append([]string{"Metric", "Condition"}, versions...))
 			for i, objective := range d.experiment.Spec.Criteria.Objectives {
-				row := []string{expr.StringifyObjective(objective)}
+				row := []string{objective.Metric, expr.ConditionFromObjective(objective)}
 				table.Append(append(row, d.experiment.GetSatisfyStrs(i)...))
 			}
 			table.Render()
@@ -203,7 +204,7 @@ func (d *Result) printMetrics() *Result {
 	if a := d.experiment.Status.Analysis; a != nil {
 		if v := a.AggregatedMetrics; v != nil {
 			d.description.WriteString("\n****** Metrics Assessment ******\n")
-			d.description.WriteString("> Most recently read values of experiment metrics for each version.\n")
+			d.description.WriteString("> Last known metric values for each version.\n")
 			table := tablewriter.NewWriter(&d.description)
 			table.SetRowLine(true)
 			versions := d.experiment.GetVersions()

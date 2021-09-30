@@ -54,9 +54,6 @@ const (
 	// NoWinner       ConditionType = "noWinner"
 )
 
-// for mocking in tests
-var k8sClient client.Client
-
 // GetConfig variable is useful for test mocks.
 var GetConfig = func() (*rest.Config, error) {
 	return config.GetConfig()
@@ -229,19 +226,26 @@ func GetMetricNameAndUnits(metricInfo v2alpha2.MetricInfo) string {
 	return r
 }
 
-// StringifyObjective returns a string representation of the given objective.
-func StringifyObjective(objective v2alpha2.Objective) string {
-	r := ""
+// ConditionFromObjective returns a string representation of condition in the objective
+func ConditionFromObjective(objective v2alpha2.Objective) string {
+	c := ""
+	l := ""
+	u := ""
 	if objective.LowerLimit != nil {
 		z := new(inf.Dec).Round(objective.LowerLimit.AsDec(), 3, inf.RoundCeil)
-		r += z.String() + " <= "
+		l += ">= " + z.String()
+		c = l
 	}
-	r += objective.Metric
 	if objective.UpperLimit != nil {
 		z := new(inf.Dec).Round(objective.UpperLimit.AsDec(), 3, inf.RoundCeil)
-		r += " <= " + z.String()
+		u += "<= " + z.String()
+		c = u
 	}
-	return r
+	if objective.LowerLimit != nil && objective.UpperLimit != nil {
+		c = l + "; " + u
+	}
+
+	return c
 }
 
 // GetSatisfyStr returns a true/false/unavailable valued string denotating if a version satisfies the objective.

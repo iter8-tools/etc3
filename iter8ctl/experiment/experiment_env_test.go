@@ -11,6 +11,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// for mocking in tests
+var k8sClient client.Client
+
 var _ = Describe("iter8ctl", func() {
 	// cleanup cluster
 	u := &unstructured.Unstructured{}
