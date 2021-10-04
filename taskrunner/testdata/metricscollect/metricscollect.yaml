@@ -1,0 +1,25 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata: 
+  name: metrics-collect-exp
+  namespace: default
+spec:
+  criteria: 
+    objectives:
+      - metric: builtin-metrics/mean-latency
+        upperLimit: 1k
+      - metric: builtin-metrics/error-count
+        upperLimit: "10"
+  duration: 
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  versionInfo: ["default", "canary"]
+  actions:
+    start:
+    - task: metrics/collect
+      with:
+        versions:
+        - name: default
+          url: https://httpbin.org
+        - name: canary
+          url: https://httpbin.org/stream/1

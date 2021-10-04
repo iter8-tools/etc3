@@ -1,0 +1,89 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: istio-quickstart
+  namespace: default
+spec:
+  versionInfo: ["A", "B"]
+  criteria:
+    objectives:
+    - metric: istio-backend/mean-latency
+      upperLimit: 100
+    - metric: itsio-backend/error-rate
+      upperLimit: "0.01"
+    rewards:
+    - metric: books-purchased
+      preferredDirection: High
+  duration:
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  backends:
+  - name: istio-backend
+    description: "backend description"
+    versionInfo:
+    - revision: v1-revision-1
+      namespace: v1-namespace-1
+    - revision: v2-revision-1
+      namespace: v2-namespace-2
+    method: GET
+    provider: provider
+    jqExpression: jqExpression
+    url: https://provider.url
+    metrics: 
+    - name: mean-latency
+      description: "Mean latency"
+      params:
+        query: "(sum(increase(istio_request_duration_milliseconds_sum{reporter='source',destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s])) or on() vector(0)) / (sum(increase(istio_requests_total{reporter='source',destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s])) or on() vector(0))"
+      type: Gauge
+      units: milliseconds
+    - name: error-rate
+      description: "Fraction of requests with error responses"
+      params:
+        query: "(sum(increase(istio_requests_total{response_code=~'5..',reporter='source',destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s])) or on() vector(0)) / (sum(increase(istio_requests_total{reporter='source',destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s])) or on() vector(0))"
+      type: Gauge
+    - name: request-count
+      description: "Number of requests"
+      params:
+        query: "sum(increase(istio_requests_total{reporter='source',destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s]))"
+      type: Counter
+    - name: books-purchased
+      description: "book purchased"
+      params:
+        query: "(sum(increase(number_of_books_purchased_total{destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s])) or on() vector(0)) / (sum(increase(istio_requests_total{reporter='source',destination_workload='$revision',destination_workload_namespace='$namespace'}[${elapsedTime}s])) or on() vector(0))"
+      type: Gauge
+      units: milliseconds
+status:
+  analysis:
+    metrics:
+    # version A
+    - books-purchased: [5029875003n]
+      iter8-istio/error-rate: ["0"]
+      iter8-istio/mean-latency: [90846332047n]
+      request-count: [1506618095820n]
+    # version B
+    - books-purchased: [24453608192n]
+      iter8-istio/error-rate: ["0"]
+      iter8-istio/mean-latency: [43256981626n]
+      request-count: [414575574077n]
+    objectives: [[true, true], [true, true]]
+    weights: [35, 65]
+    winner:
+      winner: B
+      winnerFound: true
+  completedLoops: 10
+  conditions:
+  - lastTransitionTime: "2021-04-23T17:05:21Z"
+    message: Experiment Completed
+    reason: ExperimentCompleted
+    status: "True"
+    type: Completed
+  - lastTransitionTime: "2021-04-23T17:02:52Z"
+    status: "False"
+    type: Failed
+  currentWeightDistribution: [35, 65]
+  initTime: "2021-04-23T17:02:52Z"
+  lastUpdateTime: "2021-04-23T17:04:58Z"
+  message: 'ExperimentCompleted: Experiment Completed'
+  stage: Completed
+  startTime: "2021-04-23T17:02:54Z"
+  testingPattern: ybrid-A/B

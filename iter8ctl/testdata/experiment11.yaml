@@ -1,0 +1,81 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: conformance-sample
+  namespace: default
+spec:
+  criteria:
+    objectives:
+    - metric: iter8-knative/mean-latency
+      upperLimit: "50"
+    - metric: iter8-knative/95th-percentile-tail-latency
+      upperLimit: "100"
+    - metric: iter8-knative/error-rate
+      upperLimit: 10m
+  duration:
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  backends:
+  - name: iter8-knative
+    description: "backend description"
+    versionInfo:
+    - revision: v1-revision-1
+    - revision: v2-revision-1
+    method: POST
+    provider: provider
+    jqExpression: jqExpression
+    headers:
+      header: "{{.variable-1}}::{{.variable-2}}"
+    url: https://provider.url
+    metrics: 
+    - name: mean-latency
+      description: "Mean latency"
+      params:
+        query: (sum(increase(revision_app_request_latencies_sum{revision_name='$revision'}[$elapsedTime])) or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name='$revision'}[$elapsedTime])) or on() vector(0))
+      type: Gauge
+      units: milliseconds
+    - name: error-rate
+      description: "Fraction of requests with error responses"
+      params:
+        query: (sum(increase(revision_app_request_latencies_count{response_code_class!='2xx',revision_name='$revision'}[$elapsedTime])) or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name='$revision'}[$elapsedTime])) or on() vector(0))
+      type: Gauge
+    - name: request-count
+      description: "Number of requests"
+      params:
+        query: "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
+      type: Counter
+    - name: 95th-percentile-tail-latency
+      description: "95th percentile tail latency"
+      params:
+        query: histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{revision_name='$revision'}[$elapsedTime])) by (le))
+      type: Gauge
+      units: milliseconds
+  versionInfo: ["current"]
+status:
+  analysis:
+    metrics:
+    - iter8-knative/95th-percentile-tail-latency: [4830965910n]
+      iter8-knative/error-rate: ["0"]
+      iter8-knative/mean-latency: [1491620112n]
+    objectives: [[true, true, true]]
+    weights: []
+    winner:
+      winner: current
+      winnerFound: true
+  completedLoops: 10
+  conditions:
+  - lastTransitionTime: "2021-03-30T16:04:30Z"
+    message: Experiment completed successfully
+    reason: ExperimentCompleted
+    status: "True"
+    type: Completed
+  - lastTransitionTime: "2021-03-30T16:02:19Z"
+    status: "False"
+    type: Failed
+  currentWeightDistribution: [100]
+  initTime: "2021-03-30T16:02:19Z"
+  lastUpdateTime: "2021-03-30T16:04:30Z"
+  message: 'ExperimentCompleted: Experiment completed successfully'
+  stage: Completed
+  startTime: "2021-03-30T16:02:47Z"
+  testingPattern: SLOValidation

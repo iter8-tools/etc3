@@ -1,0 +1,54 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata: 
+  name: test-experiment-3
+  namespace: default
+spec: 
+  criteria: 
+    objectives: 
+      - 
+        metric: mean-latency
+        upperLimit: 1k
+      - 
+        metric: error-rate
+        upperLimit: 10m
+  duration: 
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  versionInfo: ["default", "canary"]
+  actions:
+    start:
+    - 23
+    - task: common/exec
+      with:
+        cmd: helm
+        args:
+        - v1
+        - v2
+        - 20
+        - 40.5
+    finish:
+    - task: common/exec
+      with:
+        cmd: kustomize
+        args:
+        - build
+        - .
+status: 
+  completedLoops: 0
+  conditions: 
+    - 
+      lastTransitionTime: "2020-12-27T21:55:49Z"
+      message: "Start handler 'start' launched"
+      reason: StartHandlerLaunched
+      status: "False"
+      type: Completed
+    - 
+      lastTransitionTime: "2020-12-27T21:55:48Z"
+      status: "False"
+      type: Failed
+  startTime: "2020-12-27T21:55:48Z"
+  lastUpdateTime: "2020-12-27T21:55:48Z"
+  message: "StartHandlerLaunched: Start handler 'start' launched"
+  stage: Initializing
+  testingPattern: SLOValidation

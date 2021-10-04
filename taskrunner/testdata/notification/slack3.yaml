@@ -1,0 +1,33 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: abn-exp
+spec:
+  # target identifies the service under experimentation using its fully qualified name
+  target: bookinfo-iter8/productpage
+  criteria:
+    objectives: # used for validating versions
+    - metric: iter8-istio/mean-latency
+      upperLimit: 300
+    - metric: iter8-istio/error-rate
+      upperLimit: "0.01"
+  duration: # product of fields determines length of the experiment
+    minIntervalBetweenLoops: 10
+    maxLoops: 10
+  versionInfo: ["productpage-v1", "productpage-v2", "productpage-v3"]
+status:
+  completedIterations: 0
+  conditions:
+  - lastTransitionTime: "2021-05-20T19:56:26Z"
+    message: Experiment completed successfully
+    reason: ExperimentCompleted
+    status: "True"
+    type: Completed
+  - lastTransitionTime: "2021-05-20T19:54:49Z"
+    status: "False"
+    type: Failed
+  lastUpdateTime: "2021-05-20T19:56:26Z"
+  message: 'ExperimentCompleted: Experiment completed successfully'
+  stage: Completed
+  startTime: "2021-05-20T19:54:50Z"
+  testingPattern: Hybrid-ABN

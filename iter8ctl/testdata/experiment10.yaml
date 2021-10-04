@@ -1,0 +1,82 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: test-experiment-10
+  namespace: test-namespace
+spec:
+  criteria:
+    objectives:
+    - metric: mean-latency
+      upperLimit: 2k
+    - metric: error-rate
+      upperLimit: 10m
+  duration:
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  backends:
+  - name: knative-backend
+    description: "backend description"
+    versionInfo:
+    - name: v1-name-1
+    - name: v2-name-1
+    method: POST
+    provider: provider
+    jqExpression: jqExpression
+    url: https://provider.url
+    metrics: 
+    - name: mean-latency
+      description: "Mean latency"
+      params:
+        query: (sum(increase(revision_app_request_latencies_sum{revision_name='$name'}[$interval]))or
+            on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name='$name'}[$interval]))
+            or on() vector(0))
+      type: Gauge
+      units: milliseconds
+    - name: error-rate
+      description: "Fraction of requests with error responses"
+      params:
+        query: (sum(increase(revision_app_request_latencies_count{response_code_class!='2xx',revision_name='$name'}[$interval]))
+            or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name='$name'}[$interval]))
+            or on() vector(0))
+      type: Gauge
+    - name: request-count
+      description: "Number of requests"
+      params:
+        query: 
+      type: Counter
+    - name: 95th-percentile-tail-latency
+      description: "95th percentile tail latency"
+      params:
+        query: "histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval])) by (le))"
+      type: Gauge
+      units: milliseconds
+  versionInfo: ["sample-application-v1", "sample-application-v2"]
+status:
+  analysis:
+    metrics:
+    - error-rate: ["0"]
+      mean-latency: [5880641926n]
+    - error-rate: ["0"]
+      mean-latency: [4701943845n]
+    objectives: [[true, true], [true, true]]
+    weights: [25, 75]
+    winner:
+      winner: sample-application-v2
+      winnerFound: true
+  completedLoops: 8
+  conditions:
+  - lastTransitionTime: "2021-02-12T20:01:08Z"
+    message: Experiment completed successfully
+    reason: ExperimentCompleted
+    status: "True"
+    type: Completed
+  - lastTransitionTime: "2021-02-12T19:57:46Z"
+    status: "False"
+    type: Failed
+  currentWeightDistribution: [25, 75]
+  lastUpdateTime: "2021-02-12T20:01:08Z"
+  message: 'ExperimentCompleted: Experiment completed successfully'
+  versionRecommendedForPromotion: sample-application-v2
+  stage: Completed
+  startTime: "2021-02-12T19:57:47Z"
+  testingPattern: SLOValidation

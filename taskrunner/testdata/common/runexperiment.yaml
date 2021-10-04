@@ -1,0 +1,49 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: quickstart-exp
+spec:
+  actions:
+    # when the experiment completes, promote the winning version using kubectl apply
+    start:
+    - run: 'echo "Experiment: {{ .Namespace }}/{{ .Name }}"'
+    - if: "CandidateWon()"
+      run: 'echo v2'
+    - if: "not CandidateWon()"
+      run: 'echo v1'
+    - run: '{{ this is a messed up {{ template }}'
+    - run: '{{ .Secret "token" }}' # a better template
+    - run: '{{ .Secret "token" }}' # a template that will work with top-secret
+      with:
+        secret: top-secret
+  criteria:
+    rewards:
+    - metric: iter8-istio/user-engagement 
+      preferredDirection: High
+    objectives:
+    - metric: iter8-istio/mean-latency
+      upperLimit: 300
+    - metric: iter8-istio/error-rate
+      upperLimit: "0.01"
+  duration:
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  versionInfo: ["productpage-v1", "productpage-v2"]
+status:
+  completedLoops: 0
+  conditions:
+  - lastTransitionTime: "2021-08-06T11:54:55Z"
+    message: Experiment failed
+    reason: ExperimentCompleted
+    status: "True"
+    type: Completed
+  - lastTransitionTime: "2021-08-06T11:54:55Z"
+    message: Unable to find metric iter8-istio/request-count
+    reason: MetricUnavailable
+    status: "True"
+    type: Failed
+  startTime: "2021-08-06T11:54:37Z"
+  lastUpdateTime: "2021-08-06T11:54:37Z"
+  message: 'ExperimentCompleted: Experiment failed'
+  stage: Completed
+  testingPattern: Hybrid-A/B

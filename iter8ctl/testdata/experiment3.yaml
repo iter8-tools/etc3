@@ -1,0 +1,83 @@
+# SLOValidation experiment with 2 versions
+# 4 loops have been executed; a winner has been identified
+# Incomplete, not failed; analysis present
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: test-experiment-3
+  namespace: test-namespace
+spec:
+  versionInfo: ["default", "canary"]
+  criteria:
+    objectives:
+    - metric: mean-latency  # only one backend so no confusion
+      upperLimit: 1k
+    - metric: error-rate
+      upperLimit: 10m
+  duration:
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  backends:
+  - name: backend
+    description: "backend description"
+    versionInfo:
+    - name: v1-name-1
+      interval: v1-interval-1
+    - name: v2-name-1
+      interval: v2-interval-2
+    method: POST
+    provider: provider
+    jqExpression: jqExpression
+    headers:
+      header: "{{.variable-1}}::{{.variable-2}}"
+    url: https://provider.url
+    metrics: 
+    - name: mean-latency
+      description: "Mean latency"
+      params:
+        query: "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+      type: Gauge
+      units: milliseconds
+    - name: error-rate
+      description: "Fraction of requests with error responses"
+      params:
+        query: "(sum(increase(revision_app_request_latencies_count{response_code_class!='2xx',service_name=~'.*$name'}[$interval])) or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+      type: Gauge
+    - name: request-count
+      description: "Number of requests"
+      params:
+        query: "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
+      type: Counter
+    - name: 95th-percentile-tail-latency
+      description: "95th percentile tail latency"
+      params:
+        query: "histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval])) by (le))"
+      type: Gauge
+      units: milliseconds
+status:
+  analysis:
+    metrics:
+    - error-rate: ["0", "0", "0", "0"]
+      mean-latency: [238787878788n, 248787878788n, 258787878788n, 228787878788n]
+    - error-rate: ["0", "0", "0", "0"]
+      mean-latency: [187500m, 177500m, 167500m, 197500m]
+    objectives: [[true, true], [true, true]]
+    weights: [75, 25]
+    winner:
+      winner: canary
+      winnerFound: true
+  completedLoops: 4
+  conditions:
+  - lastTransitionTime: "2020-12-28T18:34:34Z"
+    message: Completed Iteration 4
+    reason: IterationUpdate
+    status: "False"
+    type: Completed
+  - lastTransitionTime: "2020-12-28T18:33:34Z"
+    status: "False"
+    type: Failed
+  currentWeightDistribution: [75,25]
+  lastUpdateTime: "2020-12-28T18:34:34Z"
+  message: 'IterationUpdate: Completed Iteration 4'
+  versionRecommendedForPromotion: canary
+  startTime: "2020-12-28T18:33:42Z"

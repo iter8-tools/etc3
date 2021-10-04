@@ -1,0 +1,76 @@
+# SLOValidation experiment with 2 versions
+# The start handler is running
+# Therefore, there is no analysis
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata: 
+  name: test-experiment-1
+  namespace: default
+spec: 
+  versionInfo: ["default", "canary"]
+
+  criteria: 
+    objectives: 
+    - metric: mean-latency
+      upperLimit: 1k
+    - metric: error-rate
+      upperLimit: 10m
+
+  duration: 
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+
+  backends:
+  - name: backend
+    description: "backend description"
+    versionInfo:
+    - name: name-v1
+      interval: interval-v1
+    - name: name-v2
+      interval: interval-v2
+    method: POST
+    provider: provider
+    jqExpression: jqExpression
+    headers:
+      header: "{{.variable-1}}::{{.variable-2}}"
+    url: https://provider.url
+    metrics: 
+    - name: mean-latency
+      description: "Mean latency"
+      params:
+        query: "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+      type: Gauge
+      units: milliseconds
+    - name: error-rate
+      description: "Fraction of requests with error responses"
+      params:
+        query: "(sum(increase(revision_app_request_latencies_count{response_code_class!='2xx',service_name=~'.*$name'}[$interval])) or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+      type: Gauge
+    - name: request-count
+      description: "Number of requests"
+      params:
+        query: "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
+      type: Counter
+    - name: 95th-percentile-tail-latency
+      description: "95th percentile tail latency"
+      params:
+        query: "histogram_quantile(0.95, sum(rate(revision_app_request_latencies_bucket{service_name=~'.*$name'}[$interval])) by (le))"
+      type: Gauge
+      units: milliseconds
+
+status: 
+  completedLoops: 0
+  conditions: 
+  - lastTransitionTime: "2020-12-27T21:55:49Z"
+    message: "Start handler 'start' launched"
+    reason: StartHandlerLaunched
+    status: "False"
+    type: Completed
+  - lastTransitionTime: "2020-12-27T21:55:48Z"
+    status: "False"
+    type: Failed
+  startTime: "2020-12-27T21:55:48Z"
+  lastUpdateTime: "2020-12-27T21:55:48Z"
+  stage: Initializing
+  testingPattern: SLOValidation
+  message: "StartHandlerLaunched: Start handler 'start' launched"

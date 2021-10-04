@@ -1,0 +1,39 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata: 
+  name: test-experiment-2
+  namespace: default
+spec: 
+  criteria: 
+    objectives: 
+      - 
+        metric: mean-latency
+        upperLimit: 1k
+      - 
+        metric: error-rate
+        upperLimit: 10m
+  duration: 
+    minIntervalBetweenLoops: 15
+    maxLoops: 10
+  versionInfo: ["default", "canary"]
+  actions:
+    start:
+    - task: common/exec
+      with:
+        cmd: echo
+        args:
+        - "hello-world"
+        - 'hello {{ .revision }} world'
+        - 'hello {{ .omg }} world'
+    - task: common/exec
+      with:
+        cmd: helm
+        args:
+        - version
+    finish:
+    - task: common/exec
+      with:
+        cmd: kustomize
+        args:
+        - build
+        - .

@@ -1,0 +1,20 @@
+apiVersion: iter8.tools/v2beta1
+kind: Experiment
+metadata:
+  name: readiness-exp-1
+  namespace: default
+spec:
+  target: my/simple/service
+  actions:
+    start:
+    - task: common/readiness
+      with:
+        objRefs:
+        - kind: Deployment
+          name: hello
+          namespace: default
+          waitFor: condition=Ready
+  duration: # product of fields determines length of the experiment
+    minIntervalBetweenLoops: 1
+    maxLoops: 1
+  versionInfo: ["productpage-v1", "productpage-v2"]
