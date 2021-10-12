@@ -29,7 +29,7 @@ var GetConfig = func() (*rest.Config, error) {
 }
 
 // NumAttempt is the number of times to attempt Get operation for a k8s resource
-var NumAttempt = 10
+var NumAttempt = 2
 
 // Period is the time duration between between each attempt
 var Period = 18 * time.Second
