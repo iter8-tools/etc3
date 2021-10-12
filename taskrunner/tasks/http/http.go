@@ -79,11 +79,7 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 	}
 
 	// prepare for interpolation; add experiment as tag
-	// Note that if versionRecommendedForPromotion is not set or there is no version corresponding to it,
-	// then some placeholders may not be replaced
-	tags = tags.
-		With("this", obj).
-		WithRecommendedVersionForPromotion(&exp.Experiment, t.With.VersionInfo)
+	tags = tags.With("this", obj)
 
 	// log tags now before secret is added; we don't log the secret
 	log.Trace("tags without secrets: ", tags)

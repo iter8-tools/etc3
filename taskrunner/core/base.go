@@ -89,8 +89,7 @@ func GetDefaultTags(ctx context.Context) *Tags {
 		obj, err := exp.ToMap()
 		if err == nil {
 			tags = tags.
-				With("this", obj).
-				WithRecommendedVersionForPromotionDeprecated(&exp.Experiment)
+				With("this", obj)
 		}
 	} else {
 		log.Warn("No experiment found in context")

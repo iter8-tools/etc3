@@ -59,34 +59,6 @@ func GetActionStringFromContext(ctx context.Context) (string, error) {
 	return "", errors.New("context has no action key")
 }
 
-// Interpolate interpolates input arguments based on tags of the version recommended for promotion in the experiment.
-// DEPRECATED. Use tags.Interpolate in base package instead
-func (exp *Experiment) Interpolate(inputArgs []string) ([]string, error) {
-	var recommendedBaseline string
-	var args []string
-	var err error
-	if recommendedBaseline, err = exp.GetVersionRecommendedForPromotion(); err == nil {
-		var versionDetail *v2alpha2.VersionDetail
-		if versionDetail, err = exp.GetVersionDetail(recommendedBaseline); err == nil {
-			// get the tags
-			tags := Tags{M: make(map[string]interface{})}
-			tags.M["name"] = versionDetail.Name
-			for i := 0; i < len(versionDetail.Variables); i++ {
-				tags.M[versionDetail.Variables[i].Name] = versionDetail.Variables[i].Value
-			}
-			log.Trace(tags)
-			args = make([]string, len(inputArgs))
-			for i := 0; i < len(args); i++ {
-				if args[i], err = tags.Interpolate(&inputArgs[i]); err != nil {
-					break
-				}
-				log.Trace("input arg: ", inputArgs[i], " interpolated arg: ", args[i])
-			}
-		}
-	}
-	return args, err
-}
-
 // ToMap converts exp.Experiment to  a map[string]interface{}
 func (exp *Experiment) ToMap() (map[string]interface{}, error) {
 	// convert unstructured object to JSON object
