@@ -152,21 +152,9 @@ spec:
     actions:
       start:
       - 23
-      - task: common/exec
-        with:
-          cmd: helm
-          args:
-          - v1
-          - v2
-          - 20
-          - 40.5
+      - run: helm v1 v2 20 40.5
       finish:
-      - task: common/exec
-        with:
-          cmd: kustomize
-          args:
-          - build
-          - .
+      - run: kustomize build .
     testingPattern: Canary
     deploymentPattern: Progressive
     weights: 

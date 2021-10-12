@@ -183,7 +183,7 @@ spec:
                             type: string
                           task:
                             description: Task uniquely identifies the task to be executed.
-                              Examples include 'common/bash', etc.
+                              Examples include 'notification/http', etc.
                             type: string
                           with:
                             additionalProperties:

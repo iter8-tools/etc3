@@ -9,10 +9,7 @@ import (
 	"github.com/iter8-tools/etc3/api/v2alpha2"
 	"github.com/iter8-tools/etc3/controllers"
 	"github.com/iter8-tools/etc3/taskrunner/core"
-	"github.com/iter8-tools/etc3/taskrunner/tasks/bash"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/collect"
-	"github.com/iter8-tools/etc3/taskrunner/tasks/exec"
-	"github.com/iter8-tools/etc3/taskrunner/tasks/ghaction"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/http"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/readiness"
 	"github.com/iter8-tools/etc3/taskrunner/tasks/runscript"
@@ -124,14 +121,8 @@ func MakeTask(t *v2alpha2.TaskSpec) (core.Task, error) {
 		return nil, errors.New("nil or empty task found")
 	}
 	switch *t.Task {
-	case bash.TaskName:
-		return bash.Make(t)
 	case collect.TaskName:
 		return collect.Make(t)
-	case exec.TaskName:
-		return exec.Make(t)
-	case ghaction.TaskName:
-		return ghaction.Make(t)
 	case http.TaskName:
 		return http.Make(t)
 	case readiness.TaskName:

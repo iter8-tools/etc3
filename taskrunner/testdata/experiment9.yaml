@@ -152,12 +152,7 @@ spec:
     actions:
       start: ok
       finish:
-      - task: common/exec
-        with:
-          cmd: kustomize
-          args:
-          - build
-          - .
+      - run: kustomize build .
     testingPattern: Canary
     deploymentPattern: Progressive
     weights:

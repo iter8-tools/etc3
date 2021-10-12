@@ -169,12 +169,7 @@ spec:
   strategy:
     actions:
       finish:
-      - task: common/exec
-        with:
-          args:
-          - -c
-          - kubectl -n {{ .namespace }} apply -f {{ .promote }}
-          cmd: /bin/bash
+      - run: kubectl -n {{ .namespace }} apply -f {{ .promote }}
     deploymentPattern: Progressive
     testingPattern: A/B
   target: bookinfo-iter8/productpage

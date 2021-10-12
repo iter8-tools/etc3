@@ -151,25 +151,10 @@ spec:
       start: start
     actions:
       start:
-      - task: common/exec
-        with:
-          cmd: echo
-          args:
-          - "hello-world"
-          - 'hello {{ .revision }} world'
-          - 'hello {{ .omg }} world'
-      - task: common/exec
-        with:
-          cmd: helm
-          args:
-          - version
+      - run: echo "hello-world" 'hello {{ revision }} world' 'hello {{ omg }} world'
+      - run: helm version
       finish:
-      - task: common/exec
-        with:
-          cmd: kustomize
-          args:
-          - build
-          - .
+      - run: kustomize build .
     testingPattern: Canary
     deploymentPattern: Progressive
     weights: 

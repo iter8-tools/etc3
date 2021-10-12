@@ -146,7 +146,7 @@ type Action []TaskSpec
 // TaskSpec contains the specification of a task.
 type TaskSpec struct {
 	// Task uniquely identifies the task to be executed.
-	// Examples include 'common/bash', etc.
+	// Examples include 'notification/http', etc.
 	// +optional
 	Task *string `json:"task,omitempty" yaml:"task,omitempty"`
 	// Run is identifies the bash script to be run.
