@@ -151,7 +151,7 @@ spec:
       start: start
     actions:
       start:
-      - run: echo "hello-world" 'hello {{ revision }} world' 'hello {{ omg }} world'
+      - run: echo "hello-world"
       - run: helm version
       finish:
       - run: kustomize build .
