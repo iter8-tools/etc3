@@ -82,7 +82,7 @@ func (t *Task) Interpolate(ctx context.Context) error {
 	exp, err := core.GetExperimentFromContext(ctx)
 	if err != nil {
 		log.Error(err)
-		return err
+		return errors.New("could not fetch experiment from cluster; " + err.Error())
 	}
 	ee := EnhancedExperiment{Experiment: exp}
 
@@ -91,7 +91,7 @@ func (t *Task) Interpolate(ctx context.Context) error {
 	if t.With.Secret != nil {
 		secret, err := core.GetSecret(*t.With.Secret)
 		if err != nil {
-			return err
+			return errors.New("could not fetch secret; " + err.Error())
 		}
 		ee.sec = secret
 	}
@@ -111,7 +111,7 @@ func (t *Task) Interpolate(ctx context.Context) error {
 		return errors.New("cannot interpolate string due to template execution error")
 	}
 	log.Error("template creation error: ", err)
-	return errors.New("cannot interpolate string due to template creation error")
+	return errors.New("cannot interpolate string due to template creation error; " + err.Error())
 }
 
 // get the command
