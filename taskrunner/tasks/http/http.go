@@ -138,13 +138,13 @@ func (t *Task) prepareRequest(ctx context.Context) (*http.Request, error) {
 	}
 
 	if *authType == v2alpha2.BasicAuthType {
-		usernameTemplate := "@< .secret.username >@"
-		passwordTemplate := "@< .secret.password >@"
+		usernameTemplate := core.LeftDelim + " .secret.username " + core.RightDelim
+		passwordTemplate := core.LeftDelim + " .secret.password " + core.RightDelim
 		username, _ := tags.Interpolate(&usernameTemplate)
 		password, _ := tags.Interpolate(&passwordTemplate)
 		req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(username+":"+password)))
 	} else if *authType == v2alpha2.BearerAuthType {
-		tokenTemplate := "@< .secret.token >@"
+		tokenTemplate := core.LeftDelim + " .secret.token " + core.RightDelim
 		token, _ := tags.Interpolate(&tokenTemplate)
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

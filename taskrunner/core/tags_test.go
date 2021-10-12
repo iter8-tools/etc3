@@ -16,8 +16,8 @@ func TestInterpolate(t *testing.T) {
 
 	// success cases
 	inputs := []string{
-		"hello @<.name>@",
-		"hello @<.name>@@<.other>@",
+		"hello " + LeftDelim + ".name" + RightDelim,
+		"hello " + LeftDelim + ".name" + RightDelim + LeftDelim + ".other" + RightDelim,
 	}
 	for _, str := range inputs {
 		interpolated, err := tags.Interpolate(&str)
@@ -28,9 +28,9 @@ func TestInterpolate(t *testing.T) {
 	// failure cases
 	inputs = []string{
 		// bad delimiters,
-		"hello @< @<index .name>@",
+		"hello " + LeftDelim + " " + LeftDelim + "index .name" + RightDelim,
 		// missing '.'
-		"hello @<name>@",
+		"hello " + LeftDelim + "name" + RightDelim,
 	}
 	for _, str := range inputs {
 		_, err := tags.Interpolate(&str)
@@ -38,7 +38,7 @@ func TestInterpolate(t *testing.T) {
 	}
 
 	// empty tags (success cases)
-	str := "hello @<.name>@"
+	str := "hello " + LeftDelim + ".name" + RightDelim
 	tags = NewTags()
 	interpolated, err := tags.Interpolate(&str)
 	assert.NoError(t, err)
@@ -55,7 +55,7 @@ func TestInterpolate(t *testing.T) {
 		},
 	}
 
-	str = "hello @<.secret.secretName>@"
+	str = "hello " + LeftDelim + ".secret.secretName" + RightDelim
 	tags = NewTags().WithSecret("secret", &secret)
 	assert.Contains(t, tags.M, "secret")
 	interpolated, err = tags.Interpolate(&str)
