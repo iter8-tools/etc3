@@ -99,7 +99,7 @@ func (t *Task) Interpolate(ctx context.Context) error {
 	log.Trace("got past secret")
 
 	var templ *template.Template
-	if templ, err = template.New("templated script").Parse(*t.TaskMeta.Run); err == nil {
+	if templ, err = template.New("templated script").Delims("@<", ">@").Parse(*t.TaskMeta.Run); err == nil {
 		buf := bytes.Buffer{}
 		if err = templ.Execute(&buf, &ee); err == nil {
 			t.With.interpolatedRun = buf.String()
