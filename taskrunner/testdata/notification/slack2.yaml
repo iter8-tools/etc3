@@ -24,7 +24,7 @@ spec:
   strategy:
     actions:
       finish:
-      - run: kubectl -n bookinfo-iter8 apply -f {{ .promote }} 
+      - run: kubectl -n bookinfo-iter8 apply -f @< .promote >@
       - task: notification/slack
         with:
           channel: CU5FNKWCB
