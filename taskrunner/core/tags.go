@@ -45,7 +45,7 @@ func (tags *Tags) Interpolate(str *string) (string, error) {
 	}
 	var err error
 	var templ *template.Template
-	if templ, err = template.New("").Delims("@<", ">@").Parse(*str); err == nil {
+	if templ, err = template.New("").Delims(LeftDelim, RightDelim).Parse(*str); err == nil {
 		buf := bytes.Buffer{}
 		if err = templ.Execute(&buf, tags.M); err == nil {
 			return buf.String(), nil
