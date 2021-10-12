@@ -24,11 +24,11 @@ func TestWithExperiment(t *testing.T) {
 	tags := GetDefaultTags(ctx)
 
 	testStr := []string{
-		"@<.this.apiVersion>@",
-		"@<.this.metadata.name>@",
-		"@<.this.spec.duration.intervalSeconds>@",
-		"@<(index .this.spec.versionInfo.baseline.variables 0).value>@",
-		"@<.this.status.versionRecommendedForPromotion>@",
+		LeftDelim + ".this.apiVersion" + RightDelim,
+		LeftDelim + ".this.metadata.name" + RightDelim,
+		LeftDelim + ".this.spec.duration.intervalSeconds" + RightDelim,
+		LeftDelim + "(index .this.spec.versionInfo.baseline.variables 0).value" + RightDelim,
+		LeftDelim + ".this.status.versionRecommendedForPromotion" + RightDelim,
 	}
 	expectedOut := []string{
 		"iter8.tools/v2alpha2",

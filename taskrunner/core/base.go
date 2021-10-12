@@ -7,6 +7,13 @@ import (
 	"github.com/iter8-tools/etc3/api/v2alpha2"
 )
 
+const (
+	// LeftDelim is the left delimiter used for interpolation in http and run tasks
+	LeftDelim string = "@<"
+	// RightDelim is the right delimiter used for interpolation in http and run tasks
+	RightDelim string = ">@"
+)
+
 func init() {
 	log = GetLogger()
 }

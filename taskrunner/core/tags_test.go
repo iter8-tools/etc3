@@ -30,7 +30,7 @@ func TestInterpolate(t *testing.T) {
 	// failure cases
 	inputs = []string{
 		// bad delimiters,
-		"hello @{index .name>@",
+		"hello @< @<index .name>@",
 		// missing '.'
 		"hello @<name>@",
 	}
