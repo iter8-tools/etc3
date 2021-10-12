@@ -41,7 +41,7 @@ var _ = Describe("run task", func() {
 			By("creating a run with secret")
 			secret, _ := json.Marshal("default/top-secret")
 			task, err := Make(&v2alpha2.TaskSpec{
-				Run: core.StringPointer(`echo {{ .Secret "token" }}`),
+				Run: core.StringPointer(`echo @< .Secret "token" >@`),
 				With: map[string]apiextensionsv1.JSON{
 					"secret": {Raw: secret},
 				},
