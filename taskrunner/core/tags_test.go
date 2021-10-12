@@ -16,8 +16,6 @@ func TestInterpolate(t *testing.T) {
 
 	// success cases
 	inputs := []string{
-		// `hello {{index . "name"}}`,
-		// "hello {{index .name}}",
 		"hello @<.name>@",
 		"hello @<.name>@@<.other>@",
 	}

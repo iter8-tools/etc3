@@ -77,7 +77,7 @@ func TestInterpolateWithExperiment(t *testing.T) {
 	e, err := exp.ToMap()
 	assert.NoError(t, err)
 	tags := NewTags().With("this", e)
-	str := "@<.this.metadata.namespace>@"
+	str := LeftDelim + ".this.metadata.namespace" + RightDelim
 	v, err := tags.Interpolate(&str)
 	assert.NoError(t, err)
 	assert.Equal(t, "default", v)
