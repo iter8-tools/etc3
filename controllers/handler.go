@@ -285,7 +285,7 @@ func HandlerJobFailed(handlerJob *batchv1.Job) bool {
 
 // generate job name
 func jobName(instance *v2alpha2.Experiment, handler string, handlerInstance *int) string {
-	name := fmt.Sprintf("%s-%s", instance.Name, handler)
+	name := fmt.Sprintf("%s-%s-%s", instance.Namespace, instance.Name, handler)
 	if handlerInstance != nil {
 		name = fmt.Sprintf("%s-%d", name, *handlerInstance)
 	}

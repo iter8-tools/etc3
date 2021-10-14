@@ -57,7 +57,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
-				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s", experiment.GetName(), handler)))
+				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s-%s", experiment.GetNamespace(), experiment.GetName(), handler)))
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				if err != nil {
 					return false
@@ -91,7 +91,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, nil)
-				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s", experiment.GetName(), handler)))
+				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s-%s", experiment.GetNamespace(), experiment.GetName(), handler)))
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				if err != nil {
 					return false
@@ -131,7 +131,7 @@ var _ = Describe("Handlers Run", func() {
 			Eventually(func() bool {
 				handlerJob := &batchv1.Job{}
 				jbNm := jobName(experiment, handler, &testLoop)
-				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s-%d", experiment.GetName(), handler, testLoop)))
+				Expect(jbNm).To(Equal(fmt.Sprintf("%s-%s-%s-%d", experiment.GetNamespace(), experiment.GetName(), handler, testLoop)))
 				err := k8sClient.Get(ctx(), types.NamespacedName{Name: jbNm, Namespace: "iter8"}, handlerJob)
 				if err != nil {
 					return false

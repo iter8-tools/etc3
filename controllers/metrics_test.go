@@ -124,26 +124,6 @@ var _ = Describe("Metrics", func() {
 		})
 	})
 
-	Context("failed start handler", func() {
-		Specify("experiment teminated in a failed state", func() {
-			By("Creating an experiment with a start handler")
-			name, target := "has-failing-handler", "has-failing-handler"
-			iterations, loops := int32(2), int32(1)
-			handler := "start"
-			experiment := v2alpha2.NewExperiment(name, testNamespace).
-				WithTarget(target).
-				WithTestingPattern(v2alpha2.TestingPatternConformance).
-				WithAction(handler, []v2alpha2.TaskSpec{}).
-				WithRequestCount(metricsNamespace+"/request-count").
-				WithDuration(30, iterations, loops).
-				WithBaselineVersion("baseline", nil).
-				Build()
-
-			Expect(k8sClient.Create(ctx(), experiment)).Should(Succeed())
-			Eventually(func() bool { return fails(name, testNamespace) }, 5).Should(BeTrue())
-		})
-	})
-
 	Context("When creating an experiment which refers to a non-existing metric", func() {
 		// experiment (in default ns) refers to metric "request-count" (not in default namespace)
 		It("Should fail to read metrics", func() {
