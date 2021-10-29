@@ -283,7 +283,7 @@ func (t *CollectTask) getFortioArgs(j int) ([]string, error) {
 
 	// append headers
 	for header, value := range t.With.Versions[j].Headers {
-		args = append(args, "-H", fmt.Sprintf("\"%v: %v\"", header, value))
+		args = append(args, "-H", fmt.Sprintf("%s: %s", header, value))
 	}
 
 	// append output file
